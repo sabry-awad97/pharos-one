@@ -18,6 +18,8 @@ export interface SidebarNavItemProps {
   style?: React.CSSProperties;
   /** Whether this item is focused via keyboard navigation */
   focused?: boolean;
+  /** Optional context menu handler */
+  onContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
 /**
@@ -36,6 +38,7 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
       onClick,
       style,
       focused = false,
+      onContextMenu,
     },
     ref,
   ) => {
@@ -45,11 +48,19 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
       onClick(id);
     };
 
+    const handleContextMenu = (e: React.MouseEvent) => {
+      if (onContextMenu) {
+        e.preventDefault();
+        onContextMenu(e, id);
+      }
+    };
+
     return (
       <button
         ref={ref}
         type="button"
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         title={!expanded ? label : undefined}

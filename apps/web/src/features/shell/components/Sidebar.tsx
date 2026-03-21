@@ -5,6 +5,7 @@ import { useSidebarState } from "../hooks/use-sidebar-state";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarSubItem } from "./SidebarSubItem";
 import { SidebarStats } from "./SidebarStats";
+import { SidebarContextMenu } from "./SidebarContextMenu";
 
 export interface SidebarProps {
   /** Currently active module ID */
@@ -22,16 +23,44 @@ export interface SidebarProps {
  */
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   ({ activeModule, onModuleClick, stats }, ref) => {
-    const { expanded, toggle, expandedModules, toggleModule } =
-      useSidebarState();
+    const {
+      expanded,
+      toggle,
+      expandedModules,
+      toggleModule,
+      pinnedItems,
+      togglePin,
+      hiddenItems,
+      toggleHide,
+    } = useSidebarState();
     const [hoveredToggle, setHoveredToggle] = React.useState(false);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
     const [keyboardMode, setKeyboardMode] = React.useState(false);
+    const [contextMenu, setContextMenu] = React.useState<{
+      x: number;
+      y: number;
+      itemId: string;
+      isPinned: boolean;
+    } | null>(null);
+
+    // Filter and sort templates: remove hidden, sort pinned to top
+    const visibleTemplates = React.useMemo(() => {
+      const filtered = WORKSPACE_TEMPLATES.filter(
+        (t) => !hiddenItems.has(t.id),
+      );
+      return filtered.sort((a, b) => {
+        const aPinned = pinnedItems.has(a.id);
+        const bPinned = pinnedItems.has(b.id);
+        if (aPinned && !bPinned) return -1;
+        if (!aPinned && bPinned) return 1;
+        return 0;
+      });
+    }, [hiddenItems, pinnedItems]);
 
     // Build flat list of all navigable items (modules + visible sub-items)
     const navItems = React.useMemo(() => {
       const items: Array<{ id: string; type: "module" | "subitem" }> = [];
-      WORKSPACE_TEMPLATES.forEach((template) => {
+      visibleTemplates.forEach((template) => {
         items.push({ id: template.id, type: "module" });
         if (template.subItems && expanded && expandedModules.has(template.id)) {
           template.subItems.forEach((subItem) => {
@@ -40,7 +69,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         }
       });
       return items;
-    }, [expanded, expandedModules]);
+    }, [visibleTemplates, expanded, expandedModules]);
 
     // Keyboard shortcuts
     React.useEffect(() => {
@@ -109,6 +138,51 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       }
     };
 
+    // Context menu handlers
+    const handleContextMenu = (e: React.MouseEvent, itemId: string) => {
+      e.preventDefault();
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        itemId,
+        isPinned: pinnedItems.has(itemId),
+      });
+    };
+
+    const handleContextMenuDismiss = () => {
+      setContextMenu(null);
+    };
+
+    const handleContextMenuOpen = () => {
+      if (contextMenu) {
+        onModuleClick(contextMenu.itemId);
+        setContextMenu(null);
+      }
+    };
+
+    const handleContextMenuOpenInNewTab = () => {
+      if (contextMenu) {
+        // Always create a new tab by calling onModuleClick
+        // The parent component will handle creating a new tab
+        onModuleClick(contextMenu.itemId);
+        setContextMenu(null);
+      }
+    };
+
+    const handleContextMenuPin = () => {
+      if (contextMenu) {
+        togglePin(contextMenu.itemId);
+        setContextMenu(null);
+      }
+    };
+
+    const handleContextMenuHide = () => {
+      if (contextMenu) {
+        toggleHide(contextMenu.itemId);
+        setContextMenu(null);
+      }
+    };
+
     return (
       <div
         ref={ref}
@@ -126,7 +200,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       >
         {/* Navigation items */}
         <nav style={{ flex: 1, paddingTop: 6, overflow: "auto" }}>
-          {WORKSPACE_TEMPLATES.map((template, moduleIndex) => {
+          {visibleTemplates.map((template, moduleIndex) => {
             const hasSubItems =
               template.subItems && template.subItems.length > 0;
             const isModuleExpanded = expandedModules.has(template.id);
@@ -134,7 +208,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             // Calculate if this module or any of its sub-items are focused
             let itemIndex = moduleIndex;
             for (let i = 0; i < moduleIndex; i++) {
-              const prevTemplate = WORKSPACE_TEMPLATES[i];
+              const prevTemplate = visibleTemplates[i];
               if (
                 prevTemplate.subItems &&
                 expanded &&
@@ -163,6 +237,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     expanded={expanded}
                     onClick={onModuleClick}
                     focused={isModuleFocused}
+                    onContextMenu={handleContextMenu}
                   />
                   {/* Chevron for modules with sub-items */}
                   {hasSubItems && expanded && (
@@ -215,6 +290,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                           active={activeModule === subItem.id}
                           onClick={onModuleClick}
                           focused={isSubItemFocused}
+                          onContextMenu={handleContextMenu}
                         />
                       );
                     })}
@@ -252,6 +328,21 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             <ChevronRight style={{ width: 14, height: 14 }} />
           )}
         </button>
+
+        {/* Context menu */}
+        {contextMenu && (
+          <SidebarContextMenu
+            itemId={contextMenu.itemId}
+            x={contextMenu.x}
+            y={contextMenu.y}
+            isPinned={contextMenu.isPinned}
+            onOpen={handleContextMenuOpen}
+            onOpenInNewTab={handleContextMenuOpenInNewTab}
+            onPin={handleContextMenuPin}
+            onHide={handleContextMenuHide}
+            onDismiss={handleContextMenuDismiss}
+          />
+        )}
       </div>
     );
   },

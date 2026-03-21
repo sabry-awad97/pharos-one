@@ -7,6 +7,8 @@ import { useState, useCallback, useEffect } from "react";
 
 const STORAGE_KEY = "pharmos-sidebar-expanded";
 const EXPANDED_MODULES_KEY = "pharmos-sidebar-expanded-modules";
+const PINNED_ITEMS_KEY = "pharmos-sidebar-pinned-items";
+const HIDDEN_ITEMS_KEY = "pharmos-sidebar-hidden-items";
 
 /**
  * Return type for useSidebarState hook
@@ -22,6 +24,14 @@ export interface UseSidebarStateReturn {
   expandedModules: Set<string>;
   /** Toggle a module's sub-items expansion */
   toggleModule: (moduleId: string) => void;
+  /** Set of item IDs that are pinned to top */
+  pinnedItems: Set<string>;
+  /** Toggle an item's pinned state */
+  togglePin: (itemId: string) => void;
+  /** Set of item IDs that are hidden */
+  hiddenItems: Set<string>;
+  /** Toggle an item's hidden state */
+  toggleHide: (itemId: string) => void;
 }
 
 /**
@@ -64,6 +74,28 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   });
 
+  // Initialize pinned items from localStorage
+  const [pinnedItems, setPinnedItems] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(PINNED_ITEMS_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (error) {
+      console.warn("Failed to read pinned items from localStorage:", error);
+      return new Set();
+    }
+  });
+
+  // Initialize hidden items from localStorage
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(HIDDEN_ITEMS_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (error) {
+      console.warn("Failed to read hidden items from localStorage:", error);
+      return new Set();
+    }
+  });
+
   // Persist state to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -86,6 +118,30 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   }, [expandedModules]);
 
+  // Persist pinned items to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PINNED_ITEMS_KEY,
+        JSON.stringify(Array.from(pinnedItems)),
+      );
+    } catch (error) {
+      console.warn("Failed to save pinned items to localStorage:", error);
+    }
+  }, [pinnedItems]);
+
+  // Persist hidden items to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        HIDDEN_ITEMS_KEY,
+        JSON.stringify(Array.from(hiddenItems)),
+      );
+    } catch (error) {
+      console.warn("Failed to save hidden items to localStorage:", error);
+    }
+  }, [hiddenItems]);
+
   const toggle = useCallback(() => {
     setExpandedState((current) => !current);
   }, []);
@@ -106,11 +162,39 @@ export function useSidebarState(): UseSidebarStateReturn {
     });
   }, []);
 
+  const togglePin = useCallback((itemId: string) => {
+    setPinnedItems((current) => {
+      const next = new Set(current);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleHide = useCallback((itemId: string) => {
+    setHiddenItems((current) => {
+      const next = new Set(current);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }, []);
+
   return {
     expanded,
     toggle,
     setExpanded,
     expandedModules,
     toggleModule,
+    pinnedItems,
+    togglePin,
+    hiddenItems,
+    toggleHide,
   };
 }

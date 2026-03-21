@@ -11,6 +11,8 @@ export interface SidebarSubItemProps {
   onClick: (id: string) => void;
   /** Whether this item is focused via keyboard navigation */
   focused?: boolean;
+  /** Optional context menu handler */
+  onContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
 /**
@@ -18,11 +20,18 @@ export interface SidebarSubItemProps {
  * Displays label only (no icon) with indentation
  */
 const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
-  ({ id, label, active, onClick, focused = false }, ref) => {
+  ({ id, label, active, onClick, focused = false, onContextMenu }, ref) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     const handleClick = () => {
       onClick(id);
+    };
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+      if (onContextMenu) {
+        e.preventDefault();
+        onContextMenu(e, id);
+      }
     };
 
     return (
@@ -30,6 +39,7 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
         ref={ref}
         type="button"
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
