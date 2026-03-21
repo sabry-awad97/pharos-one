@@ -1,4 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  useNavigate,
+  useMatches,
+} from "@tanstack/react-router";
 import {
   Save,
   RotateCcw,
@@ -20,7 +25,6 @@ import {
 import { useTabs } from "@/features/workspace/hooks/use-tabs";
 import { TabBar } from "@/features/workspace/components/TabBar";
 import { RibbonBar } from "@/features/workspace/components/RibbonBar";
-import { WorkspaceContainer } from "@/features/modules";
 import type { Tab } from "@/features/workspace/types";
 import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
@@ -87,6 +91,8 @@ const INITIAL_TABS: Tab[] = [
 ];
 
 function HomeComponent() {
+  const navigate = useNavigate();
+  const matches = useMatches();
   const { activeMenu, toggleMenu, closeMenu } = useMenuState();
   const {
     state,
@@ -98,13 +104,24 @@ function HomeComponent() {
     toggleSplitView,
   } = useTabs(INITIAL_TABS);
 
-  // Get active tab's module ID
-  const activeTab = state.tabs.find((tab) => tab.id === state.activeTabId);
-  const activeModuleId = activeTab?.module ?? null;
+  // Get current route to determine active module
+  const currentRoute = matches[matches.length - 1];
+  const currentPath = currentRoute?.pathname ?? "";
+  const currentModule = currentPath.split("/").pop() ?? "dashboard";
 
-  // Determine module IDs for split view
-  const leftModuleId = state.splitView.leftModuleId ?? activeModuleId;
-  const rightModuleId = state.splitView.rightModuleId ?? "inventory";
+  // Use the activeTabId from state, not derived from URL
+  // This allows multiple tabs with the same module (e.g., POS Terminal 1 & 2)
+  const activeTab =
+    state.tabs.find((t) => t.id === state.activeTabId) ?? state.tabs[0];
+
+  // Handler for tab click - navigate to module route
+  const handleTabClick = (tabId: string) => {
+    const tab = state.tabs.find((t) => t.id === tabId);
+    if (tab) {
+      setActiveTab(tabId);
+      navigate({ to: `/home/${tab.module}` });
+    }
+  };
 
   // Handler for adding new tab from template
   const handleAddTab = (template: WorkspaceTemplate) => {
@@ -113,6 +130,8 @@ function HomeComponent() {
       icon: template.icon,
       module: template.id,
     });
+    // Navigate to the new tab's module
+    navigate({ to: `/home/${template.id}` });
   };
 
   // Tab statistics for status bar
@@ -166,9 +185,9 @@ function HomeComponent() {
       <TitleBar
         appName="PharmOS"
         quickActions={quickActions}
-        onMinimize={() => console.log("Minimize")}
+        onMinimize={() => console.log(`Minimize`)}
         onMaximize={() => console.log("Maximize")}
-        onClose={() => console.log("Close")}
+        onClose={() => console.log(`Close`)}
       />
 
       {/* Menu bar with navigation */}
@@ -178,7 +197,7 @@ function HomeComponent() {
         branchInfo="Main Branch"
         userInfo="Cashier: Dr. Ravi K."
         shiftInfo="Shift 2 · 14:35"
-        onNewWorkspace={() => console.log("New workspace")}
+        onNewWorkspace={() => console.log(`New workspace`)}
         onPinActiveTab={() => {
           if (state.activeTabId) {
             togglePin(state.activeTabId);
@@ -200,8 +219,8 @@ function HomeComponent() {
       {/* Tab Bar */}
       <TabBar
         tabs={state.tabs}
-        activeTabId={state.activeTabId}
-        onTabClick={setActiveTab}
+        activeTabId={activeTab.id}
+        onTabClick={handleTabClick}
         onTabClose={closeTab}
         onTabPin={togglePin}
         onTabDuplicate={duplicateTab}
@@ -220,21 +239,11 @@ function HomeComponent() {
         moduleId={activeTab?.module}
       />
 
-      {/* Main Content Area - Conditionally render split or single view */}
+      {/* Main Content Area - Render child routes via Outlet */}
       <div
         style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
       >
-        <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-          {state.splitView.enabled ? (
-            <>
-              <WorkspaceContainer moduleId={leftModuleId} split={false} />
-              <div style={{ width: 1, background: "#e0e0e0", flexShrink: 0 }} />
-              <WorkspaceContainer moduleId={rightModuleId} split={true} />
-            </>
-          ) : (
-            <WorkspaceContainer moduleId={activeModuleId} split={false} />
-          )}
-        </div>
+        <Outlet />
       </div>
 
       {/* Status bar with statistics */}
