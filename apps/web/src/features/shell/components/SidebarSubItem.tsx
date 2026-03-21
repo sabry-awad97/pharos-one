@@ -63,8 +63,20 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
           outline: focused ? "2px solid #0078d4" : "none",
           outlineOffset: -2,
+          position: "relative",
         }}
       >
+        {/* Tree line positioned under parent icon */}
+        <span
+          style={{
+            position: "absolute",
+            left: 20,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            background: active ? "#0078d4" : "#e0e0e0",
+          }}
+        />
         <span
           style={{
             fontSize: 11,
