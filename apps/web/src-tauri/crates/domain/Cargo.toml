@@ -1,0 +1,13 @@
+[package]
+name = "pharos-domain"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pharos-core = { path = "../core" }
+serde.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+validator.workspace = true
+typed-builder.workspace = true
+derive-getters.workspace = true

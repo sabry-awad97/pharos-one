@@ -230,58 +230,58 @@ tasks:
 
   db:migrate:
     desc: "🚀 Run all pending database migrations"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo run -- up
 
   db:migrate:status:
     desc: "📊 Check database migration status"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo run -- status
 
   db:migrate:rollback:
     desc: "⏪ Rollback last database migration"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo run -- down
 
   db:migrate:fresh:
     desc: "🔄 Drop all tables and rerun migrations (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cmd: cargo run -- fresh
         prompt: "⚠️  This will DROP ALL TABLES and data. Continue?"
 
   db:migrate:refresh:
     desc: "🔄 Rollback all migrations and reapply (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cmd: cargo run -- refresh
         prompt: "⚠️  This will rollback and reapply all migrations. Continue?"
 
   db:migrate:reset:
     desc: "🗑️  Rollback all migrations (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cmd: cargo run -- reset
         prompt: "⚠️  This will rollback all migrations. Continue?"
 
   db:check:
     desc: "✅ Check database migration code compiles"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo check --all-targets
 
   db:build:
     desc: "🔨 Build database migration binary"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo build --bin migration
 
   db:build:release:
     desc: "📦 Build database migration binary (release)"
-    dir: apps/web/src-tauri/db/migration
+    dir: apps/web/src-tauri/migrations
     cmds:
       - cargo build --bin migration --release
 

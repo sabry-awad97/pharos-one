@@ -1,0 +1,15 @@
+[package]
+name = "pharos-tauri-commands"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pharos-core = { path = "../core" }
+pharos-domain = { path = "../domain" }
+pharos-application = { path = "../application" }
+pharos-infrastructure = { path = "../infrastructure" }
+pharos-events = { path = "../events", features = ["tauri-integration"] }
+tauri.workspace = true
+serde.workspace = true
+sea-orm.workspace = true
+tracing.workspace = true

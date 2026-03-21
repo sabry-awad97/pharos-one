@@ -1,0 +1,11 @@
+[package]
+name = "pharos-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+sea-orm.workspace = true
+uuid.workspace = true
+chrono.workspace = true

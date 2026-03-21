@@ -1,0 +1,14 @@
+[package]
+name = "pharos-events"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pharos-core = { path = "../core" }
+serde.workspace = true
+tokio.workspace = true
+tauri = { workspace = true, optional = true }
+
+[features]
+default = []
+tauri-integration = ["tauri"]

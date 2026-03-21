@@ -1,0 +1,19 @@
+[package]
+name = "pharos-migrations"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "pharos_migrations"
+path = "src/lib.rs"
+
+[[bin]]
+name = "migration"
+path = "src/main.rs"
+
+[dependencies]
+sea-orm-migration.workspace = true
+tokio.workspace = true
+
+[dependencies.sea-orm]
+workspace = true

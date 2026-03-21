@@ -1,0 +1,12 @@
+[package]
+name = "pharos-application"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pharos-core = { path = "../core" }
+pharos-domain = { path = "../domain" }
+serde.workspace = true
+async-trait.workspace = true
+validator.workspace = true
+uuid.workspace = true

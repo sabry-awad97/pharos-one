@@ -1,0 +1,17 @@
+[package]
+name = "pharos-infrastructure"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+pharos-core = { path = "../core" }
+pharos-domain = { path = "../domain" }
+pharos-application = { path = "../application" }
+sea-orm.workspace = true
+serde.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+typed-builder.workspace = true
+derive-getters.workspace = true

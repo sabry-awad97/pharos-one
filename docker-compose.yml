@@ -20,8 +20,8 @@ services:
     
     environment:
       # Database credentials
-      POSTGRES_DB: pharos-one
-      POSTGRES_USER: pharos-one
+      POSTGRES_DB: pharos_one
+      POSTGRES_USER: pharos_one
       POSTGRES_PASSWORD: pharos_one_dev_password
       
       # PostgreSQL configuration
@@ -53,7 +53,7 @@ services:
       - "config_file=/etc/postgresql/postgresql.conf"
     
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pharos-one -d pharos-one"]
+      test: ["CMD-SHELL", "pg_isready -U pharos_one -d pharos_one"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,10 +113,10 @@ volumes:
     labels:
       com.pharos-one.description: "pgAdmin configuration volume"
   
-  redis_data:
-    driver: local
-    labels:
-      com.pharos-one.description: "Redis data volume"
+  # redis_data:
+  #   driver: local
+  #   labels:
+  #     com.pharos-one.description: "Redis data volume"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Networks

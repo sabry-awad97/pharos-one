@@ -1,0 +1,28 @@
+[package]
+name = "pharos-app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Pharos One Desktop Application"
+
+[lib]
+name = "pharos_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+pharos-infrastructure = { path = "../crates/infrastructure" }
+pharos-events = { path = "../crates/events", features = ["tauri-integration"] }
+pharos-tauri-commands = { path = "../crates/tauri-commands" }
+pharos-migrations = { path = "../migrations" }
+tauri.workspace = true
+tauri-plugin-log.workspace = true
+tokio.workspace = true
+sea-orm.workspace = true
+sea-orm-migration.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dotenvy.workspace = true
+
+[build-dependencies]
+tauri-build.workspace = true
