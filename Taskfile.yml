@@ -37,6 +37,61 @@ tasks:
       - "{{.TURBO}} check-types"
 
   # ═══════════════════════════════════════════════════════════════════════════
+  #  🧪 Testing (Vitest)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  test:
+    desc: "🧪 Run tests in watch mode"
+    dir: apps/web
+    cmds:
+      - bunx vitest
+
+  test:run:
+    desc: "🚀 Run tests once (CI mode)"
+    dir: apps/web
+    cmds:
+      - bunx vitest run
+
+  test:ui:
+    desc: "🎨 Run tests with UI"
+    dir: apps/web
+    cmds:
+      - bunx vitest --ui
+      - echo "✅ Vitest UI started at http://localhost:51204/__vitest__/"
+
+  test:coverage:
+    desc: "📊 Run tests with coverage report"
+    dir: apps/web
+    cmds:
+      - bunx vitest run --coverage
+      - echo "✅ Coverage report generated in apps/web/coverage/"
+
+  test:watch:
+    desc: "👀 Run tests in watch mode (alias for test)"
+    dir: apps/web
+    cmds:
+      - bunx vitest
+
+  test:related:
+    desc: "🔍 Run tests related to changed files"
+    dir: apps/web
+    cmds:
+      - bunx vitest related
+
+  test:changed:
+    desc: "📝 Run tests for changed files only"
+    dir: apps/web
+    cmds:
+      - bunx vitest --changed
+
+  test:clear:
+    desc: "🧹 Clear Vitest cache"
+    dir: apps/web
+    cmds:
+      - bunx vitest --clearCache
+      - echo "✅ Vitest cache cleared"
+
+  # ═══════════════════════════════════════════════════════════════════════════
   #  �️ Tauri Desktop App
   # ═══════════════════════════════════════════════════════════════════════════
 
