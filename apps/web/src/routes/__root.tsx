@@ -1,4 +1,4 @@
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
@@ -13,7 +13,9 @@ import { Toaster } from "@pharos-one/ui/components/sonner";
 
 import "../index.css";
 
-export type RouterAppContext = object;
+export interface RouterAppContext {
+  queryClient: QueryClient;
+}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,

@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { inventoryApi } from "@/lib/api/inventory";
+import { inventoryApi } from "@/lib/api/inventory.api";
 import { queryKeys } from "@/lib/query-keys";
 import type { Medicine } from "@pharos-one/schema/inventory";
 

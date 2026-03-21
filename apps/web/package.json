@@ -9,6 +9,7 @@
 		"serve": "vite preview",
 		"start": "vite",
 		"check-types": "vite build && tsc --noEmit",
+		"generate-routes": "bunx @tanstack/router-cli generate",
 		"tauri": "tauri",
 		"desktop:dev": "tauri dev",
 		"desktop:build": "tauri build"
