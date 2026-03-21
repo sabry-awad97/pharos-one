@@ -4,3 +4,4 @@ export { StatusBar, StatusBarStat } from "./StatusBar";
 export { FileMenu } from "./FileMenu";
 export { SidebarNavItem } from "./SidebarNavItem";
 export { SidebarStats } from "./SidebarStats";
+export { Sidebar } from "./Sidebar";

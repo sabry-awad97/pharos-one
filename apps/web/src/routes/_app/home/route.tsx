@@ -18,6 +18,7 @@ import {
   TitleBar,
   MenuBar,
   StatusBar,
+  Sidebar,
   useMenuState,
   type QuickAction,
   type TabStatistics,
@@ -27,6 +28,7 @@ import { TabBar } from "@/features/workspace/components/TabBar";
 import { RibbonBar } from "@/features/workspace/components/RibbonBar";
 import { TabProvider } from "@/features/workspace/context/TabContext";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
+import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 import type { Tab } from "@/features/workspace/types";
 import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
@@ -135,6 +137,36 @@ function HomeComponent() {
     // Navigate to the new tab's module
     navigate({ to: `/home/${template.id}` });
   };
+
+  // Handler for sidebar module click
+  const handleSidebarModuleClick = (moduleId: string) => {
+    // Find first existing tab of this module type
+    const existingTab = state.tabs.find((t) => t.module === moduleId);
+
+    if (existingTab) {
+      // Switch to existing tab
+      setActiveTab(existingTab.id);
+      navigate({ to: `/home/${moduleId}` });
+    } else {
+      // Create new tab
+      const template = WORKSPACE_TEMPLATES.find((t) => t.id === moduleId);
+      if (template) {
+        addTab({
+          label: template.label,
+          icon: template.icon,
+          module: template.id,
+        });
+        navigate({ to: `/home/${moduleId}` });
+      }
+    }
+  };
+
+  // Mock stats data
+  const mockStats = [
+    { label: "Sales", value: "₹14,820", trend: "up" as const },
+    { label: "Profit", value: "₹3,940", trend: "up" as const },
+    { label: "Orders", value: "47", trend: "down" as const },
+  ];
 
   // Tab statistics for status bar
   const statistics: TabStatistics = {
@@ -246,6 +278,14 @@ function HomeComponent() {
         <div
           style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
         >
+          {/* Sidebar */}
+          <Sidebar
+            activeModule={activeTab?.module ?? null}
+            onModuleClick={handleSidebarModuleClick}
+            stats={mockStats}
+          />
+
+          {/* Content area */}
           <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
             <Outlet />
             {state.splitView.enabled && pinnedTab && (
