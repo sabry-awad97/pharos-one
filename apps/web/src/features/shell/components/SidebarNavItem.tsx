@@ -16,6 +16,8 @@ export interface SidebarNavItemProps {
   onClick: (id: string) => void;
   /** Optional inline styles for customization (e.g., indentation) */
   style?: React.CSSProperties;
+  /** Whether this item is focused via keyboard navigation */
+  focused?: boolean;
 }
 
 /**
@@ -24,7 +26,19 @@ export interface SidebarNavItemProps {
  * matching Windows Explorer design
  */
 const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
-  ({ id, icon: Icon, label, active, expanded, onClick, style }, ref) => {
+  (
+    {
+      id,
+      icon: Icon,
+      label,
+      active,
+      expanded,
+      onClick,
+      style,
+      focused = false,
+    },
+    ref,
+  ) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     const handleClick = () => {
@@ -58,6 +72,8 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
           gap: 10,
           transition: "background .1s",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+          outline: focused ? "2px solid #0078d4" : "none",
+          outlineOffset: -2,
           ...style,
         }}
       >

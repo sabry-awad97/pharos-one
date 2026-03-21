@@ -25,10 +25,95 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     const { expanded, toggle, expandedModules, toggleModule } =
       useSidebarState();
     const [hoveredToggle, setHoveredToggle] = React.useState(false);
+    const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
+    const [keyboardMode, setKeyboardMode] = React.useState(false);
+
+    // Build flat list of all navigable items (modules + visible sub-items)
+    const navItems = React.useMemo(() => {
+      const items: Array<{ id: string; type: "module" | "subitem" }> = [];
+      WORKSPACE_TEMPLATES.forEach((template) => {
+        items.push({ id: template.id, type: "module" });
+        if (template.subItems && expanded && expandedModules.has(template.id)) {
+          template.subItems.forEach((subItem) => {
+            items.push({ id: subItem.id, type: "subitem" });
+          });
+        }
+      });
+      return items;
+    }, [expanded, expandedModules]);
+
+    // Keyboard shortcuts
+    React.useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Ctrl+B: Toggle collapse
+        if (e.ctrlKey && e.key === "b") {
+          e.preventDefault();
+          toggle();
+          return;
+        }
+
+        // Ctrl+1-6: Jump to module
+        if (e.ctrlKey && e.key >= "1" && e.key <= "6") {
+          e.preventDefault();
+          const index = parseInt(e.key) - 1;
+          const module = WORKSPACE_TEMPLATES[index];
+          if (module) {
+            onModuleClick(module.id);
+          }
+          return;
+        }
+
+        // Alt+Arrow: Navigate items
+        if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+          e.preventDefault();
+          setKeyboardMode(true);
+
+          setFocusedIndex((current) => {
+            if (navItems.length === 0) return -1;
+
+            if (current === -1) {
+              // Start from first item
+              return e.key === "ArrowDown" ? 0 : navItems.length - 1;
+            }
+
+            // Navigate up or down with wrapping
+            if (e.key === "ArrowDown") {
+              return (current + 1) % navItems.length;
+            } else {
+              return current === 0 ? navItems.length - 1 : current - 1;
+            }
+          });
+          return;
+        }
+
+        // Enter: Activate focused item
+        if (e.key === "Enter" && focusedIndex >= 0 && keyboardMode) {
+          e.preventDefault();
+          const item = navItems[focusedIndex];
+          if (item) {
+            onModuleClick(item.id);
+          }
+          return;
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [toggle, onModuleClick, navItems, focusedIndex, keyboardMode]);
+
+    // Reset keyboard mode on mouse interaction
+    const handleMouseInteraction = () => {
+      if (keyboardMode) {
+        setKeyboardMode(false);
+        setFocusedIndex(-1);
+      }
+    };
 
     return (
       <div
         ref={ref}
+        onMouseMove={handleMouseInteraction}
+        onClick={handleMouseInteraction}
         style={{
           background: "#ffffff",
           borderRight: "1px solid #d1d1d1",
@@ -41,15 +126,35 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       >
         {/* Navigation items */}
         <nav style={{ flex: 1, paddingTop: 6, overflow: "auto" }}>
-          {WORKSPACE_TEMPLATES.map((template) => {
+          {WORKSPACE_TEMPLATES.map((template, moduleIndex) => {
             const hasSubItems =
               template.subItems && template.subItems.length > 0;
             const isModuleExpanded = expandedModules.has(template.id);
 
+            // Calculate if this module or any of its sub-items are focused
+            let itemIndex = moduleIndex;
+            for (let i = 0; i < moduleIndex; i++) {
+              const prevTemplate = WORKSPACE_TEMPLATES[i];
+              if (
+                prevTemplate.subItems &&
+                expanded &&
+                expandedModules.has(prevTemplate.id)
+              ) {
+                itemIndex += prevTemplate.subItems.length;
+              }
+            }
+            const isModuleFocused = keyboardMode && focusedIndex === itemIndex;
+
             return (
               <div key={template.id}>
                 {/* Parent nav item */}
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
                   <SidebarNavItem
                     id={template.id}
                     icon={template.icon}
@@ -57,6 +162,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     active={activeModule === template.id}
                     expanded={expanded}
                     onClick={onModuleClick}
+                    focused={isModuleFocused}
                   />
                   {/* Chevron for modules with sub-items */}
                   {hasSubItems && expanded && (
@@ -96,15 +202,22 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                       transition: "max-height 0.2s ease",
                     }}
                   >
-                    {template.subItems!.map((subItem) => (
-                      <SidebarSubItem
-                        key={subItem.id}
-                        id={subItem.id}
-                        label={subItem.label}
-                        active={activeModule === subItem.id}
-                        onClick={onModuleClick}
-                      />
-                    ))}
+                    {template.subItems!.map((subItem, subIndex) => {
+                      const subItemIndex = itemIndex + 1 + subIndex;
+                      const isSubItemFocused =
+                        keyboardMode && focusedIndex === subItemIndex;
+
+                      return (
+                        <SidebarSubItem
+                          key={subItem.id}
+                          id={subItem.id}
+                          label={subItem.label}
+                          active={activeModule === subItem.id}
+                          onClick={onModuleClick}
+                          focused={isSubItemFocused}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </div>

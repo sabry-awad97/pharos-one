@@ -9,6 +9,8 @@ export interface SidebarSubItemProps {
   active: boolean;
   /** Click handler that receives the item id */
   onClick: (id: string) => void;
+  /** Whether this item is focused via keyboard navigation */
+  focused?: boolean;
 }
 
 /**
@@ -16,7 +18,7 @@ export interface SidebarSubItemProps {
  * Displays label only (no icon) with indentation
  */
 const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
-  ({ id, label, active, onClick }, ref) => {
+  ({ id, label, active, onClick, focused = false }, ref) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     const handleClick = () => {
@@ -49,6 +51,8 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
           borderLeft: active ? "3px solid #0078d4" : "3px solid transparent",
           transition: "background .1s",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+          outline: focused ? "2px solid #0078d4" : "none",
+          outlineOffset: -2,
         }}
       >
         <span
