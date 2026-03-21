@@ -45,7 +45,7 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           disableTransitionOnChange
           storageKey="vite-ui-theme"
         >

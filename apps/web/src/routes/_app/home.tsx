@@ -1,188 +1,247 @@
-import { Button } from "@pharos-one/ui/components/button";
-import { Card } from "@pharos-one/ui/components/card";
-import { Input } from "@pharos-one/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import {
-  useInventory,
-  useCreateMedicine,
-  useUpdateStock,
-} from "@/hooks/use-inventory";
+  Save,
+  RotateCcw,
+  RefreshCw,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  BarChart2,
+  Truck,
+} from "lucide-react";
+import {
+  TitleBar,
+  MenuBar,
+  StatusBar,
+  useMenuState,
+  type QuickAction,
+  type TabStatistics,
+} from "@/features/shell";
+import { useTabs } from "@/features/workspace/hooks/use-tabs";
+import { TabBar } from "@/features/workspace/components/TabBar";
+import { RibbonBar } from "@/features/workspace/components/RibbonBar";
+import { WorkspaceContainer } from "@/features/modules";
+import type { Tab } from "@/features/workspace/types";
+import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomeComponent,
 });
 
+// Initial tabs matching the old mockup exactly
+const INITIAL_TABS: Tab[] = [
+  {
+    id: crypto.randomUUID(),
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    module: "dashboard",
+    unsaved: false,
+    pinned: false,
+    color: "#0078d4",
+  },
+  {
+    id: crypto.randomUUID(),
+    label: "Inventory",
+    icon: Package,
+    module: "inventory",
+    unsaved: false,
+    pinned: true,
+    color: "#107c10",
+  },
+  {
+    id: crypto.randomUUID(),
+    label: "POS – Terminal 1",
+    icon: ShoppingCart,
+    module: "pos",
+    unsaved: false,
+    pinned: false,
+    color: "#6b69d6",
+  },
+  {
+    id: crypto.randomUUID(),
+    label: "POS – Terminal 2",
+    icon: ShoppingCart,
+    module: "pos",
+    unsaved: true,
+    pinned: false,
+    color: "#6b69d6",
+  },
+  {
+    id: crypto.randomUUID(),
+    label: "Reports",
+    icon: BarChart2,
+    module: "reports",
+    unsaved: false,
+    pinned: false,
+    color: "#c43501",
+  },
+  {
+    id: crypto.randomUUID(),
+    label: "Purchase Orders",
+    icon: Truck,
+    module: "purchases",
+    unsaved: false,
+    pinned: false,
+    color: "#b8860b",
+  },
+];
+
 function HomeComponent() {
-  const [name, setName] = useState("");
-  const [genericName, setGenericName] = useState("");
-  const [price, setPrice] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const { activeMenu, toggleMenu, closeMenu } = useMenuState();
+  const {
+    state,
+    setActiveTab,
+    closeTab,
+    togglePin,
+    duplicateTab,
+    addTab,
+    toggleSplitView,
+  } = useTabs(INITIAL_TABS);
 
-  // Queries
-  const { data: medicines = [], isLoading, error } = useInventory();
+  // Get active tab's module ID
+  const activeTab = state.tabs.find((tab) => tab.id === state.activeTabId);
+  const activeModuleId = activeTab?.module ?? null;
 
-  // Mutations
-  const createMedicine = useCreateMedicine();
-  const updateStock = useUpdateStock();
+  // Determine module IDs for split view
+  const leftModuleId = state.splitView.leftModuleId ?? activeModuleId;
+  const rightModuleId = state.splitView.rightModuleId ?? "inventory";
 
-  const handleCreate = async () => {
-    try {
-      await createMedicine.mutateAsync({
-        name,
-        generic_name: genericName,
-        unit_price: parseFloat(price),
-        quantity: parseInt(quantity, 10),
-      });
-
-      // Clear form
-      setName("");
-      setGenericName("");
-      setPrice("");
-      setQuantity("");
-    } catch (error) {
-      console.error("Failed to create medicine:", error);
-    }
+  // Handler for adding new tab from template
+  const handleAddTab = (template: WorkspaceTemplate) => {
+    addTab({
+      label: template.label,
+      icon: template.icon,
+      module: template.id,
+    });
   };
 
-  const handleUpdateStock = async (id: string, change: number) => {
-    try {
-      await updateStock.mutateAsync({
-        id,
-        quantity_change: change,
-      });
-    } catch (error) {
-      console.error("Failed to update stock:", error);
+  // Tab statistics for status bar
+  const statistics: TabStatistics = {
+    totalTabs: state.tabs.length,
+    pinnedTabs: state.tabs.filter((t) => t.pinned).length,
+    unsavedTabs: state.tabs.filter((t) => t.unsaved).length,
+  };
+
+  // Quick actions for title bar
+  const quickActions: QuickAction[] = [
+    {
+      icon: Save,
+      label: "Save",
+      tooltip: "Save (Ctrl+S)",
+      onClick: () => console.log("Save clicked"),
+    },
+    {
+      icon: RotateCcw,
+      label: "Undo",
+      tooltip: "Undo (Ctrl+Z)",
+      onClick: () => console.log("Undo clicked"),
+    },
+    {
+      icon: RefreshCw,
+      label: "Refresh",
+      tooltip: "Refresh (F5)",
+      onClick: () => console.log("Refresh clicked"),
+    },
+  ];
+
+  // Close menu when clicking layout
+  const handleLayoutClick = () => {
+    if (activeMenu) {
+      closeMenu();
     }
   };
 
   return (
-    <div className="container mx-auto p-8 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Pharmacy Management System</h1>
-        <p className="text-muted-foreground">
-          Clean Architecture + Cargo Workspace + SeaORM + TanStack Query
-        </p>
-      </div>
+    <div
+      className="flex h-screen flex-col overflow-hidden text-foreground"
+      style={{
+        background: "#f3f3f3",
+        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+        fontSize: 12,
+        userSelect: "none",
+      }}
+      onClick={handleLayoutClick}
+    >
+      {/* Title bar with branding and window controls */}
+      <TitleBar
+        appName="PharmOS"
+        quickActions={quickActions}
+        onMinimize={() => console.log("Minimize")}
+        onMaximize={() => console.log("Maximize")}
+        onClose={() => console.log("Close")}
+      />
 
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Add Medicine</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Input
-            placeholder="Generic Name"
-            value={genericName}
-            onChange={(e) => setGenericName(e.target.value)}
-          />
-          <Input
-            type="number"
-            placeholder="Price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-          <Input
-            type="number"
-            placeholder="Quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-        </div>
-        <Button onClick={handleCreate} disabled={createMedicine.isPending}>
-          {createMedicine.isPending ? "Adding..." : "Add Medicine"}
-        </Button>
-        {createMedicine.isError && (
-          <p className="text-sm text-destructive">
-            Error: {createMedicine.error.message}
-          </p>
-        )}
-      </Card>
+      {/* Menu bar with navigation */}
+      <MenuBar
+        activeMenu={activeMenu}
+        onMenuClick={toggleMenu}
+        branchInfo="Main Branch"
+        userInfo="Cashier: Dr. Ravi K."
+        shiftInfo="Shift 2 · 14:35"
+        onNewWorkspace={() => console.log("New workspace")}
+        onPinActiveTab={() => {
+          if (state.activeTabId) {
+            togglePin(state.activeTabId);
+          }
+        }}
+        onDuplicateTab={() => {
+          if (state.activeTabId) {
+            duplicateTab(state.activeTabId);
+          }
+        }}
+        onSplitView={toggleSplitView}
+        onCloseTab={() => {
+          if (state.activeTabId) {
+            closeTab(state.activeTabId);
+          }
+        }}
+      />
 
-      <Card className="p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Inventory</h2>
-          {isLoading && (
-            <span className="text-sm text-muted-foreground">Loading...</span>
+      {/* Tab Bar */}
+      <TabBar
+        tabs={state.tabs}
+        activeTabId={state.activeTabId}
+        onTabClick={setActiveTab}
+        onTabClose={closeTab}
+        onTabPin={togglePin}
+        onTabDuplicate={duplicateTab}
+        onAddTab={handleAddTab}
+        splitViewEnabled={state.splitView.enabled}
+        onSplitViewToggle={toggleSplitView}
+      />
+
+      {/* Ribbon Bar with active tab info, actions, search, notifications, and user */}
+      <RibbonBar
+        activeTabLabel={activeTab?.label}
+        activeTabIcon={activeTab?.icon}
+        activeTabColor={activeTab?.color}
+        activeTabUnsaved={activeTab?.unsaved}
+        activeTabPinned={activeTab?.pinned}
+        moduleId={activeTab?.module}
+      />
+
+      {/* Main Content Area - Conditionally render split or single view */}
+      <div
+        style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
+      >
+        <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+          {state.splitView.enabled ? (
+            <>
+              <WorkspaceContainer moduleId={leftModuleId} split={false} />
+              <div style={{ width: 1, background: "#e0e0e0", flexShrink: 0 }} />
+              <WorkspaceContainer moduleId={rightModuleId} split={true} />
+            </>
+          ) : (
+            <WorkspaceContainer moduleId={activeModuleId} split={false} />
           )}
         </div>
+      </div>
 
-        {error && (
-          <p className="text-sm text-destructive">
-            Error loading medicines: {error.message}
-          </p>
-        )}
-
-        {medicines.length === 0 && !isLoading ? (
-          <p className="text-sm text-muted-foreground italic">
-            No medicines yet. Add a new medicine above.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {medicines.map((medicine) => (
-              <div
-                key={medicine.id}
-                className="p-4 bg-muted rounded-md border border-border flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium">{medicine.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {medicine.generic_name}
-                  </p>
-                  <p className="text-sm">
-                    Price: ${medicine.unit_price.toFixed(2)} | Stock:{" "}
-                    {medicine.quantity}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleUpdateStock(medicine.id, -10)}
-                    disabled={updateStock.isPending}
-                  >
-                    -10
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleUpdateStock(medicine.id, 10)}
-                    disabled={updateStock.isPending}
-                  >
-                    +10
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Card className="p-6 space-y-2 bg-muted/50">
-        <h3 className="text-sm font-semibold">Architecture:</h3>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-          <li>
-            <strong>Backend:</strong> Cargo Workspace (6 crates) + Clean
-            Architecture
-          </li>
-          <li>
-            <strong>Frontend:</strong> TanStack Query + Reusable Hooks +
-            Constant Keys
-          </li>
-          <li>
-            <strong>Features:</strong> Inventory (placeholder for 8 features)
-          </li>
-          <li>
-            <strong>Data Flow:</strong> Hooks → API → Tauri Commands →
-            Application → Domain
-          </li>
-          <li>
-            <strong>Caching:</strong> Automatic with optimistic updates
-          </li>
-        </ul>
-      </Card>
+      {/* Status bar with statistics */}
+      <StatusBar
+        statistics={statistics}
+        keyboardShortcuts="Ctrl+T New · Ctrl+W Close · Ctrl+Tab Switch · Ctrl+\ Split"
+      />
     </div>
   );
 }
