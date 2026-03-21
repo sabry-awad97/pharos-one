@@ -26,6 +26,7 @@ import { useTabs } from "@/features/workspace/hooks/use-tabs";
 import { TabBar } from "@/features/workspace/components/TabBar";
 import { RibbonBar } from "@/features/workspace/components/RibbonBar";
 import { TabProvider } from "@/features/workspace/context/TabContext";
+import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
 import type { Tab } from "@/features/workspace/types";
 import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
@@ -105,15 +106,15 @@ function HomeComponent() {
     toggleSplitView,
   } = useTabs(INITIAL_TABS);
 
-  // Get current route to determine active module
-  const currentRoute = matches[matches.length - 1];
-  const currentPath = currentRoute?.pathname ?? "";
-  const currentModule = currentPath.split("/").pop() ?? "dashboard";
-
   // Use the activeTabId from state, not derived from URL
   // This allows multiple tabs with the same module (e.g., POS Terminal 1 & 2)
   const activeTab =
     state.tabs.find((t) => t.id === state.activeTabId) ?? state.tabs[0];
+
+  // Get the first pinned tab for split view (fallback to inventory)
+  const pinnedTab =
+    state.tabs.find((t) => t.pinned) ??
+    state.tabs.find((t) => t.module === "inventory");
 
   // Handler for tab click - navigate to module route
   const handleTabClick = (tabId: string) => {
@@ -245,7 +246,25 @@ function HomeComponent() {
         <div
           style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
         >
-          <Outlet />
+          <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+            <Outlet />
+            {state.splitView.enabled && pinnedTab && (
+              <>
+                <div
+                  style={{
+                    width: 1,
+                    background: "#e0e0e0",
+                    flexShrink: 0,
+                  }}
+                />
+                <WorkspaceContainer
+                  moduleId={pinnedTab.module}
+                  label={pinnedTab.label}
+                  split={true}
+                />
+              </>
+            )}
+          </div>
         </div>
       </TabProvider>
 
