@@ -6,6 +6,7 @@
 import { useState, useCallback, useEffect } from "react";
 
 const STORAGE_KEY = "pharmos-sidebar-expanded";
+const EXPANDED_MODULES_KEY = "pharmos-sidebar-expanded-modules";
 
 /**
  * Return type for useSidebarState hook
@@ -17,6 +18,10 @@ export interface UseSidebarStateReturn {
   toggle: () => void;
   /** Set the sidebar expanded state explicitly */
   setExpanded: (value: boolean) => void;
+  /** Set of module IDs that have their sub-items expanded */
+  expandedModules: Set<string>;
+  /** Toggle a module's sub-items expansion */
+  toggleModule: (moduleId: string) => void;
 }
 
 /**
@@ -48,6 +53,17 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   });
 
+  // Initialize expanded modules from localStorage
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(EXPANDED_MODULES_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (error) {
+      console.warn("Failed to read expanded modules from localStorage:", error);
+      return new Set();
+    }
+  });
+
   // Persist state to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -58,6 +74,18 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   }, [expanded]);
 
+  // Persist expanded modules to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        EXPANDED_MODULES_KEY,
+        JSON.stringify(Array.from(expandedModules)),
+      );
+    } catch (error) {
+      console.warn("Failed to save expanded modules to localStorage:", error);
+    }
+  }, [expandedModules]);
+
   const toggle = useCallback(() => {
     setExpandedState((current) => !current);
   }, []);
@@ -66,9 +94,23 @@ export function useSidebarState(): UseSidebarStateReturn {
     setExpandedState(value);
   }, []);
 
+  const toggleModule = useCallback((moduleId: string) => {
+    setExpandedModules((current) => {
+      const next = new Set(current);
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+      return next;
+    });
+  }, []);
+
   return {
     expanded,
     toggle,
     setExpanded,
+    expandedModules,
+    toggleModule,
   };
 }

@@ -1,8 +1,9 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 import { useSidebarState } from "../hooks/use-sidebar-state";
 import { SidebarNavItem } from "./SidebarNavItem";
+import { SidebarSubItem } from "./SidebarSubItem";
 import { SidebarStats } from "./SidebarStats";
 
 export interface SidebarProps {
@@ -21,7 +22,8 @@ export interface SidebarProps {
  */
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   ({ activeModule, onModuleClick, stats }, ref) => {
-    const { expanded, toggle } = useSidebarState();
+    const { expanded, toggle, expandedModules, toggleModule } =
+      useSidebarState();
     const [hoveredToggle, setHoveredToggle] = React.useState(false);
 
     return (
@@ -38,18 +40,76 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         }}
       >
         {/* Navigation items */}
-        <nav style={{ flex: 1, paddingTop: 6 }}>
-          {WORKSPACE_TEMPLATES.map((template) => (
-            <SidebarNavItem
-              key={template.id}
-              id={template.id}
-              icon={template.icon}
-              label={template.label}
-              active={activeModule === template.id}
-              expanded={expanded}
-              onClick={onModuleClick}
-            />
-          ))}
+        <nav style={{ flex: 1, paddingTop: 6, overflow: "auto" }}>
+          {WORKSPACE_TEMPLATES.map((template) => {
+            const hasSubItems =
+              template.subItems && template.subItems.length > 0;
+            const isModuleExpanded = expandedModules.has(template.id);
+
+            return (
+              <div key={template.id}>
+                {/* Parent nav item */}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <SidebarNavItem
+                    id={template.id}
+                    icon={template.icon}
+                    label={template.label}
+                    active={activeModule === template.id}
+                    expanded={expanded}
+                    onClick={onModuleClick}
+                  />
+                  {/* Chevron for modules with sub-items */}
+                  {hasSubItems && expanded && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleModule(template.id);
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        width: 20,
+                        height: 20,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#616161",
+                        transition: "transform 0.2s ease",
+                        transform: isModuleExpanded
+                          ? "rotate(0deg)"
+                          : "rotate(-90deg)",
+                      }}
+                    >
+                      <ChevronDown style={{ width: 12, height: 12 }} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sub-items (only when module is expanded and sidebar is expanded) */}
+                {hasSubItems && expanded && isModuleExpanded && (
+                  <div
+                    style={{
+                      overflow: "hidden",
+                      transition: "max-height 0.2s ease",
+                    }}
+                  >
+                    {template.subItems!.map((subItem) => (
+                      <SidebarSubItem
+                        key={subItem.id}
+                        id={subItem.id}
+                        label={subItem.label}
+                        active={activeModule === subItem.id}
+                        onClick={onModuleClick}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* Stats panel (only when expanded) */}
