@@ -1,0 +1,482 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  🏥 Pharos-One - Task Runner
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Run 'task --list' to see all available tasks
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: "3"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Environment & Variables
+# ─────────────────────────────────────────────────────────────────────────────
+vars:
+  BUN: bun
+  TURBO: "{{.BUN}} turbo"
+  DATABASE_URL: "postgresql://pharos_one:pharos_one_dev_password@localhost:5432/pharos_one"
+  PSQL: "docker-compose exec -T postgres psql -U pharos_one -d pharos_one"
+
+env:
+  DATABASE_URL: "{{.DATABASE_URL}}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Task Groups
+# ─────────────────────────────────────────────────────────────────────────────
+tasks:
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🏗️ Build & Check
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  build:
+    desc: "📦 Build all packages"
+    cmds:
+      - "{{.TURBO}} build"
+
+  check:
+    desc: "✅ Run type checking"
+    cmds:
+      - "{{.TURBO}} check-types"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  �️ Tauri Desktop App
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  tauri:dev:
+    desc: "🖥️  Start Tauri desktop app in dev mode"
+    dir: apps/web
+    cmds:
+      - "{{.BUN}} tauri dev"
+
+  tauri:build:
+    desc: "📦 Build Tauri desktop app"
+    dir: apps/web
+    cmds:
+      - "{{.BUN}} tauri build"
+
+  tauri:build:debug:
+    desc: "🐛 Build Tauri app with debug symbols"
+    dir: apps/web
+    cmds:
+      - "{{.BUN}} tauri build --debug"
+
+  tauri:icon:
+    desc: "🎨 Generate app icons from source"
+    dir: apps/web
+    cmds:
+      - "{{.BUN}} tauri icon"
+
+  tauri:info:
+    desc: "ℹ️  Show Tauri environment info"
+    dir: apps/web
+    cmds:
+      - "{{.BUN}} tauri info"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  � Docker Services
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  docker:up:
+    desc: "🚀 Start all Docker services"
+    cmds:
+      - docker-compose up -d
+
+  docker:build:
+    desc: "🔨 Build custom PostgreSQL image with extensions"
+    cmds:
+      - docker-compose build postgres
+      - echo "✅ Custom PostgreSQL image built with pgvector and pg_textsearch"
+
+  docker:down:
+    desc: "🛑 Stop all Docker services"
+    cmds:
+      - docker-compose down
+
+  docker:restart:
+    desc: "🔄 Restart all Docker services"
+    cmds:
+      - docker-compose restart
+
+  docker:logs:
+    desc: "📋 View Docker service logs"
+    cmds:
+      - docker-compose logs -f
+
+  docker:ps:
+    desc: "📊 Show Docker service status"
+    cmds:
+      - docker-compose ps
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  PostgreSQL Database
+  # ─────────────────────────────────────────────────────────────────────────
+
+  docker:db:start:
+    desc: "🚀 Start PostgreSQL database"
+    cmds:
+      - docker-compose up -d postgres
+      - echo "⏳ Waiting for database to be ready..."
+      - powershell -Command "Start-Sleep -Seconds 3"
+      - docker-compose exec postgres pg_isready -U pharos_one -d pharos_one || echo "⚠️  Database not ready yet, please wait..."
+
+  docker:db:stop:
+    desc: "🛑 Stop PostgreSQL database"
+    cmds:
+      - docker-compose stop postgres
+
+  docker:db:restart:
+    desc: "🔄 Restart PostgreSQL database"
+    cmds:
+      - docker-compose restart postgres
+
+  docker:db:logs:
+    desc: "📋 View PostgreSQL logs"
+    cmds:
+      - docker-compose logs -f postgres
+
+  docker:db:shell:
+    desc: "🐚 Open PostgreSQL shell"
+    cmds:
+      - docker-compose exec postgres psql -U pharos_one -d pharos_one
+
+  docker:db:reset:
+    desc: "🗑️  Reset database (DESTRUCTIVE)"
+    cmds:
+      - cmd: docker-compose down -v
+        prompt: "⚠️  This will DELETE ALL DATA. Continue?"
+      - docker-compose up -d postgres
+      - echo "⏳ Waiting for database to be ready..."
+      - powershell -Command "Start-Sleep -Seconds 5"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  pgAdmin
+  # ─────────────────────────────────────────────────────────────────────────
+
+  docker:pgadmin:start:
+    desc: "🎨 Start pgAdmin (http://localhost:5050)"
+    cmds:
+      - docker-compose --profile admin up -d
+      - echo "✅ pgAdmin started at http://localhost:5050"
+      - echo "Email admin@pharos_one.local"
+      - echo "Password admin"
+
+  docker:pgadmin:stop:
+    desc: "🛑 Stop pgAdmin"
+    cmds:
+      - docker-compose stop pgadmin
+
+  docker:pgadmin:logs:
+    desc: "📋 View pgAdmin logs"
+    cmds:
+      - docker-compose logs -f pgadmin
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  Drizzle Studio
+  # ─────────────────────────────────────────────────────────────────────────
+
+  db:studio:
+    desc: "🎨 Open Drizzle Studio (https://local.drizzle.studio)"
+    cmds:
+      - echo "🚀 Starting Drizzle Studio..."
+      - echo "📍 URL https://local.drizzle.studio"
+      - echo "⚠️  Press Ctrl+C to stop"
+      - "{{.BUN}} run db:studio"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  #  Redis Cache
+  # ─────────────────────────────────────────────────────────────────────────
+
+  docker:redis:start:
+    desc: "🚀 Start Redis cache"
+    cmds:
+      - docker-compose --profile cache up -d redis
+
+  docker:redis:stop:
+    desc: "🛑 Stop Redis cache"
+    cmds:
+      - docker-compose stop redis
+
+  docker:redis:cli:
+    desc: "🔧 Open Redis CLI"
+    cmds:
+      - docker-compose exec redis redis-cli -a pharos_one_redis_password
+
+  docker:redis:logs:
+    desc: "📋 View Redis logs"
+    cmds:
+      - docker-compose logs -f redis
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🗄️ Database Management
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  db:setup:
+    desc: "🎯 Complete database setup (Docker + migrations)"
+    cmds:
+      - task: docker:db:start
+      - echo "⏳ Waiting for database to be fully ready..."
+      - powershell -Command "Start-Sleep -Seconds 3"
+      - task: db:check
+      - task: db:build
+      - task: db:migrate
+
+  db:dev:setup:
+    desc: "🛠️  Setup database for development (fresh install)"
+    cmds:
+      - task: docker:db:reset
+      - echo "⏳ Waiting for database to be fully ready..."
+      - powershell -Command "Start-Sleep -Seconds 3"
+      - task: db:check
+      - task: db:build
+      - task: db:migrate:fresh
+
+  db:migrate:
+    desc: "🚀 Run all pending database migrations"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo run -- up
+
+  db:migrate:status:
+    desc: "📊 Check database migration status"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo run -- status
+
+  db:migrate:rollback:
+    desc: "⏪ Rollback last database migration"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo run -- down
+
+  db:migrate:fresh:
+    desc: "🔄 Drop all tables and rerun migrations (DESTRUCTIVE)"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cmd: cargo run -- fresh
+        prompt: "⚠️  This will DROP ALL TABLES and data. Continue?"
+
+  db:migrate:refresh:
+    desc: "🔄 Rollback all migrations and reapply (DESTRUCTIVE)"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cmd: cargo run -- refresh
+        prompt: "⚠️  This will rollback and reapply all migrations. Continue?"
+
+  db:migrate:reset:
+    desc: "🗑️  Rollback all migrations (DESTRUCTIVE)"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cmd: cargo run -- reset
+        prompt: "⚠️  This will rollback all migrations. Continue?"
+
+  db:check:
+    desc: "✅ Check database migration code compiles"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo check --all-targets
+
+  db:build:
+    desc: "🔨 Build database migration binary"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo build --bin migration
+
+  db:build:release:
+    desc: "📦 Build database migration binary (release)"
+    dir: apps/web/src-tauri/db/migration
+    cmds:
+      - cargo build --bin migration --release
+
+  db:verify:
+    desc: "🔍 Verify database schema"
+    cmds:
+      - "{{.PSQL}} -c \"\\dt\""
+      - "{{.PSQL}} -c \"\\dT\""
+      - "{{.PSQL}} -c \"\\di\""
+
+  db:roles:
+    desc: "👥 List default roles in database"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT name, display_name, level, is_system FROM roles ORDER BY level DESC;\""
+
+  db:connect:
+    desc: "🔌 Connect to database with psql"
+    cmds:
+      - docker-compose exec postgres psql -U pharos_one -d pharos_one
+
+  db:setup:
+    desc: "🎯 Complete database setup (check, build, migrate)"
+    cmds:
+      - task: db:check
+      - task: db:build
+      - task: db:migrate
+
+  db:dev:setup:
+    desc: "🛠️  Setup database for development (fresh install)"
+    cmds:
+      - task: db:check
+      - task: db:build
+      - task: db:migrate:fresh
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🧪 Database Testing & Validation
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  db:test:connection:
+    desc: "🔌 Test database connection"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT version();\""
+
+  db:test:enums:
+    desc: "🏷️  Test ENUM types exist"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT typname FROM pg_type WHERE typtype = 'e' ORDER BY typname;\""
+
+  db:test:tables:
+    desc: "📋 Test tables exist"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;\""
+
+  db:test:indexes:
+    desc: "📇 Test indexes exist"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT indexname FROM pg_indexes WHERE schemaname = 'public' ORDER BY indexname;\""
+
+  db:test:triggers:
+    desc: "⚡ Test triggers exist"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT trigger_name, event_object_table FROM information_schema.triggers WHERE trigger_schema = 'public' ORDER BY trigger_name;\""
+
+  db:test:foreign-keys:
+    desc: "🔗 Test foreign keys exist"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT conname, conrelid::regclass, confrelid::regclass FROM pg_constraint WHERE contype = 'f' ORDER BY conname;\""
+
+  db:test:all:
+    desc: "🧪 Run all database tests"
+    cmds:
+      - echo "Testing database connection..."
+      - task: db:test:connection
+      - echo "\nTesting ENUM types..."
+      - task: db:test:enums
+      - echo "\nTesting tables..."
+      - task: db:test:tables
+      - echo "\nTesting indexes..."
+      - task: db:test:indexes
+      - echo "\nTesting triggers..."
+      - task: db:test:triggers
+      - echo "\nTesting foreign keys..."
+      - task: db:test:foreign-keys
+      - echo "\n✅ All database tests completed!"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  📊 Database Information & Stats
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  db:info:
+    desc: "ℹ️  Show database information"
+    cmds:
+      - echo "=== Database Information ==="
+      - "{{.PSQL}} -c \"SELECT current_database(), current_user, version();\""
+
+  db:size:
+    desc: "📏 Show database size"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT pg_size_pretty(pg_database_size(current_database())) as size;\""
+
+  db:tables:size:
+    desc: "📊 Show table sizes"
+    cmds:
+      - "{{.PSQL}} -c \"SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size FROM pg_tables WHERE schemaname = 'public' ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;\""
+
+  db:stats:
+    desc: "📈 Show database statistics"
+    cmds:
+      - echo "=== Table Row Counts ==="
+      - "{{.PSQL}} -c \"SELECT schemaname, tablename, n_live_tup as rows FROM pg_stat_user_tables WHERE schemaname = 'public' ORDER BY n_live_tup DESC;\""
+      - echo "\n=== Index Usage ==="
+      - "{{.PSQL}} -c \"SELECT schemaname, tablename, indexname, idx_scan as scans FROM pg_stat_user_indexes WHERE schemaname = 'public' ORDER BY idx_scan DESC LIMIT 10;\""
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🔧 Database Maintenance
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  db:vacuum:
+    desc: "🧹 Vacuum database (cleanup)"
+    cmds:
+      - "{{.PSQL}} -c \"VACUUM ANALYZE;\""
+
+  db:backup:
+    desc: "💾 Backup database to file"
+    cmds:
+      - docker-compose exec -T postgres pg_dump -U pharos_one pharos_one > backup_$(date +%Y%m%d_%H%M%S).sql
+      - echo "✅ Backup created"
+
+  db:restore:
+    desc: "📥 Restore database from backup file"
+    vars:
+      BACKUP_FILE: '{{.BACKUP_FILE | default "backup.sql"}}'
+    cmds:
+      - cmd: docker-compose exec -T postgres psql -U pharos_one -d pharos_one < {{.BACKUP_FILE}}
+        prompt: "⚠️  This will restore from {{.BACKUP_FILE}}. Continue?"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🧹 Database Cleanup
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  db:clean:soft-deleted:
+    desc: "🗑️  Permanently delete soft-deleted records (DESTRUCTIVE)"
+    cmds:
+      - cmd: |
+          {{.PSQL}} -c "DELETE FROM users WHERE deleted_at IS NOT NULL;"
+          {{.PSQL}} -c "DELETE FROM staff WHERE deleted_at IS NOT NULL;"
+          {{.PSQL}} -c "DELETE FROM roles WHERE deleted_at IS NOT NULL;"
+          echo "✅ Soft-deleted records permanently removed"
+        prompt: "⚠️  This will permanently delete all soft-deleted records. Continue?"
+
+  db:clean:test-data:
+    desc: "🧹 Remove test/sample data (DESTRUCTIVE)"
+    cmds:
+      - cmd: |
+          {{.PSQL}} -c "DELETE FROM users WHERE username LIKE 'test%' OR email LIKE 'test%';"
+          {{.PSQL}} -c "DELETE FROM staff WHERE employee_id LIKE 'TEST%' OR email LIKE 'test%';"
+          echo "✅ Test data removed"
+        prompt: "⚠️  This will delete all test data. Continue?"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  🌱 Database Seeding
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  seed:
+    desc: "🌱 Run database seeder (interactive TUI)"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo run
+
+  seed:check:
+    desc: "✅ Check seeder code compiles"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo check --all-targets
+
+  seed:build:
+    desc: "🔨 Build seeder binary"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo build --bin app_seeder
+
+  seed:build:release:
+    desc: "📦 Build seeder binary (release)"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo build --bin app_seeder --release
+
+  seed:run:
+    desc: "🚀 Run seeder in release mode"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo run --release
+
+  seed:watch:
+    desc: "👀 Watch and rebuild seeder on changes"
+    dir: apps/web/src-tauri/crates/seeder
+    cmds:
+      - cargo watch -x run

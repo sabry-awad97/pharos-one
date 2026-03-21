@@ -1,0 +1,3 @@
+{
+	"extends": "@pharos-one/config/tsconfig.base.json"
+}
