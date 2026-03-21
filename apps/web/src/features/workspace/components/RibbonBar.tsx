@@ -98,6 +98,7 @@ export function RibbonBar({
 
   return (
     <div
+      data-testid="ribbon-bar"
       style={{
         height: 44,
         background: W.surface,

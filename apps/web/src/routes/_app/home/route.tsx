@@ -250,32 +250,10 @@ function HomeComponent() {
         }}
       />
 
-      {/* Tab Bar */}
-      <TabBar
-        tabs={state.tabs}
-        activeTabId={activeTab.id}
-        onTabClick={handleTabClick}
-        onTabClose={closeTab}
-        onTabPin={togglePin}
-        onTabDuplicate={duplicateTab}
-        onAddTab={handleAddTab}
-        splitViewEnabled={state.splitView.enabled}
-        onSplitViewToggle={toggleSplitView}
-      />
-
-      {/* Ribbon Bar with active tab info, actions, search, notifications, and user */}
-      <RibbonBar
-        activeTabLabel={activeTab?.label}
-        activeTabIcon={activeTab?.icon}
-        activeTabColor={activeTab?.color}
-        activeTabUnsaved={activeTab?.unsaved}
-        activeTabPinned={activeTab?.pinned}
-        moduleId={activeTab?.module}
-      />
-
-      {/* Main Content Area - Render child routes via Outlet */}
+      {/* Main Content Area - Horizontal container with Sidebar and Workspace */}
       <TabProvider value={{ activeTabLabel: activeTab?.label }}>
         <div
+          data-testid="main-horizontal-container"
           style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
         >
           {/* Sidebar */}
@@ -285,25 +263,60 @@ function HomeComponent() {
             stats={mockStats}
           />
 
-          {/* Content area */}
-          <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-            <Outlet />
-            {state.splitView.enabled && pinnedTab && (
-              <>
-                <div
-                  style={{
-                    width: 1,
-                    background: "#e0e0e0",
-                    flexShrink: 0,
-                  }}
-                />
-                <WorkspaceContainer
-                  moduleId={pinnedTab.module}
-                  label={pinnedTab.label}
-                  split={true}
-                />
-              </>
-            )}
+          {/* Workspace area - contains TabBar, RibbonBar, and content */}
+          <div
+            data-testid="workspace-area"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              overflow: "hidden",
+            }}
+          >
+            {/* Tab Bar */}
+            <TabBar
+              tabs={state.tabs}
+              activeTabId={activeTab.id}
+              onTabClick={handleTabClick}
+              onTabClose={closeTab}
+              onTabPin={togglePin}
+              onTabDuplicate={duplicateTab}
+              onAddTab={handleAddTab}
+              splitViewEnabled={state.splitView.enabled}
+              onSplitViewToggle={toggleSplitView}
+            />
+
+            {/* Ribbon Bar */}
+            <RibbonBar
+              activeTabLabel={activeTab?.label}
+              activeTabIcon={activeTab?.icon}
+              activeTabColor={activeTab?.color}
+              activeTabUnsaved={activeTab?.unsaved}
+              activeTabPinned={activeTab?.pinned}
+              moduleId={activeTab?.module}
+            />
+
+            {/* Content area */}
+            <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+              <Outlet />
+              {state.splitView.enabled && pinnedTab && (
+                <>
+                  <div
+                    style={{
+                      width: 1,
+                      background: "#e0e0e0",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <WorkspaceContainer
+                    moduleId={pinnedTab.module}
+                    label={pinnedTab.label}
+                    split={true}
+                  />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </TabProvider>

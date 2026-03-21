@@ -233,6 +233,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     return (
       <div
         ref={ref}
+        data-testid="sidebar"
         onMouseMove={handleMouseInteraction}
         onClick={handleMouseInteraction}
         style={{

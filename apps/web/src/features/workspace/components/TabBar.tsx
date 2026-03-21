@@ -87,6 +87,7 @@ export function TabBar({
 
   return (
     <div
+      data-testid="tab-bar"
       style={{
         height: 36,
         background: "#f0f0f0",
