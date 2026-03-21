@@ -32,8 +32,13 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       togglePin,
       hiddenItems,
       toggleHide,
+      sidebarWidth,
+      setSidebarWidth,
+      resetWidth,
     } = useSidebarState();
     const [hoveredToggle, setHoveredToggle] = React.useState(false);
+    const [hoveredHandle, setHoveredHandle] = React.useState(false);
+    const [isResizing, setIsResizing] = React.useState(false);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
     const [keyboardMode, setKeyboardMode] = React.useState(false);
     const [contextMenu, setContextMenu] = React.useState<{
@@ -183,6 +188,48 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       }
     };
 
+    // Drag handle resize logic
+    const handleMouseDown = (e: React.MouseEvent) => {
+      if (!expanded) return; // Disable resize when collapsed
+
+      e.preventDefault();
+      setIsResizing(true);
+
+      const startX = e.clientX;
+      const startWidth = sidebarWidth;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        const delta = e.clientX - startX;
+        const newWidth = startWidth + delta;
+        setSidebarWidth(newWidth);
+      };
+
+      const handleMouseUp = () => {
+        setIsResizing(false);
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Double-click handle to reset width
+    const handleDoubleClick = () => {
+      if (expanded) {
+        resetWidth();
+      }
+    };
+
+    // Clean up event listeners on unmount
+    React.useEffect(() => {
+      return () => {
+        // Cleanup in case component unmounts during resize
+        document.removeEventListener("mousemove", () => {});
+        document.removeEventListener("mouseup", () => {});
+      };
+    }, []);
+
     return (
       <div
         ref={ref}
@@ -194,8 +241,9 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
-          width: expanded ? 180 : 48,
-          transition: "width 0.15s ease",
+          width: expanded ? sidebarWidth : 48,
+          transition: isResizing ? "none" : "width 0.15s ease",
+          position: "relative",
         }}
       >
         {/* Navigation items */}
@@ -328,6 +376,28 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             <ChevronRight style={{ width: 14, height: 14 }} />
           )}
         </button>
+
+        {/* Drag handle for resizing (only when expanded) */}
+        {expanded && (
+          <div
+            onMouseDown={handleMouseDown}
+            onDoubleClick={handleDoubleClick}
+            onMouseEnter={() => setHoveredHandle(true)}
+            onMouseLeave={() => setHoveredHandle(false)}
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: 2,
+              height: "100%",
+              cursor: "col-resize",
+              background:
+                hoveredHandle || isResizing ? "#91c9f7" : "transparent",
+              transition: "background 0.1s",
+              zIndex: 10,
+            }}
+          />
+        )}
 
         {/* Context menu */}
         {contextMenu && (

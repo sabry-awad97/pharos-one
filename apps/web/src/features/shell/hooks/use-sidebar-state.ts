@@ -9,6 +9,11 @@ const STORAGE_KEY = "pharmos-sidebar-expanded";
 const EXPANDED_MODULES_KEY = "pharmos-sidebar-expanded-modules";
 const PINNED_ITEMS_KEY = "pharmos-sidebar-pinned-items";
 const HIDDEN_ITEMS_KEY = "pharmos-sidebar-hidden-items";
+const SIDEBAR_WIDTH_KEY = "pharmos-sidebar-width";
+
+const DEFAULT_WIDTH = 180;
+const MIN_WIDTH = 48;
+const MAX_WIDTH = 280;
 
 /**
  * Return type for useSidebarState hook
@@ -32,6 +37,12 @@ export interface UseSidebarStateReturn {
   hiddenItems: Set<string>;
   /** Toggle an item's hidden state */
   toggleHide: (itemId: string) => void;
+  /** Current sidebar width in pixels */
+  sidebarWidth: number;
+  /** Set the sidebar width (clamped between MIN_WIDTH and MAX_WIDTH) */
+  setSidebarWidth: (width: number) => void;
+  /** Reset sidebar width to default */
+  resetWidth: () => void;
 }
 
 /**
@@ -96,6 +107,24 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   });
 
+  // Initialize sidebar width from localStorage
+  const [sidebarWidth, setSidebarWidthState] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+      if (stored !== null) {
+        const width = parseInt(stored, 10);
+        // Validate width is within bounds
+        if (!isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
+          return width;
+        }
+      }
+      return DEFAULT_WIDTH;
+    } catch (error) {
+      console.warn("Failed to read sidebar width from localStorage:", error);
+      return DEFAULT_WIDTH;
+    }
+  });
+
   // Persist state to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -142,6 +171,15 @@ export function useSidebarState(): UseSidebarStateReturn {
     }
   }, [hiddenItems]);
 
+  // Persist sidebar width to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
+    } catch (error) {
+      console.warn("Failed to save sidebar width to localStorage:", error);
+    }
+  }, [sidebarWidth]);
+
   const toggle = useCallback(() => {
     setExpandedState((current) => !current);
   }, []);
@@ -186,6 +224,16 @@ export function useSidebarState(): UseSidebarStateReturn {
     });
   }, []);
 
+  const setSidebarWidth = useCallback((width: number) => {
+    // Clamp width between MIN_WIDTH and MAX_WIDTH
+    const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
+    setSidebarWidthState(clampedWidth);
+  }, []);
+
+  const resetWidth = useCallback(() => {
+    setSidebarWidthState(DEFAULT_WIDTH);
+  }, []);
+
   return {
     expanded,
     toggle,
@@ -196,5 +244,8 @@ export function useSidebarState(): UseSidebarStateReturn {
     togglePin,
     hiddenItems,
     toggleHide,
+    sidebarWidth,
+    setSidebarWidth,
+    resetWidth,
   };
 }
