@@ -49,28 +49,28 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
           alignItems: "center",
           justifyContent: "flex-start",
           height: 32,
-          padding: "6px 12px",
-          paddingLeft: 40,
+          padding: "6px 8px",
           border: "none",
           cursor: "pointer",
           background: active
-            ? "rgba(0,120,212,0.1)"
+            ? "rgba(0,120,212,0.05)"
             : isHovered
-              ? "#f5f5f5"
+              ? "#fafafa"
               : "transparent",
-          borderLeft: active ? "3px solid #0078d4" : "3px solid transparent",
+          borderLeft: "3px solid transparent",
           transition: "background .1s",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
           outline: focused ? "2px solid #0078d4" : "none",
           outlineOffset: -2,
           position: "relative",
+          borderRadius: 4,
         }}
       >
         {/* Tree line positioned under parent icon */}
         <span
           style={{
             position: "absolute",
-            left: 20,
+            left: -8,
             top: 0,
             bottom: 0,
             width: 2,

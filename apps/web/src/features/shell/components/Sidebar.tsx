@@ -254,6 +254,13 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
               template.subItems && template.subItems.length > 0;
             const isModuleExpanded = expandedModules.has(template.id);
 
+            // Check if this module or any of its sub-items are active
+            const isModuleActive = activeModule === template.id;
+            const isSubItemActive = !!(
+              hasSubItems && activeModule?.startsWith(`${template.id}-`)
+            );
+            const isActive = isModuleActive || isSubItemActive;
+
             // Calculate if this module or any of its sub-items are focused
             let itemIndex = moduleIndex;
             for (let i = 0; i < moduleIndex; i++) {
@@ -282,7 +289,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     id={template.id}
                     icon={template.icon}
                     label={template.label}
-                    active={activeModule === template.id}
+                    active={isActive}
                     expanded={expanded}
                     onClick={onModuleClick}
                     focused={isModuleFocused}
@@ -324,6 +331,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     style={{
                       overflow: "hidden",
                       transition: "max-height 0.2s ease",
+                      marginTop: 2,
+                      marginBottom: 4,
+                      paddingLeft: 28,
+                      paddingRight: 8,
                     }}
                   >
                     {template.subItems!.map((subItem, subIndex) => {

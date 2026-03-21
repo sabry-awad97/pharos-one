@@ -17,8 +17,10 @@ import { Route as AppHomeReportsRouteImport } from './routes/_app/home/reports'
 import { Route as AppHomePurchasesRouteImport } from './routes/_app/home/purchases'
 import { Route as AppHomePosRouteImport } from './routes/_app/home/pos'
 import { Route as AppHomeInventoryRouteImport } from './routes/_app/home/inventory'
-import { Route as AppHomeDashboardRouteImport } from './routes/_app/home/dashboard'
 import { Route as AppHomeCustomersRouteImport } from './routes/_app/home/customers'
+import { Route as AppHomeDashboardIndexRouteImport } from './routes/_app/home/dashboard/index'
+import { Route as AppHomeDashboardOverviewRouteImport } from './routes/_app/home/dashboard/overview'
+import { Route as AppHomeDashboardAlertsRouteImport } from './routes/_app/home/dashboard/alerts'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
@@ -59,14 +61,25 @@ const AppHomeInventoryRoute = AppHomeInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AppHomeRouteRoute,
 } as any)
-const AppHomeDashboardRoute = AppHomeDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppHomeRouteRoute,
-} as any)
 const AppHomeCustomersRoute = AppHomeCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => AppHomeRouteRoute,
+} as any)
+const AppHomeDashboardIndexRoute = AppHomeDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => AppHomeRouteRoute,
+} as any)
+const AppHomeDashboardOverviewRoute =
+  AppHomeDashboardOverviewRouteImport.update({
+    id: '/dashboard/overview',
+    path: '/dashboard/overview',
+    getParentRoute: () => AppHomeRouteRoute,
+  } as any)
+const AppHomeDashboardAlertsRoute = AppHomeDashboardAlertsRouteImport.update({
+  id: '/dashboard/alerts',
+  path: '/dashboard/alerts',
   getParentRoute: () => AppHomeRouteRoute,
 } as any)
 
@@ -75,22 +88,26 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
-  '/home/dashboard': typeof AppHomeDashboardRoute
   '/home/inventory': typeof AppHomeInventoryRoute
   '/home/pos': typeof AppHomePosRoute
   '/home/purchases': typeof AppHomePurchasesRoute
   '/home/reports': typeof AppHomeReportsRoute
+  '/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
+  '/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/home/dashboard/': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
-  '/home/dashboard': typeof AppHomeDashboardRoute
   '/home/inventory': typeof AppHomeInventoryRoute
   '/home/pos': typeof AppHomePosRoute
   '/home/purchases': typeof AppHomePurchasesRoute
   '/home/reports': typeof AppHomeReportsRoute
+  '/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
+  '/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/home/dashboard': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -99,11 +116,13 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/_app/home/customers': typeof AppHomeCustomersRoute
-  '/_app/home/dashboard': typeof AppHomeDashboardRoute
   '/_app/home/inventory': typeof AppHomeInventoryRoute
   '/_app/home/pos': typeof AppHomePosRoute
   '/_app/home/purchases': typeof AppHomePurchasesRoute
   '/_app/home/reports': typeof AppHomeReportsRoute
+  '/_app/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
+  '/_app/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/_app/home/dashboard/': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,22 +131,26 @@ export interface FileRouteTypes {
     | '/home'
     | '/demo/tabs'
     | '/home/customers'
-    | '/home/dashboard'
     | '/home/inventory'
     | '/home/pos'
     | '/home/purchases'
     | '/home/reports'
+    | '/home/dashboard/alerts'
+    | '/home/dashboard/overview'
+    | '/home/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/home'
     | '/demo/tabs'
     | '/home/customers'
-    | '/home/dashboard'
     | '/home/inventory'
     | '/home/pos'
     | '/home/purchases'
     | '/home/reports'
+    | '/home/dashboard/alerts'
+    | '/home/dashboard/overview'
+    | '/home/dashboard'
   id:
     | '__root__'
     | '/'
@@ -135,11 +158,13 @@ export interface FileRouteTypes {
     | '/_app/home'
     | '/demo/tabs'
     | '/_app/home/customers'
-    | '/_app/home/dashboard'
     | '/_app/home/inventory'
     | '/_app/home/pos'
     | '/_app/home/purchases'
     | '/_app/home/reports'
+    | '/_app/home/dashboard/alerts'
+    | '/_app/home/dashboard/overview'
+    | '/_app/home/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,13 +231,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeInventoryRouteImport
       parentRoute: typeof AppHomeRouteRoute
     }
-    '/_app/home/dashboard': {
-      id: '/_app/home/dashboard'
-      path: '/dashboard'
-      fullPath: '/home/dashboard'
-      preLoaderRoute: typeof AppHomeDashboardRouteImport
-      parentRoute: typeof AppHomeRouteRoute
-    }
     '/_app/home/customers': {
       id: '/_app/home/customers'
       path: '/customers'
@@ -220,25 +238,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeCustomersRouteImport
       parentRoute: typeof AppHomeRouteRoute
     }
+    '/_app/home/dashboard/': {
+      id: '/_app/home/dashboard/'
+      path: '/dashboard'
+      fullPath: '/home/dashboard/'
+      preLoaderRoute: typeof AppHomeDashboardIndexRouteImport
+      parentRoute: typeof AppHomeRouteRoute
+    }
+    '/_app/home/dashboard/overview': {
+      id: '/_app/home/dashboard/overview'
+      path: '/dashboard/overview'
+      fullPath: '/home/dashboard/overview'
+      preLoaderRoute: typeof AppHomeDashboardOverviewRouteImport
+      parentRoute: typeof AppHomeRouteRoute
+    }
+    '/_app/home/dashboard/alerts': {
+      id: '/_app/home/dashboard/alerts'
+      path: '/dashboard/alerts'
+      fullPath: '/home/dashboard/alerts'
+      preLoaderRoute: typeof AppHomeDashboardAlertsRouteImport
+      parentRoute: typeof AppHomeRouteRoute
+    }
   }
 }
 
 interface AppHomeRouteRouteChildren {
   AppHomeCustomersRoute: typeof AppHomeCustomersRoute
-  AppHomeDashboardRoute: typeof AppHomeDashboardRoute
   AppHomeInventoryRoute: typeof AppHomeInventoryRoute
   AppHomePosRoute: typeof AppHomePosRoute
   AppHomePurchasesRoute: typeof AppHomePurchasesRoute
   AppHomeReportsRoute: typeof AppHomeReportsRoute
+  AppHomeDashboardAlertsRoute: typeof AppHomeDashboardAlertsRoute
+  AppHomeDashboardOverviewRoute: typeof AppHomeDashboardOverviewRoute
+  AppHomeDashboardIndexRoute: typeof AppHomeDashboardIndexRoute
 }
 
 const AppHomeRouteRouteChildren: AppHomeRouteRouteChildren = {
   AppHomeCustomersRoute: AppHomeCustomersRoute,
-  AppHomeDashboardRoute: AppHomeDashboardRoute,
   AppHomeInventoryRoute: AppHomeInventoryRoute,
   AppHomePosRoute: AppHomePosRoute,
   AppHomePurchasesRoute: AppHomePurchasesRoute,
   AppHomeReportsRoute: AppHomeReportsRoute,
+  AppHomeDashboardAlertsRoute: AppHomeDashboardAlertsRoute,
+  AppHomeDashboardOverviewRoute: AppHomeDashboardOverviewRoute,
+  AppHomeDashboardIndexRoute: AppHomeDashboardIndexRoute,
 }
 
 const AppHomeRouteRouteWithChildren = AppHomeRouteRoute._addFileChildren(

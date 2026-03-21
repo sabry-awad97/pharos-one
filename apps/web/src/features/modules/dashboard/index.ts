@@ -6,6 +6,8 @@
 import { LayoutDashboard } from "lucide-react";
 import { registerModule } from "../registry";
 import { DashboardWorkspace } from "./DashboardWorkspace";
+import { DashboardOverviewWorkspace } from "./DashboardOverviewWorkspace";
+import { DashboardAlertsWorkspace } from "./DashboardAlertsWorkspace";
 
 // Register dashboard module on import
 // Note: No toolbar - action buttons are in the workspace header itself (matching old implementation)
@@ -16,5 +18,24 @@ registerModule({
   component: DashboardWorkspace,
 });
 
+// Register dashboard sub-item modules
+registerModule({
+  id: "dashboard-overview",
+  label: "Dashboard - Overview",
+  icon: LayoutDashboard,
+  component: DashboardOverviewWorkspace,
+});
+
+registerModule({
+  id: "dashboard-alerts",
+  label: "Dashboard - Alerts & Notifications",
+  icon: LayoutDashboard,
+  component: DashboardAlertsWorkspace,
+});
+
 // Export components for direct use if needed
-export { DashboardWorkspace };
+export {
+  DashboardWorkspace,
+  DashboardOverviewWorkspace,
+  DashboardAlertsWorkspace,
+};

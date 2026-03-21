@@ -54,7 +54,6 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     subItems: [
       { id: "dashboard-overview", label: "Overview" },
       { id: "dashboard-alerts", label: "Alerts & Notifications" },
-      { id: "dashboard-actions", label: "Quick Actions" },
     ],
   },
   {

@@ -140,23 +140,60 @@ function HomeComponent() {
 
   // Handler for sidebar module click
   const handleSidebarModuleClick = (moduleId: string) => {
+    // Check if this is a sub-item (contains hyphen with parent prefix)
+    // e.g., "dashboard-overview" -> parent: "dashboard", route: "/home/dashboard/overview"
+    const isSubItem = moduleId.includes("-");
+    let parentModule = moduleId;
+    let routePath = `/home/${moduleId}`;
+
+    if (isSubItem) {
+      // Parse sub-item ID: "dashboard-overview" -> parent: "dashboard", sub: "overview"
+      const parts = moduleId.split("-");
+      parentModule = parts[0];
+      const subItemPath = parts.slice(1).join("-");
+      routePath = `/home/${parentModule}/${subItemPath}`;
+    }
+
     // Find first existing tab of this module type
     const existingTab = state.tabs.find((t) => t.module === moduleId);
 
     if (existingTab) {
       // Switch to existing tab
       setActiveTab(existingTab.id);
-      navigate({ to: `/home/${moduleId}` });
+      navigate({ to: routePath });
     } else {
       // Create new tab
-      const template = WORKSPACE_TEMPLATES.find((t) => t.id === moduleId);
-      if (template) {
+      // For sub-items, find the sub-item definition within the parent template
+      let template = WORKSPACE_TEMPLATES.find((t) => t.id === moduleId);
+      let label = moduleId;
+      let icon = undefined;
+
+      if (isSubItem) {
+        // Find parent template and sub-item
+        const parentTemplate = WORKSPACE_TEMPLATES.find(
+          (t) => t.id === parentModule,
+        );
+        if (parentTemplate) {
+          const subItem = parentTemplate.subItems?.find(
+            (s) => s.id === moduleId,
+          );
+          if (subItem) {
+            label = `${parentTemplate.label} - ${subItem.label}`;
+            icon = parentTemplate.icon;
+          }
+        }
+      } else if (template) {
+        label = template.label;
+        icon = template.icon;
+      }
+
+      if (icon) {
         addTab({
-          label: template.label,
-          icon: template.icon,
-          module: template.id,
+          label,
+          icon,
+          module: moduleId,
         });
-        navigate({ to: `/home/${moduleId}` });
+        navigate({ to: routePath });
       }
     }
   };
