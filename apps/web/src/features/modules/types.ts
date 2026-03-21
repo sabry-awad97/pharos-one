@@ -20,7 +20,7 @@ export interface WorkspaceModule {
   /** Accent color for the module (CSS color value) */
   color?: string;
   /** Main workspace component */
-  component: ComponentType<{ split?: boolean }>;
+  component: ComponentType<{ split?: boolean; label?: string }>;
   /** Optional toolbar component for module-specific actions */
   toolbar?: ComponentType;
 }

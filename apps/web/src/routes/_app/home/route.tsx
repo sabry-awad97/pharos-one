@@ -25,6 +25,7 @@ import {
 import { useTabs } from "@/features/workspace/hooks/use-tabs";
 import { TabBar } from "@/features/workspace/components/TabBar";
 import { RibbonBar } from "@/features/workspace/components/RibbonBar";
+import { TabProvider } from "@/features/workspace/context/TabContext";
 import type { Tab } from "@/features/workspace/types";
 import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
@@ -240,11 +241,13 @@ function HomeComponent() {
       />
 
       {/* Main Content Area - Render child routes via Outlet */}
-      <div
-        style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
-      >
-        <Outlet />
-      </div>
+      <TabProvider value={{ activeTabLabel: activeTab?.label }}>
+        <div
+          style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
+        >
+          <Outlet />
+        </div>
+      </TabProvider>
 
       {/* Status bar with statistics */}
       <StatusBar

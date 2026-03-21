@@ -15,7 +15,13 @@ const W = {
  * Reports workspace showing analytics and metrics
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function ReportsWorkspace({ split = false }: { split?: boolean }) {
+export function ReportsWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["Revenue – March", "₹4,48,200", "↑18%"],
     ["Gross Profit", "₹1,12,050", "↑11%"],
@@ -33,7 +39,7 @@ export function ReportsWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Reports"
+      label={label || "Reports"}
       color="#c43501"
       columns={cols}
       data={data}

@@ -10,6 +10,8 @@ export interface WorkspaceContainerProps {
   moduleId: string | null;
   /** Whether this is in split view (hides annotation callouts) */
   split?: boolean;
+  /** Optional custom label to override module's default label */
+  label?: string;
 }
 
 /**
@@ -19,6 +21,7 @@ export interface WorkspaceContainerProps {
 export function WorkspaceContainer({
   moduleId,
   split = false,
+  label,
 }: WorkspaceContainerProps) {
   // No module selected
   if (!moduleId) {
@@ -110,8 +113,8 @@ export function WorkspaceContainer({
         </div>
       )}
 
-      {/* Module workspace - pass split prop */}
-      <ModuleComponent split={split} />
+      {/* Module workspace - pass split prop and optional label */}
+      <ModuleComponent split={split} {...(label ? { label } : {})} />
     </div>
   );
 }

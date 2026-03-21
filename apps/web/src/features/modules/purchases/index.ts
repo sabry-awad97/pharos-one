@@ -6,7 +6,6 @@
 import { Truck } from "lucide-react";
 import { registerModule } from "../registry";
 import { PurchasesWorkspace } from "./PurchasesWorkspace";
-import { PurchasesToolbar } from "./PurchasesToolbar";
 
 // Register purchases module on import
 registerModule({
@@ -14,8 +13,7 @@ registerModule({
   label: "Purchase Orders",
   icon: Truck,
   component: PurchasesWorkspace,
-  toolbar: PurchasesToolbar,
 });
 
 // Export components for direct use if needed
-export { PurchasesWorkspace, PurchasesToolbar };
+export { PurchasesWorkspace };

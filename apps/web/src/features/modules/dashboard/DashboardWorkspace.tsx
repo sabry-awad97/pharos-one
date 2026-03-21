@@ -15,7 +15,13 @@ const W = {
  * Dashboard workspace showing KPI metrics in table format
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function DashboardWorkspace({ split = false }: { split?: boolean }) {
+export function DashboardWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["Today's Sales", "₹14,820", "↑12%"],
     ["Orders", "47", "↑3%"],
@@ -37,7 +43,7 @@ export function DashboardWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Dashboard"
+      label={label || "Dashboard"}
       color="#0078d4"
       columns={cols}
       data={data}

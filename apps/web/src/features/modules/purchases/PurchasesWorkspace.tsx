@@ -16,7 +16,13 @@ const W = {
  * Purchases workspace showing purchase orders
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function PurchasesWorkspace({ split = false }: { split?: boolean }) {
+export function PurchasesWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["PO-2026-0041", "MedSupply Co", "₹28,400", "Pending"],
     ["PO-2026-0040", "PharmGen", "₹11,800", "Received"],
@@ -63,7 +69,7 @@ export function PurchasesWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Purchase Orders"
+      label={label || "Purchase Orders"}
       color="#b8860b"
       columns={cols}
       data={data}

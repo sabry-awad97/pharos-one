@@ -10,7 +10,13 @@ import { ModuleWorkspace } from "../components/ModuleWorkspace";
  * POS workspace showing cart interface
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function PosWorkspace({ split = false }: { split?: boolean }) {
+export function PosWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["Amoxicillin 500mg", "2", "₹12.50", "₹25.00"],
     ["Paracetamol 650mg", "3", "₹4.20", "₹12.60"],
@@ -20,7 +26,7 @@ export function PosWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Point of Sale"
+      label={label || "Point of Sale"}
       color="#6b69d6"
       columns={cols}
       data={data}

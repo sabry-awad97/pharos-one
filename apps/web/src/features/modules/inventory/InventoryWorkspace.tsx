@@ -16,7 +16,13 @@ const W = {
  * Inventory workspace showing drug catalog
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function InventoryWorkspace({ split = false }: { split?: boolean }) {
+export function InventoryWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["Amoxicillin 500mg", "AMX-500", "240", "₹12.50", "In Stock"],
     ["Paracetamol 650mg", "PCT-650", "18", "₹4.20", "Low"],
@@ -63,7 +69,7 @@ export function InventoryWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Inventory"
+      label={label || "Inventory"}
       color="#107c10"
       columns={cols}
       data={data}

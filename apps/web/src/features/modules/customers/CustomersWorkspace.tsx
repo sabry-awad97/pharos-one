@@ -10,7 +10,13 @@ import { ModuleWorkspace } from "../components/ModuleWorkspace";
  * Customers workspace showing customer profiles
  * Exact match to PharmacyTabs.tsx WorkspaceContent component
  */
-export function CustomersWorkspace({ split = false }: { split?: boolean }) {
+export function CustomersWorkspace({
+  split = false,
+  label,
+}: {
+  split?: boolean;
+  label?: string;
+}) {
   const data = [
     ["Priya Nair", "Platinum", "3,890 pts", "Chennai"],
     ["Anjali Sharma", "Gold", "1,240 pts", "Bengaluru"],
@@ -20,7 +26,7 @@ export function CustomersWorkspace({ split = false }: { split?: boolean }) {
 
   return (
     <ModuleWorkspace
-      label="Customers"
+      label={label || "Customers"}
       color="#6b69d6"
       columns={cols}
       data={data}
