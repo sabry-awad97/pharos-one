@@ -1,9 +1,10 @@
 /**
  * SidebarContextMenu component
- * Right-click context menu for sidebar navigation items
+ * Right-click context menu for sidebar navigation items with search
  */
 
 import { useState, useEffect, useRef } from "react";
+import type { LucideIcon } from "lucide-react";
 import { FolderOpen, FolderPlus, Pin, EyeOff } from "lucide-react";
 
 export interface SidebarContextMenuProps {
@@ -27,8 +28,15 @@ export interface SidebarContextMenuProps {
   onDismiss: () => void;
 }
 
+interface MenuAction {
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+  searchTerms: string[];
+}
+
 interface MenuItemProps {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   onClick: () => void;
 }
@@ -64,7 +72,7 @@ function MenuItem({ icon: Icon, label, onClick }: MenuItemProps) {
 
 /**
  * Context menu for sidebar navigation items
- * Matches Windows 11 styling
+ * Matches Windows 11 styling with searchable actions
  */
 export function SidebarContextMenu({
   x,
@@ -77,6 +85,54 @@ export function SidebarContextMenu({
   onDismiss,
 }: SidebarContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Define all menu actions with search terms
+  const menuActions: MenuAction[] = [
+    {
+      icon: FolderOpen,
+      label: "Open",
+      onClick: onOpen,
+      searchTerms: ["open", "activate", "switch"],
+    },
+    {
+      icon: FolderPlus,
+      label: "Open in New Tab",
+      onClick: onOpenInNewTab,
+      searchTerms: ["open", "new", "tab", "create"],
+    },
+    {
+      icon: Pin,
+      label: isPinned ? "Unpin from Sidebar" : "Pin to Sidebar",
+      onClick: onPin,
+      searchTerms: isPinned
+        ? ["unpin", "remove", "sidebar"]
+        : ["pin", "add", "sidebar", "favorite"],
+    },
+    {
+      icon: EyeOff,
+      label: "Hide from Sidebar",
+      onClick: onHide,
+      searchTerms: ["hide", "remove", "sidebar"],
+    },
+  ];
+
+  // Filter actions based on search query
+  const filteredActions = searchQuery.trim()
+    ? menuActions.filter((action) => {
+        const query = searchQuery.toLowerCase();
+        return (
+          action.label.toLowerCase().includes(query) ||
+          action.searchTerms.some((term) => term.includes(query))
+        );
+      })
+    : menuActions;
+
+  // Auto-focus search input on mount
+  useEffect(() => {
+    searchRef.current?.focus();
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -121,36 +177,68 @@ export function SidebarContextMenu({
         position: "fixed",
         left: x,
         top: y,
-        width: 200,
+        width: 240,
         background: "#ffffff",
         border: "1px solid #d1d1d1",
         boxShadow: "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
         borderRadius: 6,
-        padding: "4px 0",
+        padding: "6px 0",
         zIndex: 500,
       }}
     >
-      <MenuItem icon={FolderOpen} label="Open" onClick={onOpen} />
-      <MenuItem
-        icon={FolderPlus}
-        label="Open in New Tab"
-        onClick={onOpenInNewTab}
-      />
+      {/* Search input */}
+      <div style={{ padding: "0 8px 6px 8px" }}>
+        <input
+          ref={searchRef}
+          type="text"
+          placeholder="Search actions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "6px 10px",
+            border: "1px solid #d1d1d1",
+            borderRadius: 4,
+            fontSize: 12,
+            fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+            outline: "none",
+            background: "#fafafa",
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = "#0078d4";
+            e.target.style.background = "#ffffff";
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = "#d1d1d1";
+            e.target.style.background = "#fafafa";
+          }}
+        />
+      </div>
 
-      <div
-        style={{
-          height: 1,
-          background: "#ebebeb",
-          margin: "3px 0",
-        }}
-      />
-
-      <MenuItem
-        icon={Pin}
-        label={isPinned ? "Unpin from Sidebar" : "Pin to Sidebar"}
-        onClick={onPin}
-      />
-      <MenuItem icon={EyeOff} label="Hide from Sidebar" onClick={onHide} />
+      {/* Filtered menu items */}
+      {filteredActions.length > 0 ? (
+        <div style={{ padding: "0 0 2px 0" }}>
+          {filteredActions.map((action, index) => (
+            <MenuItem
+              key={index}
+              icon={action.icon}
+              label={action.label}
+              onClick={action.onClick}
+            />
+          ))}
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: "8px 12px",
+            fontSize: 12,
+            color: "#616161",
+            textAlign: "center",
+          }}
+        >
+          No actions found
+        </div>
+      )}
     </div>
   );
 }
