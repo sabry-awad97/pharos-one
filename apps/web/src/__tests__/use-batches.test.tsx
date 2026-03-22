@@ -5,7 +5,11 @@ import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 import * as batchService from "../features/modules/inventory/services/batch.service";
 
 // Mock the batch service
-vi.mock("../features/modules/inventory/services/batch.service");
+vi.mock("../features/modules/inventory/services/batch.service", () => ({
+  fetchBatchesByProductId: vi.fn(),
+  fetchBatchById: vi.fn(),
+  fetchBatches: vi.fn(),
+}));
 
 describe("useBatches Hook", () => {
   const createWrapper = () => {
