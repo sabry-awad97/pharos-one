@@ -1,6 +1,7 @@
 /**
  * DateRangeFilter - Date range picker for filtering transactions
  * Uses shadcn/ui Popover + Calendar components with theme variables
+ * Defaults to compact (sm) size for filter contexts
  */
 
 import * as React from "react";
@@ -19,12 +20,13 @@ interface DateRangeFilterProps {
   dateFrom: Date | null;
   dateTo: Date | null;
   onChange: (dateFrom: Date | null, dateTo: Date | null) => void;
+  size?: "sm" | "default" | "lg";
 }
 
 export const DateRangeFilter = React.forwardRef<
   HTMLButtonElement,
   DateRangeFilterProps
->(({ dateFrom, dateTo, onChange }, ref) => {
+>(({ dateFrom, dateTo, onChange, size = "sm" }, ref) => {
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (range: DateRange | undefined) => {
@@ -59,7 +61,7 @@ export const DateRangeFilter = React.forwardRef<
         <Button
           ref={ref}
           variant="outline"
-          size="sm"
+          size={size}
           className={cn(
             "gap-1.5",
             hasSelection && "border-primary text-primary",

@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BatchDetailsPanel } from "../features/modules/inventory/components/BatchDetailsPanel";
+import { BatchDetailsPanel } from "../features/modules/inventory/components/ProductDetailsPanel";
 
 describe("BatchDetailsPanel", () => {
   let queryClient: QueryClient;

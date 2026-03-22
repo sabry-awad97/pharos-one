@@ -47,7 +47,7 @@ registerModule({
 
 // Export components for direct use if needed
 export { InventoryWorkspace };
-export { BatchDetailsPanel } from "./components/BatchDetailsPanel";
+export { BatchDetailsPanel } from "./components/ProductDetailsPanel";
 export { StockMovementsPanel } from "./components/StockMovementsPanel";
 export { ProductDetailsTab } from "./components/ProductDetailsTab";
 export { ProductLotsTab } from "./components/ProductLotsTab";

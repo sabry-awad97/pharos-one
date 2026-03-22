@@ -20,7 +20,7 @@ import {
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
-import { BatchDetailsPanel } from "../features/modules/inventory/components/BatchDetailsPanel";
+import { BatchDetailsPanel } from "../features/modules/inventory/components/ProductDetailsPanel";
 import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 import * as productHooks from "../features/modules/inventory/hooks/use-products";
 
