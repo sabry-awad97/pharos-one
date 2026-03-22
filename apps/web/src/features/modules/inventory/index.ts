@@ -49,15 +49,21 @@ registerModule({
 export { InventoryWorkspace };
 
 // Export hooks (public API only)
-export { useDrugs, useDrug } from "./hooks/use-drugs";
+export { useProducts, useProduct } from "./hooks/use-products";
+export { useBatches, useProductBatches, useBatch } from "./hooks/use-batches";
 export { useSuppliers, useSupplier } from "./hooks/use-suppliers";
 export { useCategories, useCategory } from "./hooks/use-categories";
 
 // Export types only (schemas are internal implementation details)
 export type {
-  Drug,
-  DrugWithRelations,
-  DrugStatus,
+  Product,
+  ProductWithRelations,
+  ProductStockSummary,
+  Batch,
+  BatchWithRelations,
+  BatchStatus,
+  StockTransaction,
+  TransactionType,
   Supplier,
   Category,
   InventoryFilters,

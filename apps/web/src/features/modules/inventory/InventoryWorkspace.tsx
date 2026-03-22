@@ -7,9 +7,8 @@
 import { useState } from "react";
 import { Hash, Filter, Download, RefreshCw } from "lucide-react";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
-import { useDrugs } from "./hooks/use-drugs";
-import type { DrugWithRelations } from "./schema";
-import type { Drug } from "./schema";
+import { useProducts } from "./hooks/use-products";
+import type { ProductStockSummary } from "./schema";
 
 // Color constants matching ModuleWorkspace.tsx
 const W = {
@@ -37,7 +36,11 @@ const statusDot: Record<string, string> = {
 };
 
 // Status badge component
-function StatusBadge({ status }: { status: DrugWithRelations["status"] }) {
+function StatusBadge({
+  status,
+}: {
+  status: ProductStockSummary["stockStatus"];
+}) {
   const config = {
     ok: {
       bg: "#dff6dd",
@@ -93,7 +96,7 @@ export function InventoryWorkspace({
   label?: string;
 }) {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
-  const { data: drugs = [], isLoading, error } = useDrugs();
+  const { data: products = [], isLoading, error } = useProducts();
 
   return (
     <div
@@ -127,7 +130,7 @@ export function InventoryWorkspace({
           <p style={{ margin: 0, fontSize: 10, color: W.textMuted }}>
             {isLoading
               ? "Loading..."
-              : `${drugs.length} items • Last updated: just now`}
+              : `${products.length} items • Last updated: just now`}
           </p>
         </div>
         <div style={{ flex: 1 }} />
@@ -201,7 +204,7 @@ export function InventoryWorkspace({
                   }}
                 >
                   {[
-                    { label: "Drug Name", w: "auto" },
+                    { label: "Product Name", w: "auto" },
                     { label: "SKU", w: 90 },
                     { label: "Stock", w: 70 },
                     { label: "Expiry", w: 80 },
@@ -224,12 +227,12 @@ export function InventoryWorkspace({
                 </tr>
               </thead>
               <tbody>
-                {drugs.map((drug, idx) => {
-                  const selected = selectedRow === drug.id;
+                {products.map((product, idx) => {
+                  const selected = selectedRow === product.id;
                   return (
                     <tr
-                      key={drug.id}
-                      onClick={() => setSelectedRow(drug.id)}
+                      key={product.id}
+                      onClick={() => setSelectedRow(product.id)}
                       className="cursor-pointer transition-[background] duration-100"
                       style={{
                         borderBottom: `1px solid ${W.borderLight}`,
@@ -257,13 +260,13 @@ export function InventoryWorkspace({
                             : W.surface;
                       }}
                     >
-                      {/* Drug Name */}
+                      {/* Product Name */}
                       <td style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
                         <div className="flex items-center gap-2">
                           <span
                             className="w-[7px] h-[7px] rounded-full shrink-0"
                             style={{
-                              background: statusDot[drug.status],
+                              background: statusDot[product.stockStatus],
                             }}
                           />
                           <span
@@ -272,7 +275,7 @@ export function InventoryWorkspace({
                               color: W.text,
                             }}
                           >
-                            {drug.name}
+                            {product.name}
                           </span>
                         </div>
                       </td>
@@ -284,7 +287,7 @@ export function InventoryWorkspace({
                           color: W.textSub,
                         }}
                       >
-                        {drug.sku}
+                        {product.sku}
                       </td>
 
                       {/* Stock */}
@@ -293,14 +296,15 @@ export function InventoryWorkspace({
                           className="text-xs font-semibold"
                           style={{
                             color:
-                              drug.stock === 0
+                              product.availableQuantity === 0
                                 ? W.danger
-                                : drug.stock < 20
+                                : product.availableQuantity <
+                                    product.reorderLevel
                                   ? W.warn
                                   : W.text,
                           }}
                         >
-                          {drug.stock}
+                          {product.availableQuantity}
                         </span>
                       </td>
 
@@ -309,10 +313,13 @@ export function InventoryWorkspace({
                         className="py-1.5 px-3 text-[11px]"
                         style={{
                           color:
-                            drug.status === "expiring" ? W.expiring : W.textSub,
+                            product.stockStatus === "expiring"
+                              ? W.expiring
+                              : W.textSub,
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {drug.expiry}
+                        {product.nearestExpiry || "N/A"}
                       </td>
 
                       {/* Price */}
@@ -322,7 +329,7 @@ export function InventoryWorkspace({
                           color: W.text,
                         }}
                       >
-                        ₹{drug.price.toFixed(2)}
+                        ₹{product.basePrice.toFixed(2)}
                       </td>
 
                       {/* Category */}
@@ -334,7 +341,7 @@ export function InventoryWorkspace({
                             borderColor: W.border,
                           }}
                         >
-                          {drug.category.name}
+                          {product.category.name}
                         </span>
                       </td>
 
@@ -345,12 +352,12 @@ export function InventoryWorkspace({
                           color: W.textSub,
                         }}
                       >
-                        {drug.supplier.name}
+                        {product.defaultSupplier?.name || "N/A"}
                       </td>
 
                       {/* Status */}
                       <td className="py-1.5 px-3">
-                        <StatusBadge status={drug.status} />
+                        <StatusBadge status={product.stockStatus} />
                       </td>
                     </tr>
                   );

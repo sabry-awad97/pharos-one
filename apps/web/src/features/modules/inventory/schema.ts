@@ -2,6 +2,11 @@
  * Inventory domain types
  * Shared type definitions for inventory feature
  *
+ * ARCHITECTURE: Product-Batch-Transaction separation
+ * - Product: Master catalog (what you CAN sell)
+ * - Batch: Physical stock with expiry/lot tracking (what you HAVE)
+ * - Transaction: Audit trail (what you DID)
+ *
  * CONVENTION: Use .nullable() instead of .optional()
  * - nullable() = field exists but can be null (database NULL)
  * - optional() = field may not exist in object (avoid this)
@@ -9,7 +14,11 @@
 
 import { z } from "zod";
 
-// Supplier schema - will be a separate table
+// ============================================================================
+// MASTER DATA SCHEMAS
+// ============================================================================
+
+// Supplier schema - separate table
 export const supplierSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
@@ -20,7 +29,7 @@ export const supplierSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-// Category schema - will be a separate table
+// Category schema - separate table
 export const categorySchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
@@ -28,46 +37,168 @@ export const categorySchema = z.object({
   parentCategoryId: z.number().int().positive().nullable(),
 });
 
-// Drug status enum
-export const drugStatusSchema = z.enum(["ok", "low", "expiring", "out"]);
+// ============================================================================
+// PRODUCT SCHEMA (Master Catalog)
+// ============================================================================
 
-// Drug schema with foreign key references
-export const drugSchema = z.object({
+export const productSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
-  sku: z.string().min(1),
-  stock: z.number().int().nonnegative(),
-  expiry: z.string().regex(/^\d{4}-\d{2}$/, "Expiry must be in YYYY-MM format"),
-  price: z.number().positive(),
-  categoryId: z.number().int().positive(), // Foreign key to category
-  supplierId: z.number().int().positive(), // Foreign key to supplier
-  status: drugStatusSchema,
+  sku: z.string().min(1), // Unique product identifier
+  genericName: z.string().nullable(),
+  manufacturer: z.string().nullable(),
+  categoryId: z.number().int().positive(),
+  defaultSupplierId: z.number().int().positive().nullable(),
+  basePrice: z.number().positive(), // Selling price
+  reorderLevel: z.number().int().nonnegative(), // When to reorder
+  requiresPrescription: z.boolean().default(false),
+  controlledSubstance: z.boolean().default(false),
+  description: z.string().nullable(),
+  isActive: z.boolean().default(true),
 });
 
-// Extended drug schema with populated relations (for API responses)
-export const drugWithRelationsSchema = drugSchema.extend({
+// Product with relations
+export const productWithRelationsSchema = productSchema.extend({
   category: categorySchema,
+  defaultSupplier: supplierSchema.nullable(),
+});
+
+// ============================================================================
+// BATCH SCHEMA (Physical Stock)
+// ============================================================================
+
+export const batchStatusSchema = z.enum([
+  "available", // Normal stock
+  "reserved", // Allocated to order
+  "quarantine", // Quality check
+  "expired", // Past expiry
+  "recalled", // Manufacturer recall
+]);
+
+export const batchSchema = z.object({
+  id: z.number().int().positive(),
+  productId: z.number().int().positive(), // FK to Product
+  batchNumber: z.string().min(1), // Lot number from supplier
+  expiryDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Expiry must be YYYY-MM-DD"),
+
+  // Purchase details
+  supplierId: z.number().int().positive(),
+  purchaseOrderId: z.number().int().positive().nullable(),
+  receivedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  costPerUnit: z.number().positive(), // Actual purchase cost
+
+  // Quantity tracking
+  quantityReceived: z.number().int().positive(),
+  quantityRemaining: z.number().int().nonnegative(),
+
+  // Location & status
+  locationId: z.number().int().positive().nullable(),
+  status: batchStatusSchema,
+
+  // Metadata
+  notes: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+// Batch with relations
+export const batchWithRelationsSchema = batchSchema.extend({
+  product: productWithRelationsSchema,
   supplier: supplierSchema,
 });
 
-// Inventory filters
+// ============================================================================
+// STOCK TRANSACTION SCHEMA (Audit Trail)
+// ============================================================================
+
+export const transactionTypeSchema = z.enum([
+  "purchase", // Receiving new stock
+  "sale", // Customer purchase
+  "adjustment", // Manual correction
+  "transfer", // Between locations
+  "return", // Customer return
+  "damage", // Damaged/destroyed
+  "expiry", // Expired removal
+]);
+
+export const stockTransactionSchema = z.object({
+  id: z.number().int().positive(),
+  batchId: z.number().int().positive(),
+  type: transactionTypeSchema,
+  quantity: z.number().int(), // Positive = add, Negative = remove
+
+  // References
+  orderId: z.number().int().positive().nullable(), // For sales
+  userId: z.number().int().positive(), // Who performed action
+
+  // Details
+  reason: z.string().nullable(),
+  timestamp: z.string().datetime(),
+});
+
+// ============================================================================
+// COMPUTED VIEWS
+// ============================================================================
+
+// Product with aggregated stock info (for inventory list)
+export const productStockSummarySchema = productWithRelationsSchema.extend({
+  totalQuantity: z.number().int().nonnegative(),
+  availableQuantity: z.number().int().nonnegative(),
+  reservedQuantity: z.number().int().nonnegative(),
+  nearestExpiry: z.string().nullable(), // Earliest expiry date
+  batchCount: z.number().int().nonnegative(),
+  stockStatus: z.enum(["ok", "low", "expiring", "out"]),
+});
+
+// ============================================================================
+// FILTERS
+// ============================================================================
+
 export const inventoryFiltersSchema = z.object({
-  status: drugStatusSchema.nullable(),
+  status: batchStatusSchema.nullable(),
   categoryId: z.number().int().positive().nullable(),
   supplierId: z.number().int().positive().nullable(),
   search: z.string().nullable(),
+  expiringWithinDays: z.number().int().positive().nullable(),
 });
 
-// TypeScript types inferred from schemas
+// ============================================================================
+// TYPESCRIPT TYPES
+// ============================================================================
+
 export type Supplier = z.infer<typeof supplierSchema>;
 export type Category = z.infer<typeof categorySchema>;
-export type DrugStatus = z.infer<typeof drugStatusSchema>;
-export type Drug = z.infer<typeof drugSchema>;
-export type DrugWithRelations = z.infer<typeof drugWithRelationsSchema>;
+
+export type Product = z.infer<typeof productSchema>;
+export type ProductWithRelations = z.infer<typeof productWithRelationsSchema>;
+
+export type BatchStatus = z.infer<typeof batchStatusSchema>;
+export type Batch = z.infer<typeof batchSchema>;
+export type BatchWithRelations = z.infer<typeof batchWithRelationsSchema>;
+
+export type TransactionType = z.infer<typeof transactionTypeSchema>;
+export type StockTransaction = z.infer<typeof stockTransactionSchema>;
+
+export type ProductStockSummary = z.infer<typeof productStockSummarySchema>;
 export type InventoryFilters = z.infer<typeof inventoryFiltersSchema>;
 
-// Array schemas
+// ============================================================================
+// ARRAY SCHEMAS
+// ============================================================================
+
 export const suppliersArraySchema = z.array(supplierSchema);
 export const categoriesArraySchema = z.array(categorySchema);
-export const drugsArraySchema = z.array(drugSchema);
-export const drugsWithRelationsArraySchema = z.array(drugWithRelationsSchema);
+export const productsArraySchema = z.array(productSchema);
+export const productsWithRelationsArraySchema = z.array(
+  productWithRelationsSchema,
+);
+export const batchesArraySchema = z.array(batchSchema);
+export const batchesWithRelationsArraySchema = z.array(
+  batchWithRelationsSchema,
+);
+export const stockTransactionsArraySchema = z.array(stockTransactionSchema);
+export const productStockSummariesArraySchema = z.array(
+  productStockSummarySchema,
+);
