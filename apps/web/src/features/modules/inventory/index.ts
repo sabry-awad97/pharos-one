@@ -50,6 +50,7 @@ export { InventoryWorkspace };
 export { BatchDetailsPanel } from "./components/BatchDetailsPanel";
 export { ProductDetailsTab } from "./components/ProductDetailsTab";
 export { ProductLotsTab } from "./components/ProductLotsTab";
+export { ProductHistoryTab } from "./components/ProductHistoryTab";
 
 // Export hooks (public API only)
 export { useProducts, useProduct } from "./hooks/use-products";

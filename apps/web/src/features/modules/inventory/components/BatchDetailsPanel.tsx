@@ -22,6 +22,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { ProductDetailsTab } from "./ProductDetailsTab";
 import { ProductLotsTab } from "./ProductLotsTab";
+import { ProductHistoryTab } from "./ProductHistoryTab";
 
 /**
  * Props for BatchDetailsPanel component
@@ -133,13 +134,7 @@ export function BatchDetailsPanel({
 
         {activeTab === "lots" && <ProductLotsTab productId={productId} />}
 
-        {activeTab === "history" && (
-          <div className="p-4">
-            <div className="text-sm text-muted-foreground">
-              Transaction history coming soon...
-            </div>
-          </div>
-        )}
+        {activeTab === "history" && <ProductHistoryTab productId={productId} />}
       </div>
     </div>
   );
