@@ -450,9 +450,9 @@ export function InventoryWorkspace({
         </div>
 
         {/* Table content */}
-        <div className="flex-1 overflow-y-auto p-3">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {error && (
-            <div className="p-4 rounded-md border border-red-700 bg-red-50 text-red-700">
+            <div className="p-4 m-3 rounded-md border border-red-700 bg-red-50 text-red-700">
               Error loading inventory: {error.message}
             </div>
           )}
@@ -464,116 +464,121 @@ export function InventoryWorkspace({
           )}
 
           {!isLoading && !error && (
-            <div className="flex flex-col gap-3">
-              <div className="overflow-x-auto bg-card custom-scrollbar">
-                <table className="w-full border-collapse">
-                  <thead>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <tr
-                        key={headerGroup.id}
-                        className="bg-muted/50 sticky top-0 z-10 border-b border-border"
-                      >
-                        {headerGroup.headers.map((header) => (
-                          <th
-                            key={header.id}
-                            className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
-                            style={{
-                              width:
-                                header.column.getSize() !== 150
-                                  ? header.column.getSize()
-                                  : undefined,
-                            }}
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                            {{
-                              asc: " ↑",
-                              desc: " ↓",
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody>
-                    {table.getRowModel().rows.map((row, idx) => {
-                      const selected = selectedRowIds.has(row.original.id);
-                      const focused = focusedRowId === row.original.id;
-                      return (
-                        <TableRowContextMenu
-                          key={row.id}
-                          row={row.original}
-                          actions={customActions}
-                          actionGroups={actionGroups}
+            <>
+              {/* Scrollable table area */}
+              <div className="flex-1 overflow-y-auto p-3">
+                <div className="overflow-x-auto bg-card custom-scrollbar">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr
+                          key={headerGroup.id}
+                          className="bg-muted/50 sticky top-0 z-10 border-b border-border"
                         >
-                          <tr
-                            data-selected={selected ? "true" : undefined}
-                            data-focused={focused ? "true" : undefined}
-                            className="border-b transition-[background]"
-                            style={{
-                              borderBottomColor:
-                                "oklch(from var(--border) l c h / 0.8)",
-                              background: focused
-                                ? "oklch(from var(--primary) l c h / 0.07)"
-                                : selected
-                                  ? "oklch(from var(--primary) l c h / 0.05)"
-                                  : idx % 2 === 1
-                                    ? "oklch(from var(--muted) l c h / 0.5)"
-                                    : "var(--card)",
-                              boxShadow: focused
-                                ? "inset 0 0 0 1.5px var(--primary)"
-                                : "none",
-                            }}
-                            onClick={(e) => handleRowClick(row.original.id, e)}
-                            onDoubleClick={() =>
-                              handleRowDoubleClick(row.original.id)
-                            }
-                            onMouseEnter={(e) => {
-                              if (!focused) {
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
+                              style={{
+                                width:
+                                  header.column.getSize() !== 150
+                                    ? header.column.getSize()
+                                    : undefined,
+                              }}
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                  )}
+                              {{
+                                asc: " ↑",
+                                desc: " ↓",
+                              }[header.column.getIsSorted() as string] ?? null}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody>
+                      {table.getRowModel().rows.map((row, idx) => {
+                        const selected = selectedRowIds.has(row.original.id);
+                        const focused = focusedRowId === row.original.id;
+                        return (
+                          <TableRowContextMenu
+                            key={row.id}
+                            row={row.original}
+                            actions={customActions}
+                            actionGroups={actionGroups}
+                          >
+                            <tr
+                              data-selected={selected ? "true" : undefined}
+                              data-focused={focused ? "true" : undefined}
+                              className="border-b transition-[background]"
+                              style={{
+                                borderBottomColor:
+                                  "oklch(from var(--border) l c h / 0.8)",
+                                background: focused
+                                  ? "oklch(from var(--primary) l c h / 0.07)"
+                                  : selected
+                                    ? "oklch(from var(--primary) l c h / 0.05)"
+                                    : idx % 2 === 1
+                                      ? "oklch(from var(--muted) l c h / 0.5)"
+                                      : "var(--card)",
+                                boxShadow: focused
+                                  ? "inset 0 0 0 1.5px var(--primary)"
+                                  : "none",
+                              }}
+                              onClick={(e) =>
+                                handleRowClick(row.original.id, e)
+                              }
+                              onDoubleClick={() =>
+                                handleRowDoubleClick(row.original.id)
+                              }
+                              onMouseEnter={(e) => {
+                                if (!focused) {
+                                  (
+                                    e.currentTarget as HTMLTableRowElement
+                                  ).style.background =
+                                    "oklch(from var(--primary) l c h / 0.03)";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
                                 (
                                   e.currentTarget as HTMLTableRowElement
-                                ).style.background =
-                                  "oklch(from var(--primary) l c h / 0.03)";
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              (
-                                e.currentTarget as HTMLTableRowElement
-                              ).style.background = focused
-                                ? "oklch(from var(--primary) l c h / 0.07)"
-                                : selected
-                                  ? "oklch(from var(--primary) l c h / 0.05)"
-                                  : idx % 2 === 1
-                                    ? "oklch(from var(--muted) l c h / 0.5)"
-                                    : "var(--card)";
-                            }}
-                          >
-                            {row.getVisibleCells().map((cell) => (
-                              <td
-                                key={cell.id}
-                                className="py-1.5 px-3 whitespace-nowrap"
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        </TableRowContextMenu>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                ).style.background = focused
+                                  ? "oklch(from var(--primary) l c h / 0.07)"
+                                  : selected
+                                    ? "oklch(from var(--primary) l c h / 0.05)"
+                                    : idx % 2 === 1
+                                      ? "oklch(from var(--muted) l c h / 0.5)"
+                                      : "var(--card)";
+                              }}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <td
+                                  key={cell.id}
+                                  className="py-1.5 px-3 whitespace-nowrap"
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext(),
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          </TableRowContextMenu>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              {/* Pagination controls */}
-              <div className="flex items-center justify-between px-3 py-3 border-t border-border">
+              {/* Pagination controls - fixed at bottom */}
+              <div className="flex-none flex items-center justify-between px-3 py-3 border-t border-border bg-card">
                 {/* Left side: Page size selector */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
@@ -668,7 +673,7 @@ export function InventoryWorkspace({
                   {getItemsDisplayText(table)}
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Annotation callouts - only shown when not in split view */}
