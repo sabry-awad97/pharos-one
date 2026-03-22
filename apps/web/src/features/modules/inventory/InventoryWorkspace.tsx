@@ -220,36 +220,23 @@ export function InventoryWorkspace({
 
   return (
     <div
+      className="flex-1 flex flex-col overflow-hidden font-sans"
       style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
         background: W.bg,
-        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
       }}
     >
       {/* Module header - matching ModuleWorkspace.tsx pattern */}
       <div
+        className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0"
         style={{
-          padding: "10px 16px 8px",
           borderBottom: `1px solid ${W.border}`,
           background: W.surface,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexShrink: 0,
         }}
       >
         <div
+          className="w-7 h-7 rounded-md flex items-center justify-center"
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: 6,
             background: "#107c1020",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
           <Hash style={{ width: 14, height: 14, color: "#107c10" }} />
@@ -270,16 +257,10 @@ export function InventoryWorkspace({
             {[Filter, Download, RefreshCw].map((Icon, i) => (
               <button
                 key={i}
+                className="w-[26px] h-[26px] flex items-center justify-center border rounded cursor-pointer"
                 style={{
-                  width: 26,
-                  height: 26,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: `1px solid ${W.border}`,
-                  borderRadius: 4,
+                  borderColor: W.border,
                   background: W.surface,
-                  cursor: "pointer",
                   color: W.textSub,
                 }}
                 onMouseEnter={(e) => {
@@ -301,23 +282,18 @@ export function InventoryWorkspace({
       {/* Enhanced data table - based on PharmacyDashboard.tsx structure */}
       <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
         <div
+          className="rounded-md overflow-hidden shadow-sm border"
           style={{
             background: W.surface,
-            borderRadius: 6,
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-            border: `1px solid ${W.border}`,
+            borderColor: W.border,
           }}
         >
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr
+                className="bg-[#f5f5f5] sticky top-0 z-10"
                 style={{
-                  background: "#f5f5f5",
                   borderBottom: `1px solid ${W.border}`,
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
                 }}
               >
                 {[
@@ -332,18 +308,10 @@ export function InventoryWorkspace({
                 ].map(({ label, w }) => (
                   <th
                     key={label}
+                    className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
                     style={{
-                      textAlign: "left",
-                      padding: "7px 12px",
-                      fontSize: 10,
-                      fontWeight: 600,
                       color: W.textMuted,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
                       width: typeof w === "number" ? w : undefined,
-                      whiteSpace: "nowrap",
-                      cursor: "pointer",
-                      userSelect: "none",
                     }}
                   >
                     {label}
@@ -358,6 +326,7 @@ export function InventoryWorkspace({
                   <tr
                     key={drug.id}
                     onClick={() => setSelectedRow(drug.id)}
+                    className="cursor-pointer transition-[background] duration-100"
                     style={{
                       borderBottom: `1px solid ${W.borderLight}`,
                       background: selected
@@ -365,10 +334,8 @@ export function InventoryWorkspace({
                         : idx % 2 === 1
                           ? W.surfaceAlt
                           : W.surface,
-                      cursor: "pointer",
                       outline: selected ? "1.5px solid #0078d4" : "none",
                       outlineOffset: -1,
-                      transition: "background 0.1s",
                     }}
                     onMouseEnter={(e) => {
                       if (!selected)
@@ -388,26 +355,16 @@ export function InventoryWorkspace({
                   >
                     {/* Drug Name */}
                     <td style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
+                      <div className="flex items-center gap-2">
                         <span
+                          className="w-[7px] h-[7px] rounded-full shrink-0"
                           style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: "50%",
-                            flexShrink: 0,
                             background: statusDot[drug.status],
                           }}
                         />
                         <span
+                          className="text-xs font-medium"
                           style={{
-                            fontSize: 12,
-                            fontWeight: 500,
                             color: W.text,
                           }}
                         >
@@ -418,22 +375,19 @@ export function InventoryWorkspace({
 
                     {/* SKU */}
                     <td
+                      className="py-1.5 px-3 text-[11px] font-mono"
                       style={{
-                        padding: "6px 12px",
-                        fontSize: 11,
                         color: W.textSub,
-                        fontFamily: "Consolas, monospace",
                       }}
                     >
                       {drug.sku}
                     </td>
 
                     {/* Stock */}
-                    <td style={{ padding: "6px 12px" }}>
+                    <td className="py-1.5 px-3">
                       <span
+                        className="text-xs font-semibold"
                         style={{
-                          fontSize: 12,
-                          fontWeight: 600,
                           color:
                             drug.stock === 0
                               ? W.danger
@@ -448,9 +402,8 @@ export function InventoryWorkspace({
 
                     {/* Expiry */}
                     <td
+                      className="py-1.5 px-3 text-[11px]"
                       style={{
-                        padding: "6px 12px",
-                        fontSize: 11,
                         color:
                           drug.status === "expiring" ? W.expiring : W.textSub,
                       }}
@@ -460,26 +413,21 @@ export function InventoryWorkspace({
 
                     {/* Price */}
                     <td
+                      className="py-1.5 px-3 text-xs font-medium"
                       style={{
-                        padding: "6px 12px",
-                        fontSize: 12,
                         color: W.text,
-                        fontWeight: 500,
                       }}
                     >
                       ₹{drug.price.toFixed(2)}
                     </td>
 
                     {/* Category */}
-                    <td style={{ padding: "6px 12px" }}>
+                    <td className="py-1.5 px-3">
                       <span
+                        className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
                         style={{
-                          fontSize: 10,
-                          padding: "2px 6px",
-                          borderRadius: 3,
-                          background: "#f0f0f0",
                           color: W.textSub,
-                          border: `1px solid ${W.border}`,
+                          borderColor: W.border,
                         }}
                       >
                         {drug.category}
@@ -488,9 +436,8 @@ export function InventoryWorkspace({
 
                     {/* Supplier */}
                     <td
+                      className="py-1.5 px-3 text-[11px]"
                       style={{
-                        padding: "6px 12px",
-                        fontSize: 11,
                         color: W.textSub,
                       }}
                     >
@@ -498,7 +445,7 @@ export function InventoryWorkspace({
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: "6px 12px" }}>
+                    <td className="py-1.5 px-3">
                       <StatusBadge status={drug.status} />
                     </td>
                   </tr>
