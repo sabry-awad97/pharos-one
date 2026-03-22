@@ -1,11 +1,17 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  within,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock the action registry
-vi.mock("../features/modules/inventory/config/inventory-actions", () => ({
-  inventoryActions: [
+vi.mock("../features/modules/inventory/hooks/use-inventory-actions", () => ({
+  useInventoryActions: () => [
     {
       id: "edit-product",
       label: "Edit Product",
@@ -15,12 +21,22 @@ vi.mock("../features/modules/inventory/config/inventory-actions", () => ({
       handler: vi.fn((row: unknown) => console.log("Edit Product:", row)),
     },
     {
-      id: "view-batches",
-      label: "View Batches",
+      id: "batch-details",
+      label: "Batch Details",
       group: "view",
-      shortcut: "⌘B",
+      shortcut: "⌘D",
+      isVisible: (row: { batchCount: number }) => row.batchCount > 0,
+      handler: vi.fn((row: unknown) => console.log("Batch Details:", row)),
+    },
+    {
+      id: "view-stock-movements",
+      label: "View Stock Movements",
+      group: "view",
+      shortcut: "⌘M",
       isVisible: () => true,
-      handler: vi.fn((row: unknown) => console.log("View Batches:", row)),
+      handler: vi.fn((row: unknown) =>
+        console.log("View Stock Movements:", row),
+      ),
     },
     {
       id: "view-history",
@@ -69,6 +85,7 @@ vi.mock("../features/modules/inventory/hooks/use-products", () => ({
         category: { id: "cat1", name: "Category 1" },
         defaultSupplier: { id: "sup1", name: "Supplier 1" },
         stockStatus: "ok" as const,
+        batchCount: 3,
       },
       {
         id: "2",
@@ -81,9 +98,28 @@ vi.mock("../features/modules/inventory/hooks/use-products", () => ({
         category: { id: "cat1", name: "Category 1" },
         defaultSupplier: { id: "sup1", name: "Supplier 1" },
         stockStatus: "expiring" as const,
+        batchCount: 1,
       },
     ],
     isLoading: false,
+    error: null,
+  }),
+  useProduct: (id: string) => ({
+    data: {
+      id,
+      name: "Test Product",
+      sku: "TEST-001",
+      availableQuantity: 100,
+      reorderLevel: 20,
+      nearestExpiry: "2026-12-31",
+      basePrice: 99.99,
+      category: { id: "cat1", name: "Category 1" },
+      defaultSupplier: { id: "sup1", name: "Supplier 1" },
+      stockStatus: "ok" as const,
+      batchCount: 3,
+    },
+    isLoading: false,
+    isError: false,
     error: null,
   }),
 }));
@@ -127,10 +163,14 @@ describe("InventoryWorkspace - Context Menu", () => {
 
     const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row");
-    const firstDataRow = rows[1];
+    const firstDataRow = rows[1]; // Skip header row
 
     // Right-click the row
     fireEvent.contextMenu(firstDataRow);
+
+    // Verify context menu appears
+    const contextMenu = screen.getByRole("menu");
+    expect(contextMenu).toBeInTheDocument();
 
     // Verify search input exists
     const searchInput = screen.getByPlaceholderText(/search/i);
@@ -149,7 +189,7 @@ describe("InventoryWorkspace - Context Menu", () => {
 
     // Verify multiple actions are displayed
     expect(screen.getByText("Edit Product")).toBeInTheDocument();
-    expect(screen.getByText("View Batches")).toBeInTheDocument();
+    expect(screen.getByText("View Stock Movements")).toBeInTheDocument();
     expect(screen.getByText("Adjust Stock")).toBeInTheDocument();
 
     // Type in search to filter actions
@@ -158,7 +198,7 @@ describe("InventoryWorkspace - Context Menu", () => {
 
     // Verify filtered results
     expect(screen.getByText("Edit Product")).toBeInTheDocument();
-    expect(screen.queryByText("View Batches")).not.toBeInTheDocument();
+    expect(screen.queryByText("View Stock Movements")).not.toBeInTheDocument();
   });
 
   it("should execute action with correct row data when clicked", () => {
@@ -189,6 +229,7 @@ describe("InventoryWorkspace - Context Menu", () => {
       category: { id: "cat1", name: "Category 1" },
       defaultSupplier: { id: "sup1", name: "Supplier 1" },
       stockStatus: "ok",
+      batchCount: 3,
     });
 
     consoleSpy.mockRestore();
@@ -218,7 +259,7 @@ describe("InventoryWorkspace - Context Menu", () => {
     expect(screen.getByText("Mark as Expiring")).toBeInTheDocument();
   });
 
-  it("should support keyboard navigation in command palette", () => {
+  it("should close context menu when pressing Escape key", () => {
     renderComponent();
 
     const table = screen.getByRole("table");
@@ -228,16 +269,14 @@ describe("InventoryWorkspace - Context Menu", () => {
     // Right-click the row
     fireEvent.contextMenu(firstDataRow);
 
-    // Get the search input
-    const searchInput = screen.getByPlaceholderText(/search/i);
+    // Verify menu is open
+    const contextMenu = screen.getByRole("menu");
+    expect(contextMenu).toBeInTheDocument();
 
-    // Verify arrow keys navigate through items
-    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
-    fireEvent.keyDown(searchInput, { key: "ArrowDown" });
-    fireEvent.keyDown(searchInput, { key: "ArrowUp" });
+    // Press Escape to close
+    fireEvent.keyDown(document.body, { key: "Escape" });
 
-    // Verify Escape closes the menu
-    fireEvent.keyDown(searchInput, { key: "Escape" });
+    // Verify menu is closed
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
@@ -258,7 +297,7 @@ describe("InventoryWorkspace - Context Menu", () => {
 
     // Verify actions are still present
     expect(screen.getByText("Edit Product")).toBeInTheDocument();
-    expect(screen.getByText("View Batches")).toBeInTheDocument();
+    expect(screen.getByText("View Stock Movements")).toBeInTheDocument();
     expect(screen.getByText("Adjust Stock")).toBeInTheDocument();
   });
 
@@ -274,7 +313,55 @@ describe("InventoryWorkspace - Context Menu", () => {
 
     // Verify shortcuts are displayed
     expect(screen.getByText("⌘E")).toBeInTheDocument();
-    expect(screen.getByText("⌘B")).toBeInTheDocument();
+    expect(screen.getByText("⌘M")).toBeInTheDocument();
     expect(screen.getByText("⌘S")).toBeInTheDocument();
+  });
+
+  it("should close context menu after clicking an action item", async () => {
+    renderComponent();
+
+    const table = screen.getByRole("table");
+    const rows = within(table).getAllByRole("row");
+    const firstDataRow = rows[1];
+
+    // Right-click the row to open context menu
+    fireEvent.contextMenu(firstDataRow);
+
+    // Verify context menu is open
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    // Click an action item
+    const editAction = screen.getByText("Edit Product");
+    fireEvent.click(editAction);
+
+    // Wait for context menu to close (animation may take time)
+    await waitFor(() => {
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+  });
+
+  it("should close context menu after clicking Batch Details action", async () => {
+    renderComponent();
+
+    const table = screen.getByRole("table");
+    const rows = within(table).getAllByRole("row");
+    const firstDataRow = rows[1];
+
+    // Right-click the row to open context menu
+    fireEvent.contextMenu(firstDataRow);
+
+    // Verify context menu is open
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    // Find and click "Batch Details" action using role
+    const batchDetailsAction = screen.getByRole("option", {
+      name: /batch details/i,
+    });
+    fireEvent.click(batchDetailsAction);
+
+    // Wait for context menu to close
+    await waitFor(() => {
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
   });
 });

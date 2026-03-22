@@ -7,6 +7,7 @@
  * - Filters actions by visibility rules
  * - Groups and sorts actions automatically
  * - Renders icons, shortcuts, and disabled states
+ * - Includes searchable command palette
  *
  * USAGE:
  * ```typescript
@@ -78,6 +79,7 @@ export interface TableRowContextMenuProps {
  * - Command palette with search
  * - Icon and shortcut rendering
  * - Disabled state handling
+ * - Automatic closing after action execution
  * - Zero hardcoded colors (uses theme variables)
  *
  * @example
@@ -149,6 +151,18 @@ export function TableRowContextMenu({
                         onSelect={() => {
                           if (!isDisabled) {
                             action.handler(row);
+                            // Close menu after action executes
+                            // Using requestAnimationFrame to ensure action completes first
+                            requestAnimationFrame(() => {
+                              const event = new KeyboardEvent("keydown", {
+                                key: "Escape",
+                                code: "Escape",
+                                keyCode: 27,
+                                bubbles: true,
+                                cancelable: true,
+                              });
+                              document.dispatchEvent(event);
+                            });
                           }
                         }}
                         disabled={isDisabled}

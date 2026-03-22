@@ -4,7 +4,7 @@
  * Enhanced table layout with sorting, filtering, and selection
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Hash, Filter, Download, RefreshCw } from "lucide-react";
 import {
   useReactTable,
@@ -21,7 +21,10 @@ import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/BatchDetailsPanel";
 import { StockMovementsPanel } from "./components/StockMovementsPanel";
-import { inventoryActions, actionGroups } from "./config/inventory-actions";
+import {
+  useInventoryActions,
+  actionGroups,
+} from "./hooks/use-inventory-actions";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
 
@@ -92,30 +95,30 @@ export function InventoryWorkspace({
   const [stockMovementsPanelProductId, setStockMovementsPanelProductId] =
     useState<number | null>(null);
 
-  // Create custom actions with batch details handler
-  const customActions = useMemo(
-    () =>
-      inventoryActions.map((action) => {
-        if (action.id === "batch-details") {
-          return {
-            ...action,
-            handler: (row: ProductStockSummary) => {
-              setBatchDetailsPanelProductId(row.id);
-            },
-          };
-        }
-        if (action.id === "view-stock-movements") {
-          return {
-            ...action,
-            handler: (row: ProductStockSummary) => {
-              setStockMovementsPanelProductId(row.id);
-            },
-          };
-        }
-        return action;
-      }),
-    [],
-  );
+  // Callbacks for opening panels
+  const handleBatchDetailsOpen = useCallback((productId: number) => {
+    console.log("Opening batch details for product:", productId);
+    setBatchDetailsPanelProductId(productId);
+  }, []);
+
+  const handleStockMovementsOpen = useCallback((productId: number) => {
+    console.log("Opening stock movements for product:", productId);
+    setStockMovementsPanelProductId(productId);
+  }, []);
+
+  // Get inventory actions with custom handlers
+  const customActions = useInventoryActions({
+    onBatchDetailsOpen: handleBatchDetailsOpen,
+    onStockMovementsOpen: handleStockMovementsOpen,
+  });
+
+  // Debug: Log when state changes
+  useEffect(() => {
+    console.log(
+      "stockMovementsPanelProductId changed to:",
+      stockMovementsPanelProductId,
+    );
+  }, [stockMovementsPanelProductId]);
 
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
@@ -410,16 +413,23 @@ export function InventoryWorkspace({
 
       {/* Stock Movements Panel - overlay sheet */}
       {stockMovementsPanelProductId !== null && (
-        <StockMovementsPanel
-          open={true}
-          onOpenChange={(open) => {
-            if (!open) setStockMovementsPanelProductId(null);
-          }}
-          productId={stockMovementsPanelProductId}
-          productName={
-            products.find((p) => p.id === stockMovementsPanelProductId)?.name
-          }
-        />
+        <>
+          {console.log(
+            "Rendering StockMovementsPanel with productId:",
+            stockMovementsPanelProductId,
+          )}
+          <StockMovementsPanel
+            open={true}
+            onOpenChange={(open) => {
+              console.log("Sheet onOpenChange called with:", open);
+              if (!open) setStockMovementsPanelProductId(null);
+            }}
+            productId={stockMovementsPanelProductId}
+            productName={
+              products.find((p) => p.id === stockMovementsPanelProductId)?.name
+            }
+          />
+        </>
       )}
     </div>
   );
