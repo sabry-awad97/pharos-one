@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_app/home/inventory")({
+export const Route = createFileRoute("/_app/home/inventory/")({
   component: InventoryRoute,
 });
 
