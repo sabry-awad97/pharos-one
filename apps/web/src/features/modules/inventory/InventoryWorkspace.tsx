@@ -152,31 +152,39 @@ const drugs: Drug[] = [
   },
 ];
 
+// Status dot colors
+const statusDot: Record<string, string> = {
+  ok: "#107c10",
+  low: "#d4a017",
+  expiring: "#d83b01",
+  out: "#a4262c",
+};
+
 // Status badge component
 function StatusBadge({ status }: { status: Drug["status"] }) {
   const config = {
     ok: {
       bg: "#dff6dd",
-      color: W.success,
-      border: "#107c10",
+      color: statusDot.ok,
+      border: statusDot.ok,
       label: "In Stock",
     },
     low: {
       bg: "#fff4ce",
-      color: W.warn,
-      border: "#d4a017",
+      color: statusDot.low,
+      border: statusDot.low,
       label: "Low Stock",
     },
     expiring: {
       bg: "#fed9cc",
-      color: W.expiring,
-      border: "#d83b01",
+      color: statusDot.expiring,
+      border: statusDot.expiring,
       label: "Expiring",
     },
     out: {
       bg: "#fde7e9",
-      color: W.danger,
-      border: "#a4262c",
+      color: statusDot.out,
+      border: statusDot.out,
       label: "Out of Stock",
     },
   };
@@ -185,14 +193,11 @@ function StatusBadge({ status }: { status: Drug["status"] }) {
 
   return (
     <span
+      className="text-[10px] px-1.5 py-0.5 rounded-[3px] font-medium border"
       style={{
-        fontSize: 10,
-        padding: "2px 6px",
-        borderRadius: 3,
         background: bg,
         color: color,
-        border: `1px solid ${border}20`,
-        fontWeight: 500,
+        borderColor: `${border}20`,
       }}
     >
       {label}
@@ -396,14 +401,7 @@ export function InventoryWorkspace({
                             height: 7,
                             borderRadius: "50%",
                             flexShrink: 0,
-                            background:
-                              drug.status === "ok"
-                                ? W.success
-                                : drug.status === "low"
-                                  ? W.warn
-                                  : drug.status === "expiring"
-                                    ? W.expiring
-                                    : W.danger,
+                            background: statusDot[drug.status],
                           }}
                         />
                         <span
