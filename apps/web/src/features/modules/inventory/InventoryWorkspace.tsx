@@ -367,7 +367,7 @@ export function InventoryWorkspace({
           )}
 
           {!isLoading && !error && (
-            <div className="overflow-hidden bg-card">
+            <div className="overflow-x-auto bg-card custom-scrollbar">
               <table className="w-full border-collapse">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
