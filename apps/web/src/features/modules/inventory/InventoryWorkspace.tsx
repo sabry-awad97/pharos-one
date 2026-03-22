@@ -466,7 +466,7 @@ export function InventoryWorkspace({
           {!isLoading && !error && (
             <>
               {/* Scrollable table area */}
-              <div className="flex-1 overflow-y-auto p-3">
+              <div className="flex-1 overflow-y-auto">
                 <div className="overflow-x-auto bg-card custom-scrollbar">
                   <table className="w-full border-collapse">
                     <thead>
