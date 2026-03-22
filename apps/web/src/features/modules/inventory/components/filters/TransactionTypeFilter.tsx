@@ -63,7 +63,7 @@ export const TransactionTypeFilter = React.forwardRef<
           variant="outline"
           size="sm"
           className={cn(
-            "gap-1.5",
+            "gap-1.5 font-normal",
             selectedCount > 0 && "border-primary text-primary",
           )}
         >

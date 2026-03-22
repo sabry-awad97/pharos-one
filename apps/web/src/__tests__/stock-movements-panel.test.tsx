@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StockMovementsPanel } from "../features/modules/inventory/components/StockMovementsPanel";
@@ -173,7 +173,7 @@ describe("StockMovementsPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("renders as a sheet drawer when open", () => {
+  it("renders as inline panel", () => {
     vi.mocked(
       transactionService.fetchTransactionsByProductId,
     ).mockResolvedValue([]);
@@ -181,15 +181,14 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
-    // Should render sheet content
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    // Should render as complementary role (inline panel, not dialog)
+    expect(screen.getByRole("complementary")).toBeInTheDocument();
   });
 
   it("displays product name in header", () => {
@@ -200,10 +199,9 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
@@ -218,20 +216,21 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
     // Should have Type filter button
     expect(screen.getByRole("button", { name: /type/i })).toBeInTheDocument();
 
-    // Should have Date Range filter button
-    expect(
-      screen.getByRole("button", { name: /date range/i }),
-    ).toBeInTheDocument();
+    // Should have DateRangePicker button (shows dates, not "Date Range" text)
+    const dateButtons = screen.getAllByRole("button");
+    const datePickerButton = dateButtons.find((btn) =>
+      btn.textContent?.includes("2026"),
+    );
+    expect(datePickerButton).toBeInTheDocument();
 
     // Should have Clear filters button
     expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
@@ -247,10 +246,9 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
@@ -266,10 +264,9 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
@@ -288,10 +285,9 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
@@ -302,6 +298,37 @@ describe("StockMovementsPanel", () => {
     });
   });
 
+  it("shows compare toggle in date range picker", async () => {
+    vi.mocked(
+      transactionService.fetchTransactionsByProductId,
+    ).mockResolvedValue([]);
+
+    const onClose = vi.fn();
+    renderWithQueryClient(
+      <StockMovementsPanel
+        productId={1}
+        productName="Amoxicillin 500mg"
+        onClose={onClose}
+      />,
+    );
+
+    // Find and click the date picker button
+    const dateButtons = screen.getAllByRole("button");
+    const datePickerButton = dateButtons.find((btn) =>
+      btn.textContent?.includes("2026"),
+    );
+    expect(datePickerButton).toBeInTheDocument();
+
+    if (datePickerButton) {
+      fireEvent.click(datePickerButton);
+
+      // Wait for popover to open and check for Compare toggle
+      await waitFor(() => {
+        expect(screen.getByText("Compare")).toBeInTheDocument();
+      });
+    }
+  });
+
   it("displays transaction count in footer", async () => {
     vi.mocked(
       transactionService.fetchTransactionsByProductId,
@@ -310,10 +337,9 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
@@ -322,7 +348,7 @@ describe("StockMovementsPanel", () => {
     });
   });
 
-  it("closes on backdrop click", async () => {
+  it("calls onClose when close button is clicked", async () => {
     vi.mocked(
       transactionService.fetchTransactionsByProductId,
     ).mockResolvedValue([]);
@@ -330,15 +356,17 @@ describe("StockMovementsPanel", () => {
     const onClose = vi.fn();
     renderWithQueryClient(
       <StockMovementsPanel
-        open={true}
-        onOpenChange={onClose}
         productId={1}
         productName="Amoxicillin 500mg"
+        onClose={onClose}
       />,
     );
 
-    // Sheet component handles backdrop click internally
-    // We verify the onOpenChange prop is passed correctly
-    expect(onClose).not.toHaveBeenCalled();
+    // Click the close button (X)
+    const closeButton = screen.getByLabelText("Close");
+    fireEvent.click(closeButton);
+
+    // Should have called onClose
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

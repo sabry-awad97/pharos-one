@@ -51,7 +51,6 @@ export { BatchDetailsPanel } from "./components/ProductDetailsPanel";
 export { StockMovementsPanel } from "./components/StockMovementsPanel";
 export { ProductDetailsTab } from "./components/ProductDetailsTab";
 export { ProductLotsTab } from "./components/ProductLotsTab";
-export { ProductHistoryTab } from "./components/ProductHistoryTab";
 
 // Export hooks (public API only)
 export { useProducts, useProduct } from "./hooks/use-products";

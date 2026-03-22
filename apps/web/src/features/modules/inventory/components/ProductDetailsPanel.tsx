@@ -18,11 +18,15 @@
  * ```
  */
 
-import * as React from "react";
 import { X } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@pharos-one/ui/components/tabs";
 import { ProductDetailsTab } from "./ProductDetailsTab";
 import { ProductLotsTab } from "./ProductLotsTab";
-import { ProductHistoryTab } from "./ProductHistoryTab";
 
 /**
  * Props for BatchDetailsPanel component
@@ -48,7 +52,7 @@ export interface BatchDetailsPanelProps {
  * Read-only panel displaying all batches for a product
  *
  * Features:
- * - Displays batch details with tabs: Details, Lots, History
+ * - Displays batch details with tabs: Details, Lots
  * - Handles loading, empty, and error states
  * - Closes when X button clicked
  * - Zero hardcoded colors (uses theme variables)
@@ -67,75 +71,62 @@ export function BatchDetailsPanel({
   productName,
   onClose,
 }: BatchDetailsPanelProps) {
-  const [activeTab, setActiveTab] = React.useState<
-    "details" | "lots" | "history"
-  >("details");
-
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border">
+    <Tabs
+      defaultValue="details"
+      className="flex flex-col h-full bg-card border-l border-border"
+    >
       {/* Header */}
-      <div className="flex-none px-4 py-3 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">
+      <div className="flex-none border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground truncate">
               {productName || "Product Details"}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[11px] font-normal text-muted-foreground mt-0.5">
               Product information and batches
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="ml-3 w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mt-3">
-          <button
-            onClick={() => setActiveTab("details")}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              activeTab === "details"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+        {/* Tabs Navigation */}
+        <TabsList variant="line" className="px-4 h-auto gap-6">
+          <TabsTrigger
+            value="details"
+            className="font-semibold data-active:text-primary after:bg-primary after:h-[2px]"
           >
             Details
-          </button>
-          <button
-            onClick={() => setActiveTab("lots")}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              activeTab === "lots"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+          </TabsTrigger>
+          <TabsTrigger
+            value="lots"
+            className="font-semibold data-active:text-primary after:bg-primary after:h-[2px]"
           >
             Lots
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              activeTab === "history"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            History
-          </button>
-        </div>
+          </TabsTrigger>
+        </TabsList>
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-auto">
-        {activeTab === "details" && <ProductDetailsTab productId={productId} />}
+      <TabsContent
+        value="details"
+        className="flex-1 m-0 p-0 overflow-auto custom-scrollbar"
+      >
+        <ProductDetailsTab productId={productId} />
+      </TabsContent>
 
-        {activeTab === "lots" && <ProductLotsTab productId={productId} />}
-
-        {activeTab === "history" && <ProductHistoryTab productId={productId} />}
-      </div>
-    </div>
+      <TabsContent
+        value="lots"
+        className="flex-1 m-0 p-0 overflow-auto custom-scrollbar"
+      >
+        <ProductLotsTab productId={productId} />
+      </TabsContent>
+    </Tabs>
   );
 }

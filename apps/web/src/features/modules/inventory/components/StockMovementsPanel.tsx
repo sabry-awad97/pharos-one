@@ -4,7 +4,7 @@
  *
  * ARCHITECTURE: Inline panel component (not overlay)
  * - Displays next to table in workspace
- * - Integrates Timeline, TransactionTypeFilter, DateRangeFilter
+ * - Integrates Timeline, TransactionTypeFilter, DateRangePicker
  * - Uses useStockTransactions hook for data
  * - Uses useTransactionFilters hook for filtering
  * - Handles loading, error, and empty states
@@ -24,8 +24,8 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Button } from "@pharos-one/ui/components/button";
 import { Skeleton } from "@pharos-one/ui/components/skeleton";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { TransactionTypeFilter } from "./filters/TransactionTypeFilter";
-import { DateRangeFilter } from "./filters/DateRangeFilter";
 import { Timeline } from "./timeline/Timeline";
 import { useTransactionFilters } from "../hooks/use-transaction-filters";
 import { useStockTransactions } from "../hooks/use-transactions";
@@ -56,7 +56,7 @@ export interface StockMovementsPanelProps {
  * Features:
  * - Inline panel next to table
  * - Transaction timeline with date grouping
- * - Type and date range filters
+ * - Type filter and date range picker
  * - Loading skeleton
  * - Error message display
  * - Empty state handling
@@ -97,41 +97,61 @@ export function StockMovementsPanel({
       role="complementary"
     >
       {/* Header */}
-      <div className="flex-none px-4 py-3 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">
+      <div className="flex-none border-b border-border">
+        {/* Title Bar */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-normal text-foreground truncate">
               {productName || "Stock Movements"}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Stock transaction history
+            <p className="text-[11px] font-normal text-muted-foreground mt-0.5">
+              Transaction history
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="ml-3 w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 mt-3">
-          <TransactionTypeFilter
-            value={filters.types}
-            onChange={(types) => setFilters({ ...filters, types })}
-          />
-          <DateRangeFilter
-            dateFrom={filters.dateFrom}
-            dateTo={filters.dateTo}
-            onChange={(dateFrom, dateTo) =>
-              setFilters({ ...filters, dateFrom, dateTo })
-            }
-          />
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            Clear
-          </Button>
+        {/* Filters Bar */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2">
+            {/* Date Range Picker - Left */}
+            <div className="flex-1">
+              <DateRangePicker
+                size="sm"
+                initialDateFrom={filters.dateFrom || undefined}
+                initialDateTo={filters.dateTo || undefined}
+                onUpdate={({ range }) => {
+                  setFilters({
+                    ...filters,
+                    dateFrom: range.from || null,
+                    dateTo: range.to || null,
+                  });
+                }}
+              />
+            </div>
+
+            {/* Type Filter - Right */}
+            <TransactionTypeFilter
+              value={filters.types}
+              onChange={(types) => setFilters({ ...filters, types })}
+            />
+
+            {/* Clear Button - X Icon */}
+            <button
+              onClick={clearFilters}
+              className="flex items-center justify-center w-6 h-6 rounded-md border border-border bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors group"
+              aria-label="Clear filters"
+              title="Clear filters"
+            >
+              <X className="w-3 h-3 transition-transform group-hover:rotate-90" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -146,7 +166,7 @@ export function StockMovementsPanel({
         )}
 
         {isError && !isLoading && (
-          <div className="flex items-center justify-center h-full text-destructive text-sm">
+          <div className="flex items-center justify-center h-full text-destructive text-sm font-normal">
             Failed to load transactions. Please try again.
           </div>
         )}
@@ -155,7 +175,7 @@ export function StockMovementsPanel({
           <div className="mt-4">
             <Timeline transactions={filteredTransactions} />
             {/* Transaction count */}
-            <p className="text-xs text-muted-foreground mt-4 pb-4">
+            <p className="text-[11px] font-normal text-muted-foreground mt-4 pb-4">
               {filteredTransactions.length} of {transactions.length}{" "}
               transactions
             </p>
