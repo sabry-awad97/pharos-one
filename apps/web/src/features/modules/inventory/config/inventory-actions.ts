@@ -18,7 +18,7 @@
  * @see docs/epics/context-menu-actions.md for full roadmap
  */
 
-import { Edit, Eye, Package, Clock } from "lucide-react";
+import { Edit, Eye, Package, Clock, TrendingUp } from "lucide-react";
 import type { InventoryAction, ActionGroup } from "../types/actions";
 
 /**
@@ -66,6 +66,19 @@ export const inventoryActions: InventoryAction[] = [
     handler: (row) => {
       console.log("Batch Details:", row);
       // TODO: Open batch details panel showing all batches for this product
+    },
+  },
+
+  {
+    id: "view-stock-movements",
+    label: "View Stock Movements",
+    group: "view",
+    shortcut: "⌘M",
+    icon: TrendingUp,
+    isVisible: () => true,
+    handler: (row) => {
+      console.log("View Stock Movements:", row);
+      // TODO: Open stock movements panel showing all transactions
     },
   },
 

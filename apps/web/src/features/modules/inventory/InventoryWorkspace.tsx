@@ -20,6 +20,7 @@ import { Checkbox } from "@pharos-one/ui/components/checkbox";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/BatchDetailsPanel";
+import { StockMovementsPanel } from "./components/StockMovementsPanel";
 import { inventoryActions, actionGroups } from "./config/inventory-actions";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
@@ -88,6 +89,8 @@ export function InventoryWorkspace({
   const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
     number | null
   >(null);
+  const [stockMovementsPanelProductId, setStockMovementsPanelProductId] =
+    useState<number | null>(null);
 
   // Create custom actions with batch details handler
   const customActions = useMemo(
@@ -98,6 +101,14 @@ export function InventoryWorkspace({
             ...action,
             handler: (row: ProductStockSummary) => {
               setBatchDetailsPanelProductId(row.id);
+            },
+          };
+        }
+        if (action.id === "view-stock-movements") {
+          return {
+            ...action,
+            handler: (row: ProductStockSummary) => {
+              setStockMovementsPanelProductId(row.id);
             },
           };
         }
@@ -395,6 +406,20 @@ export function InventoryWorkspace({
             onClose={() => setBatchDetailsPanelProductId(null)}
           />
         </aside>
+      )}
+
+      {/* Stock Movements Panel - overlay sheet */}
+      {stockMovementsPanelProductId !== null && (
+        <StockMovementsPanel
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setStockMovementsPanelProductId(null);
+          }}
+          productId={stockMovementsPanelProductId}
+          productName={
+            products.find((p) => p.id === stockMovementsPanelProductId)?.name
+          }
+        />
       )}
     </div>
   );
