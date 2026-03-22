@@ -11,10 +11,12 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
   type RowSelectionState,
+  type PaginationState,
 } from "@tanstack/react-table";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/ProductDetailsPanel";
@@ -87,6 +89,10 @@ export function InventoryWorkspace({
   const { data: products = [], isLoading, error } = useProducts();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
   const [lastSelectedRowId, setLastSelectedRowId] = useState<number | null>(
     null,
@@ -299,12 +305,15 @@ export function InventoryWorkspace({
     state: {
       sorting,
       rowSelection,
+      pagination,
     },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
   });
 
@@ -366,111 +375,157 @@ export function InventoryWorkspace({
           )}
 
           {!isLoading && !error && (
-            <div className="overflow-x-auto bg-card custom-scrollbar">
-              <table className="w-full border-collapse">
-                <thead>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr
-                      key={headerGroup.id}
-                      className="bg-muted/50 sticky top-0 z-10 border-b border-border"
-                    >
-                      {headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
-                          style={{
-                            width:
-                              header.column.getSize() !== 150
-                                ? header.column.getSize()
-                                : undefined,
-                          }}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                          {{
-                            asc: " ↑",
-                            desc: " ↓",
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row, idx) => {
-                    const selected = selectedRowIds.has(row.original.id);
-                    const focused = focusedRowId === row.original.id;
-                    return (
-                      <TableRowContextMenu
-                        key={row.id}
-                        row={row.original}
-                        actions={customActions}
-                        actionGroups={actionGroups}
+            <div className="flex flex-col gap-3">
+              <div className="overflow-x-auto bg-card custom-scrollbar">
+                <table className="w-full border-collapse">
+                  <thead>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <tr
+                        key={headerGroup.id}
+                        className="bg-muted/50 sticky top-0 z-10 border-b border-border"
                       >
-                        <tr
-                          data-selected={selected ? "true" : undefined}
-                          data-focused={focused ? "true" : undefined}
-                          className="border-b transition-[background]"
-                          style={{
-                            borderBottomColor:
-                              "oklch(from var(--border) l c h / 0.8)",
-                            background: focused
-                              ? "oklch(from var(--primary) l c h / 0.07)"
-                              : selected
-                                ? "oklch(from var(--primary) l c h / 0.05)"
-                                : idx % 2 === 1
-                                  ? "oklch(from var(--muted) l c h / 0.5)"
-                                  : "var(--card)",
-                            boxShadow: focused
-                              ? "inset 0 0 0 1.5px var(--primary)"
-                              : "none",
-                          }}
-                          onClick={(e) => handleRowClick(row.original.id, e)}
-                          onDoubleClick={() =>
-                            handleRowDoubleClick(row.original.id)
-                          }
-                          onMouseEnter={(e) => {
-                            if (!focused) {
+                        {headerGroup.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
+                            style={{
+                              width:
+                                header.column.getSize() !== 150
+                                  ? header.column.getSize()
+                                  : undefined,
+                            }}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                            {{
+                              asc: " ↑",
+                              desc: " ↓",
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody>
+                    {table.getRowModel().rows.map((row, idx) => {
+                      const selected = selectedRowIds.has(row.original.id);
+                      const focused = focusedRowId === row.original.id;
+                      return (
+                        <TableRowContextMenu
+                          key={row.id}
+                          row={row.original}
+                          actions={customActions}
+                          actionGroups={actionGroups}
+                        >
+                          <tr
+                            data-selected={selected ? "true" : undefined}
+                            data-focused={focused ? "true" : undefined}
+                            className="border-b transition-[background]"
+                            style={{
+                              borderBottomColor:
+                                "oklch(from var(--border) l c h / 0.8)",
+                              background: focused
+                                ? "oklch(from var(--primary) l c h / 0.07)"
+                                : selected
+                                  ? "oklch(from var(--primary) l c h / 0.05)"
+                                  : idx % 2 === 1
+                                    ? "oklch(from var(--muted) l c h / 0.5)"
+                                    : "var(--card)",
+                              boxShadow: focused
+                                ? "inset 0 0 0 1.5px var(--primary)"
+                                : "none",
+                            }}
+                            onClick={(e) => handleRowClick(row.original.id, e)}
+                            onDoubleClick={() =>
+                              handleRowDoubleClick(row.original.id)
+                            }
+                            onMouseEnter={(e) => {
+                              if (!focused) {
+                                (
+                                  e.currentTarget as HTMLTableRowElement
+                                ).style.background =
+                                  "oklch(from var(--primary) l c h / 0.03)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
                               (
                                 e.currentTarget as HTMLTableRowElement
-                              ).style.background =
-                                "oklch(from var(--primary) l c h / 0.03)";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            (
-                              e.currentTarget as HTMLTableRowElement
-                            ).style.background = focused
-                              ? "oklch(from var(--primary) l c h / 0.07)"
-                              : selected
-                                ? "oklch(from var(--primary) l c h / 0.05)"
-                                : idx % 2 === 1
-                                  ? "oklch(from var(--muted) l c h / 0.5)"
-                                  : "var(--card)";
-                          }}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <td
-                              key={cell.id}
-                              className="py-1.5 px-3 whitespace-nowrap"
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      </TableRowContextMenu>
+                              ).style.background = focused
+                                ? "oklch(from var(--primary) l c h / 0.07)"
+                                : selected
+                                  ? "oklch(from var(--primary) l c h / 0.05)"
+                                  : idx % 2 === 1
+                                    ? "oklch(from var(--muted) l c h / 0.5)"
+                                    : "var(--card)";
+                            }}
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <td
+                                key={cell.id}
+                                className="py-1.5 px-3 whitespace-nowrap"
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        </TableRowContextMenu>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination controls */}
+              <nav aria-label="pagination" className="flex justify-center">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page number buttons */}
+                  {Array.from(
+                    { length: table.getPageCount() },
+                    (_, i) => i,
+                  ).map((pageIndex) => {
+                    const isActive =
+                      pageIndex === table.getState().pagination.pageIndex;
+                    return (
+                      <button
+                        key={pageIndex}
+                        onClick={() => table.setPageIndex(pageIndex)}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`w-8 h-8 text-xs border rounded ${
+                          isActive
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {pageIndex + 1}
+                      </button>
                     );
                   })}
-                </tbody>
-              </table>
+
+                  <button
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
             </div>
           )}
 
