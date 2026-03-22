@@ -1,9 +1,9 @@
 /**
  * StockMovementsPanel Component
- * Slide-in drawer displaying stock transaction history with filters
+ * Inline panel displaying stock transaction history with filters
  *
- * ARCHITECTURE: Sheet-based overlay panel
- * - Opens as slide-in drawer from right
+ * ARCHITECTURE: Inline panel component (not overlay)
+ * - Displays next to table in workspace
  * - Integrates Timeline, TransactionTypeFilter, DateRangeFilter
  * - Uses useStockTransactions hook for data
  * - Uses useTransactionFilters hook for filtering
@@ -13,23 +13,15 @@
  * USAGE:
  * ```typescript
  * <StockMovementsPanel
- *   open={true}
- *   onOpenChange={setOpen}
  *   productId={1}
  *   productName="Amoxicillin 500mg"
+ *   onClose={() => setIsOpen(false)}
  * />
  * ```
  */
 
 import * as React from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@pharos-one/ui/components/sheet";
+import { X } from "lucide-react";
 import { Button } from "@pharos-one/ui/components/button";
 import { Skeleton } from "@pharos-one/ui/components/skeleton";
 import { TransactionTypeFilter } from "./filters/TransactionTypeFilter";
@@ -43,16 +35,6 @@ import { useStockTransactions } from "../hooks/use-transactions";
  */
 export interface StockMovementsPanelProps {
   /**
-   * Whether the panel is open
-   */
-  open: boolean;
-
-  /**
-   * Callback when panel open state changes
-   */
-  onOpenChange: (open: boolean) => void;
-
-  /**
    * Product ID to fetch transactions for
    */
   productId: number;
@@ -61,36 +43,39 @@ export interface StockMovementsPanelProps {
    * Product name to display in header
    */
   productName?: string;
+
+  /**
+   * Callback when panel should close
+   */
+  onClose: () => void;
 }
 
 /**
- * Stock Movements Panel - displays transaction history in a slide-in drawer
+ * Stock Movements Panel - displays transaction history inline
  *
  * Features:
- * - Slide-in drawer from right
+ * - Inline panel next to table
  * - Transaction timeline with date grouping
  * - Type and date range filters
  * - Loading skeleton
  * - Error message display
  * - Empty state handling
- * - Transaction count in footer
- * - Closes on backdrop click or ESC key
+ * - Transaction count display
+ * - Closes when X button clicked
  *
  * @example
  * ```typescript
  * <StockMovementsPanel
- *   open={true}
- *   onOpenChange={setOpen}
  *   productId={1}
  *   productName="Amoxicillin 500mg"
+ *   onClose={() => setIsOpen(false)}
  * />
  * ```
  */
 export function StockMovementsPanel({
-  open,
-  onOpenChange,
   productId,
   productName,
+  onClose,
 }: StockMovementsPanelProps) {
   const { filters, setFilters, clearFilters, applyFilters } =
     useTransactionFilters();
@@ -107,15 +92,32 @@ export function StockMovementsPanel({
   );
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[500px] flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{productName || "Stock Movements"}</SheetTitle>
-          <SheetDescription>Stock transaction history</SheetDescription>
-        </SheetHeader>
+    <div
+      className="flex flex-col h-full bg-card border-l border-border"
+      role="complementary"
+    >
+      {/* Header */}
+      <div className="flex-none px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">
+              {productName || "Stock Movements"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Stock transaction history
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Filters */}
-        <div className="flex gap-2 my-4 px-6">
+        <div className="flex gap-2 mt-3">
           <TransactionTypeFilter
             value={filters.types}
             onChange={(types) => setFilters({ ...filters, types })}
@@ -131,38 +133,35 @@ export function StockMovementsPanel({
             Clear
           </Button>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 min-h-0 overflow-auto px-6">
-          {isLoading && (
-            <div data-testid="loading-skeleton" className="space-y-4">
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          )}
+      {/* Content */}
+      <div className="flex-1 min-h-0 overflow-auto px-4">
+        {isLoading && (
+          <div data-testid="loading-skeleton" className="space-y-4 mt-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        )}
 
-          {isError && !isLoading && (
-            <div className="flex items-center justify-center h-full text-destructive text-sm">
-              Failed to load transactions. Please try again.
-            </div>
-          )}
+        {isError && !isLoading && (
+          <div className="flex items-center justify-center h-full text-destructive text-sm">
+            Failed to load transactions. Please try again.
+          </div>
+        )}
 
-          {!isLoading && !isError && (
-            <Timeline transactions={filteredTransactions} />
-          )}
-        </div>
-
-        {/* Footer */}
         {!isLoading && !isError && (
-          <SheetFooter>
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-4">
+            <Timeline transactions={filteredTransactions} />
+            {/* Transaction count */}
+            <p className="text-xs text-muted-foreground mt-4 pb-4">
               {filteredTransactions.length} of {transactions.length}{" "}
               transactions
             </p>
-          </SheetFooter>
+          </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 }

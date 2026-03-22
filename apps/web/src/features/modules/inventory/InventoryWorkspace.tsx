@@ -19,7 +19,7 @@ import {
 import { Checkbox } from "@pharos-one/ui/components/checkbox";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
-import { BatchDetailsPanel } from "./components/BatchDetailsPanel";
+import { BatchDetailsPanel } from "./components/ProductDetailsPanel";
 import { StockMovementsPanel } from "./components/StockMovementsPanel";
 import {
   useInventoryActions,
@@ -265,13 +265,18 @@ export function InventoryWorkspace({
     enableRowSelection: true,
   });
 
+  // Check if any panel is open
+  const isPanelOpen =
+    batchDetailsPanelProductId !== null ||
+    stockMovementsPanelProductId !== null;
+
   return (
     <div
-      className={`flex ${batchDetailsPanelProductId !== null ? "flex-row" : "flex-col"} flex-1 overflow-hidden font-sans bg-background`}
+      className={`flex ${isPanelOpen ? "flex-row" : "flex-col"} flex-1 overflow-hidden font-sans bg-background`}
     >
       {/* Table container - takes flex-1 when panel is open */}
       <div
-        className={`flex flex-col ${batchDetailsPanelProductId !== null ? "flex-1 min-h-0" : "flex-1"} overflow-hidden`}
+        className={`flex flex-col ${isPanelOpen ? "flex-1 min-h-0" : "flex-1"} overflow-hidden`}
       >
         {/* Module header */}
         <div className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0 border-b border-border bg-card">
@@ -411,25 +416,17 @@ export function InventoryWorkspace({
         </aside>
       )}
 
-      {/* Stock Movements Panel - overlay sheet */}
+      {/* Stock Movements Panel - inline side-by-side */}
       {stockMovementsPanelProductId !== null && (
-        <>
-          {console.log(
-            "Rendering StockMovementsPanel with productId:",
-            stockMovementsPanelProductId,
-          )}
+        <aside role="complementary" className="w-[360px] flex-none">
           <StockMovementsPanel
-            open={true}
-            onOpenChange={(open) => {
-              console.log("Sheet onOpenChange called with:", open);
-              if (!open) setStockMovementsPanelProductId(null);
-            }}
             productId={stockMovementsPanelProductId}
             productName={
               products.find((p) => p.id === stockMovementsPanelProductId)?.name
             }
+            onClose={() => setStockMovementsPanelProductId(null)}
           />
-        </>
+        </aside>
       )}
     </div>
   );
