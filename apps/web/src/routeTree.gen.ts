@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTabsRouteImport } from './routes/demo/tabs'
+import { Route as DemoInventoryRouteImport } from './routes/demo/inventory'
 import { Route as DemoDashboardRouteImport } from './routes/demo/dashboard'
 import { Route as AppHomeRouteRouteImport } from './routes/_app/home/route'
 import { Route as AppHomeReportsRouteImport } from './routes/_app/home/reports'
@@ -39,6 +40,11 @@ const IndexRoute = IndexRouteImport.update({
 const DemoTabsRoute = DemoTabsRouteImport.update({
   id: '/demo/tabs',
   path: '/demo/tabs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoInventoryRoute = DemoInventoryRouteImport.update({
+  id: '/demo/inventory',
+  path: '/demo/inventory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoDashboardRoute = DemoDashboardRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/demo/inventory': typeof DemoInventoryRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
   '/home/pos': typeof AppHomePosRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/demo/inventory': typeof DemoInventoryRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
   '/home/pos': typeof AppHomePosRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/_app/home': typeof AppHomeRouteRouteWithChildren
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/demo/inventory': typeof DemoInventoryRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/_app/home/customers': typeof AppHomeCustomersRoute
   '/_app/home/pos': typeof AppHomePosRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/demo/dashboard'
+    | '/demo/inventory'
     | '/demo/tabs'
     | '/home/customers'
     | '/home/pos'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/demo/dashboard'
+    | '/demo/inventory'
     | '/demo/tabs'
     | '/home/customers'
     | '/home/pos'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/home'
     | '/demo/dashboard'
+    | '/demo/inventory'
     | '/demo/tabs'
     | '/_app/home/customers'
     | '/_app/home/pos'
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
   DemoDashboardRoute: typeof DemoDashboardRoute
+  DemoInventoryRoute: typeof DemoInventoryRoute
   DemoTabsRoute: typeof DemoTabsRoute
 }
 
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/tabs'
       fullPath: '/demo/tabs'
       preLoaderRoute: typeof DemoTabsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/inventory': {
+      id: '/demo/inventory'
+      path: '/demo/inventory'
+      fullPath: '/demo/inventory'
+      preLoaderRoute: typeof DemoInventoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/dashboard': {
@@ -411,6 +431,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
   DemoDashboardRoute: DemoDashboardRoute,
+  DemoInventoryRoute: DemoInventoryRoute,
   DemoTabsRoute: DemoTabsRoute,
 }
 export const routeTree = rootRouteImport
