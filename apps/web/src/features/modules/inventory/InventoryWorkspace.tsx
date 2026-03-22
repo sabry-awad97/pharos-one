@@ -17,7 +17,15 @@ import {
   type SortingState,
   type RowSelectionState,
   type PaginationState,
+  type Table,
 } from "@tanstack/react-table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@pharos-one/ui/components/select";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/ProductDetailsPanel";
 import { StockMovementsPanel } from "./components/StockMovementsPanel";
@@ -27,6 +35,54 @@ import {
 } from "./hooks/use-inventory-actions";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
+
+// Page size options
+const PAGE_SIZE_OPTIONS = [
+  { value: "10", label: "10 / page" },
+  { value: "25", label: "25 / page" },
+  { value: "50", label: "50 / page" },
+  { value: "100", label: "100 / page" },
+] as const;
+
+const DEFAULT_PAGE_SIZE = 10;
+const STORAGE_KEY = "inventory-page-size";
+
+// Hook for persisted page size
+function usePersistedPageSize() {
+  const [pageSize, setPageSize] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? parseInt(stored, 10) : DEFAULT_PAGE_SIZE;
+    } catch {
+      return DEFAULT_PAGE_SIZE;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, pageSize.toString());
+    } catch {
+      // Silently fail if localStorage is unavailable
+    }
+  }, [pageSize]);
+
+  return [pageSize, setPageSize] as const;
+}
+
+// Helper function to calculate items display text
+function getItemsDisplayText(table: Table<ProductStockSummary>): string {
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const totalItems = table.getFilteredRowModel().rows.length;
+
+  if (totalItems === 0) {
+    return "No items";
+  }
+
+  const start = pageIndex * pageSize + 1;
+  const end = Math.min((pageIndex + 1) * pageSize, totalItems);
+
+  return `Showing ${start}–${end} of ${totalItems} items`;
+}
 
 // Status badge component
 function StatusBadge({
@@ -89,10 +145,17 @@ export function InventoryWorkspace({
   const { data: products = [], isLoading, error } = useProducts();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [pageSize, setPageSize] = usePersistedPageSize();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize,
   });
+
+  // Sync pageSize changes with pagination state
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageSize, pageIndex: 0 }));
+  }, [pageSize]);
+
   const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
   const [lastSelectedRowId, setLastSelectedRowId] = useState<number | null>(
     null,
@@ -484,48 +547,78 @@ export function InventoryWorkspace({
               </div>
 
               {/* Pagination controls */}
-              <nav aria-label="pagination" className="flex justify-center">
+              <div className="flex items-center justify-between px-3 py-3 border-t border-border">
+                {/* Left side: Page size selector */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                    className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  <span className="text-xs text-muted-foreground">
+                    Items per page:
+                  </span>
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(value) => setPageSize(parseInt(value, 10))}
                   >
-                    Previous
-                  </button>
-
-                  {/* Page number buttons */}
-                  {Array.from(
-                    { length: table.getPageCount() },
-                    (_, i) => i,
-                  ).map((pageIndex) => {
-                    const isActive =
-                      pageIndex === table.getState().pagination.pageIndex;
-                    return (
-                      <button
-                        key={pageIndex}
-                        onClick={() => table.setPageIndex(pageIndex)}
-                        aria-current={isActive ? "page" : undefined}
-                        className={`w-8 h-8 text-xs border rounded ${
-                          isActive
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-card text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {pageIndex + 1}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                    className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
+                    <SelectTrigger className="h-8 w-[130px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </nav>
+
+                {/* Center: Pagination controls */}
+                <nav aria-label="pagination" className="flex justify-center">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => table.previousPage()}
+                      disabled={!table.getCanPreviousPage()}
+                      className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page number buttons */}
+                    {Array.from(
+                      { length: table.getPageCount() },
+                      (_, i) => i,
+                    ).map((pageIndex) => {
+                      const isActive =
+                        pageIndex === table.getState().pagination.pageIndex;
+                      return (
+                        <button
+                          key={pageIndex}
+                          onClick={() => table.setPageIndex(pageIndex)}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`w-8 h-8 text-xs border rounded ${
+                            isActive
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-card text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {pageIndex + 1}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      onClick={() => table.nextPage()}
+                      disabled={!table.getCanNextPage()}
+                      className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </nav>
+
+                {/* Right side: Items display */}
+                <div className="text-xs text-muted-foreground">
+                  {getItemsDisplayText(table)}
+                </div>
+              </div>
             </div>
           )}
 
