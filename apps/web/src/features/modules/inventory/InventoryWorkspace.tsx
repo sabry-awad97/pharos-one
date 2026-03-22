@@ -17,6 +17,21 @@ import {
   type RowSelectionState,
 } from "@tanstack/react-table";
 import { Checkbox } from "@pharos-one/ui/components/checkbox";
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+} from "@pharos-one/ui/components/context-menu";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+  CommandGroup,
+  CommandSeparator,
+  CommandShortcut,
+} from "@pharos-one/ui/components/command";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
@@ -422,48 +437,106 @@ export function InventoryWorkspace({
                 {table.getRowModel().rows.map((row, idx) => {
                   const selected = row.getIsSelected();
                   return (
-                    <tr
-                      key={row.id}
-                      className="transition-[background] duration-100"
-                      style={{
-                        borderBottom: `1px solid ${W.borderLight}`,
-                        background: selected
-                          ? "rgba(0,120,212,0.07)"
-                          : idx % 2 === 1
-                            ? W.surfaceAlt
-                            : W.surface,
-                        boxShadow: selected
-                          ? "inset 0 0 0 1.5px #0078d4"
-                          : "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!selected)
-                          (
-                            e.currentTarget as HTMLTableRowElement
-                          ).style.background = "#f0f6ff";
-                      }}
-                      onMouseLeave={(e) => {
-                        (
-                          e.currentTarget as HTMLTableRowElement
-                        ).style.background = selected
-                          ? "rgba(0,120,212,0.07)"
-                          : idx % 2 === 1
-                            ? W.surfaceAlt
-                            : W.surface;
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          style={{ padding: "6px 12px", whiteSpace: "nowrap" }}
+                    <ContextMenu key={row.id}>
+                      <ContextMenuTrigger asChild>
+                        <tr
+                          className="transition-[background] duration-100"
+                          style={{
+                            borderBottom: `1px solid ${W.borderLight}`,
+                            background: selected
+                              ? "rgba(0,120,212,0.07)"
+                              : idx % 2 === 1
+                                ? W.surfaceAlt
+                                : W.surface,
+                            boxShadow: selected
+                              ? "inset 0 0 0 1.5px #0078d4"
+                              : "none",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!selected)
+                              (
+                                e.currentTarget as HTMLTableRowElement
+                              ).style.background = "#f0f6ff";
+                          }}
+                          onMouseLeave={(e) => {
+                            (
+                              e.currentTarget as HTMLTableRowElement
+                            ).style.background = selected
+                              ? "rgba(0,120,212,0.07)"
+                              : idx % 2 === 1
+                                ? W.surfaceAlt
+                                : W.surface;
+                          }}
                         >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              style={{
+                                padding: "6px 12px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="p-0">
+                        <Command>
+                          <CommandInput placeholder="Search actions..." />
+                          <CommandList>
+                            <CommandEmpty>No actions found.</CommandEmpty>
+                            <CommandGroup heading="Edit">
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("Edit Product:", row.original);
+                                }}
+                              >
+                                Edit Product
+                                <CommandShortcut>⌘E</CommandShortcut>
+                              </CommandItem>
+                            </CommandGroup>
+                            <CommandSeparator />
+                            <CommandGroup heading="View">
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("View Batches:", row.original);
+                                }}
+                              >
+                                View Batches
+                                <CommandShortcut>⌘B</CommandShortcut>
+                              </CommandItem>
+                            </CommandGroup>
+                            <CommandSeparator />
+                            <CommandGroup heading="Actions">
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("Adjust Stock:", row.original);
+                                }}
+                              >
+                                Adjust Stock
+                                <CommandShortcut>⌘S</CommandShortcut>
+                              </CommandItem>
+                              {row.original.stockStatus === "expiring" && (
+                                <CommandItem
+                                  onSelect={() => {
+                                    console.log(
+                                      "Mark as Expiring:",
+                                      row.original,
+                                    );
+                                  }}
+                                >
+                                  Mark as Expiring
+                                </CommandItem>
+                              )}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   );
                 })}
               </tbody>
