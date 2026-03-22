@@ -1,4 +1,5 @@
 import * as React from "react";
+import { MoreVertical } from "lucide-react";
 
 export interface SidebarSubItemProps {
   /** Unique identifier for the sub-item */
@@ -112,6 +113,43 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
           >
             {badge}
           </span>
+        )}
+        {/* MoreVertical icon */}
+        {onContextMenu && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onContextMenu) {
+                onContextMenu(e, id);
+              }
+            }}
+            style={{
+              opacity: isHovered ? 1 : 0,
+              transition: "opacity 0.1s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 2,
+              borderRadius: 4,
+              flexShrink: 0,
+              marginLeft: 4,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.background = "#f0f0f0";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.background =
+                "transparent";
+            }}
+          >
+            <MoreVertical
+              style={{
+                width: 14,
+                height: 14,
+                color: "#616161",
+              }}
+            />
+          </div>
         )}
       </button>
     );
