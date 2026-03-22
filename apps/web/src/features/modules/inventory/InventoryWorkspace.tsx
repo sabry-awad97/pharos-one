@@ -150,6 +150,7 @@ export function InventoryWorkspace({
     pageIndex: 0,
     pageSize,
   });
+  const [goToPageValue, setGoToPageValue] = useState<string>("");
 
   // Sync pageSize changes with pagination state
   useEffect(() => {
@@ -380,6 +381,31 @@ export function InventoryWorkspace({
     enableRowSelection: true,
   });
 
+  // Handle go to page navigation
+  const handleGoToPage = useCallback(() => {
+    const pageNumber = parseInt(goToPageValue, 10);
+
+    // Validate page number
+    if (isNaN(pageNumber) || pageNumber < 1) {
+      // Invalid or less than 1: stay on current page
+      setGoToPageValue("");
+      return;
+    }
+
+    const totalPages = table.getPageCount();
+
+    if (pageNumber > totalPages) {
+      // Beyond total pages: go to last page
+      table.setPageIndex(totalPages - 1);
+    } else {
+      // Valid page: navigate (pageIndex is 0-based)
+      table.setPageIndex(pageNumber - 1);
+    }
+
+    // Clear input after navigation
+    setGoToPageValue("");
+  }, [goToPageValue, table]);
+
   // Check if any panel is open
   const isPanelOpen =
     batchDetailsPanelProductId !== null ||
@@ -568,6 +594,29 @@ export function InventoryWorkspace({
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Go to page input */}
+                  <div className="flex items-center gap-2 ml-4">
+                    <label
+                      htmlFor="go-to-page"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Go to page:
+                    </label>
+                    <input
+                      id="go-to-page"
+                      type="text"
+                      value={goToPageValue}
+                      onChange={(e) => setGoToPageValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleGoToPage();
+                        }
+                      }}
+                      className="h-8 w-16 px-2 text-xs border border-border rounded bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="1"
+                    />
+                  </div>
                 </div>
 
                 {/* Center: Pagination controls */}

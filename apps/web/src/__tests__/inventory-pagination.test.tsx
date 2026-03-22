@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
@@ -126,5 +126,114 @@ describe("InventoryWorkspace - Pagination Navigation", () => {
 
     // Should have exactly 3 page buttons (25 items / 10 per page = 3 pages)
     expect(pageButtons).toHaveLength(3);
+  });
+});
+
+describe("InventoryWorkspace - Go to Page", () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+  });
+
+  const renderComponent = () => {
+    const user = userEvent.setup();
+    const result = render(
+      <QueryClientProvider client={queryClient}>
+        <InventoryWorkspace />
+      </QueryClientProvider>,
+    );
+    return { ...result, user };
+  };
+
+  it("should display go to page input field", () => {
+    renderComponent();
+
+    // Look for "Go to page:" label or input
+    expect(screen.getByLabelText(/go to page/i)).toBeInTheDocument();
+  });
+
+  it("should navigate to specified page when entering page number", async () => {
+    const { user } = renderComponent();
+
+    // Initially on page 1
+    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    // Find the go to page input
+    const goToPageInput = screen.getByLabelText(/go to page/i);
+
+    // Type page number 2
+    await user.clear(goToPageInput);
+    await user.type(goToPageInput, "2");
+    await user.keyboard("{Enter}");
+
+    // Should navigate to page 2
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "2" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+    });
+  });
+
+  it("should handle invalid page numbers gracefully", async () => {
+    const { user } = renderComponent();
+
+    const goToPageInput = screen.getByLabelText(/go to page/i);
+
+    // Try to go to page 0 (invalid)
+    await user.clear(goToPageInput);
+    await user.type(goToPageInput, "0");
+    await user.keyboard("{Enter}");
+
+    // Should stay on page 1
+    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("should handle page numbers beyond total pages", async () => {
+    const { user } = renderComponent();
+
+    const goToPageInput = screen.getByLabelText(/go to page/i);
+
+    // With 25 items and 10 per page, we have 3 pages
+    // Try to go to page 10 (beyond total)
+    await user.clear(goToPageInput);
+    await user.type(goToPageInput, "10");
+    await user.keyboard("{Enter}");
+
+    // Should go to last page (page 3)
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "3" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+    });
+  });
+
+  it("should clear input after navigation", async () => {
+    const { user } = renderComponent();
+
+    const goToPageInput = screen.getByLabelText(
+      /go to page/i,
+    ) as HTMLInputElement;
+
+    // Type and navigate
+    await user.type(goToPageInput, "2");
+    await user.keyboard("{Enter}");
+
+    // Input should be cleared
+    await waitFor(() => {
+      expect(goToPageInput.value).toBe("");
+    });
   });
 });
