@@ -5,7 +5,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Hash, Filter, Download, RefreshCw } from "lucide-react";
+import { Hash, Filter, Download, RefreshCw, ChevronRight } from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -447,6 +447,46 @@ export function InventoryWorkspace({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Breadcrumb + Toolbar */}
+        <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
+          <span className="text-[11px] text-muted-foreground">Pharos One</span>
+          <ChevronRight className="w-3 h-3 text-border" />
+          <span className="text-[11px] text-primary font-semibold">
+            Inventory
+          </span>
+          <span className="w-px h-4 bg-border mx-1" />
+          <span className="text-[11px] text-muted-foreground">
+            {products.length} items
+          </span>
+          <div className="flex-1" />
+          <button
+            title="Filter"
+            className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
+          >
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filter</span>
+          </button>
+          <button
+            title="Sort"
+            className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Sort</span>
+          </button>
+          <button
+            title="Export"
+            className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export</span>
+          </button>
+          <span className="w-px h-4 bg-border mx-0.5" />
+          <button className="flex items-center gap-1.5 h-[26px] px-2.5 bg-primary text-primary-foreground rounded border-none text-xs cursor-pointer font-medium hover:opacity-90 transition-opacity">
+            <Hash className="w-3 h-3" />
+            Add Product
+          </button>
         </div>
 
         {/* Table content */}
