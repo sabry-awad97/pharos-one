@@ -16,7 +16,6 @@ import {
   type SortingState,
   type RowSelectionState,
 } from "@tanstack/react-table";
-import { Checkbox } from "@pharos-one/ui/components/checkbox";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/ProductDetailsPanel";
@@ -89,6 +88,10 @@ export function InventoryWorkspace({
   const { data: products = [], isLoading, error } = useProducts();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
+  const [lastSelectedRowId, setLastSelectedRowId] = useState<number | null>(
+    null,
+  );
   const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
     number | null
   >(null);
@@ -107,6 +110,62 @@ export function InventoryWorkspace({
     console.log("Opening stock movements for product:", productId);
     setStockMovementsPanelProductId(productId);
   }, []);
+
+  // Handle row click with modifier keys for Windows-style selection
+  const handleRowClick = useCallback(
+    (productId: number, event: React.MouseEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        // Ctrl+Click: Toggle selection (don't change focus)
+        setSelectedRowIds((prev) => {
+          const newSelection = new Set(prev);
+          if (newSelection.has(productId)) {
+            newSelection.delete(productId);
+          } else {
+            newSelection.add(productId);
+          }
+          return newSelection;
+        });
+        setLastSelectedRowId(productId);
+      } else if (event.shiftKey) {
+        // Shift+Click: Range selection (don't change focus)
+        if (lastSelectedRowId !== null) {
+          // Find indices of lastSelectedRowId and productId in products array
+          const startIdx = products.findIndex(
+            (p) => p.id === lastSelectedRowId,
+          );
+          const endIdx = products.findIndex((p) => p.id === productId);
+          if (startIdx !== -1 && endIdx !== -1) {
+            const [minIdx, maxIdx] = [
+              Math.min(startIdx, endIdx),
+              Math.max(startIdx, endIdx),
+            ];
+            const rangeIds = products
+              .slice(minIdx, maxIdx + 1)
+              .map((p) => p.id);
+            setSelectedRowIds(new Set(rangeIds));
+          }
+        } else {
+          // No anchor, just select single row
+          setSelectedRowIds(new Set([productId]));
+          setLastSelectedRowId(productId);
+        }
+      } else {
+        // Normal click: Single selection AND set focus
+        setSelectedRowIds(new Set([productId]));
+        setLastSelectedRowId(productId);
+        setFocusedRowId(productId);
+      }
+    },
+    [lastSelectedRowId, products],
+  );
+
+  // Handle row double-click to open panel
+  const handleRowDoubleClick = useCallback(
+    (productId: number) => {
+      handleBatchDetailsOpen(productId);
+    },
+    [handleBatchDetailsOpen],
+  );
 
   // Get inventory actions with custom handlers
   const customActions = useInventoryActions({
@@ -129,29 +188,6 @@ export function InventoryWorkspace({
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
     () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllRowsSelected()}
-            onCheckedChange={(checked) => {
-              table.toggleAllRowsSelected(!!checked);
-            }}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(checked) => {
-              row.toggleSelected(!!checked);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="Select row"
-          />
-        ),
-        size: 40,
-      },
       {
         accessorKey: "name",
         header: "Product Name",
@@ -329,7 +365,7 @@ export function InventoryWorkspace({
           )}
 
           {!isLoading && !error && (
-            <div className="rounded-md overflow-hidden shadow-sm border border-border bg-card">
+            <div className="overflow-hidden bg-card">
               <table className="w-full border-collapse">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
@@ -366,7 +402,7 @@ export function InventoryWorkspace({
                 </thead>
                 <tbody>
                   {table.getRowModel().rows.map((row, idx) => {
-                    const selected = row.getIsSelected();
+                    const selected = selectedRowIds.has(row.original.id);
                     const focused = focusedRowId === row.original.id;
                     return (
                       <TableRowContextMenu
@@ -376,40 +412,45 @@ export function InventoryWorkspace({
                         actionGroups={actionGroups}
                       >
                         <tr
+                          data-selected={selected ? "true" : undefined}
+                          data-focused={focused ? "true" : undefined}
+                          className="border-b transition-[background]"
                           style={{
-                            borderBottom: "1px solid hsl(var(--border) / 0.5)",
+                            borderBottomColor:
+                              "oklch(from var(--border) l c h / 0.8)",
                             background: focused
-                              ? "rgba(0,120,212,0.07)"
+                              ? "oklch(from var(--primary) l c h / 0.07)"
                               : selected
-                                ? "rgba(0,120,212,0.05)"
+                                ? "oklch(from var(--primary) l c h / 0.05)"
                                 : idx % 2 === 1
-                                  ? "hsl(var(--muted) / 0.3)"
-                                  : "hsl(var(--card))",
+                                  ? "oklch(from var(--muted) l c h / 0.5)"
+                                  : "var(--card)",
                             boxShadow: focused
-                              ? "inset 0 0 0 1.5px #0078d4"
+                              ? "inset 0 0 0 1.5px var(--primary)"
                               : "none",
-                            transition: "background 0.1s",
                           }}
-                          onClick={() =>
-                            handleBatchDetailsOpen(row.original.id)
+                          onClick={(e) => handleRowClick(row.original.id, e)}
+                          onDoubleClick={() =>
+                            handleRowDoubleClick(row.original.id)
                           }
                           onMouseEnter={(e) => {
                             if (!focused) {
                               (
                                 e.currentTarget as HTMLTableRowElement
-                              ).style.background = "#f0f6ff";
+                              ).style.background =
+                                "oklch(from var(--primary) l c h / 0.03)";
                             }
                           }}
                           onMouseLeave={(e) => {
                             (
                               e.currentTarget as HTMLTableRowElement
                             ).style.background = focused
-                              ? "rgba(0,120,212,0.07)"
+                              ? "oklch(from var(--primary) l c h / 0.07)"
                               : selected
-                                ? "rgba(0,120,212,0.05)"
+                                ? "oklch(from var(--primary) l c h / 0.05)"
                                 : idx % 2 === 1
-                                  ? "hsl(var(--muted) / 0.3)"
-                                  : "hsl(var(--card))";
+                                  ? "oklch(from var(--muted) l c h / 0.5)"
+                                  : "var(--card)";
                           }}
                         >
                           {row.getVisibleCells().map((cell) => (
