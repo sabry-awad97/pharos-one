@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 import { useSidebarState } from "../hooks/use-sidebar-state";
 import { SidebarNavItem } from "./SidebarNavItem";
@@ -34,9 +34,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       toggleHide,
       sidebarWidth,
       setSidebarWidth,
-      resetWidth,
     } = useSidebarState();
-    const [hoveredToggle, setHoveredToggle] = React.useState(false);
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
@@ -214,11 +212,9 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       document.addEventListener("mouseup", handleMouseUp);
     };
 
-    // Double-click handle to reset width
+    // Double-click handle to toggle collapse/expand
     const handleDoubleClick = () => {
-      if (expanded) {
-        resetWidth();
-      }
+      toggle();
     };
 
     // Clean up event listeners on unmount
@@ -366,52 +362,24 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         {/* Stats panel (only when expanded) */}
         {expanded && stats && <SidebarStats stats={stats} />}
 
-        {/* Collapse toggle button */}
-        <button
-          onClick={toggle}
-          onMouseEnter={() => setHoveredToggle(true)}
-          onMouseLeave={() => setHoveredToggle(false)}
+        {/* Drag handle for resizing */}
+        <div
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+          onMouseEnter={() => setHoveredHandle(true)}
+          onMouseLeave={() => setHoveredHandle(false)}
           style={{
-            height: 32,
-            borderTop: "1px solid #e8e8e8",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: hoveredToggle ? "#f5f5f5" : "transparent",
-            border: "none",
-            cursor: "pointer",
-            color: "#919191",
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 2,
+            height: "100%",
+            cursor: "col-resize",
+            background: hoveredHandle || isResizing ? "#91c9f7" : "transparent",
             transition: "background 0.1s",
+            zIndex: 10,
           }}
-        >
-          {expanded ? (
-            <ChevronLeft style={{ width: 14, height: 14 }} />
-          ) : (
-            <ChevronRight style={{ width: 14, height: 14 }} />
-          )}
-        </button>
-
-        {/* Drag handle for resizing (only when expanded) */}
-        {expanded && (
-          <div
-            onMouseDown={handleMouseDown}
-            onDoubleClick={handleDoubleClick}
-            onMouseEnter={() => setHoveredHandle(true)}
-            onMouseLeave={() => setHoveredHandle(false)}
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: 2,
-              height: "100%",
-              cursor: "col-resize",
-              background:
-                hoveredHandle || isResizing ? "#91c9f7" : "transparent",
-              transition: "background 0.1s",
-              zIndex: 10,
-            }}
-          />
-        )}
+        />
 
         {/* Context menu */}
         {contextMenu && (

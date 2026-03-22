@@ -27,11 +27,18 @@ describe("Sidebar Collapsed Alignment", () => {
 
     const sidebar = screen.getByTestId("sidebar");
 
-    // Collapse the sidebar by clicking the toggle button at the bottom
-    // The toggle button is the last button in the sidebar (no accessible name)
-    const allButtons = within(sidebar).getAllByRole("button");
-    const toggleButton = allButtons[allButtons.length - 1]; // Last button is the toggle
-    fireEvent.click(toggleButton);
+    // Get the rail element to collapse the sidebar
+    const rail = sidebar.querySelector(
+      'div[style*="col-resize"]',
+    ) as HTMLElement;
+
+    // Check if sidebar is expanded, if so collapse it using rail double-click
+    let currentStyles = window.getComputedStyle(sidebar);
+    let currentWidth = parseInt(currentStyles.width);
+
+    if (currentWidth > 48) {
+      fireEvent.doubleClick(rail);
+    }
 
     // Find a navigation item button (Dashboard) - should still be accessible by name
     const dashboardButton = within(sidebar).getByRole("button", {
