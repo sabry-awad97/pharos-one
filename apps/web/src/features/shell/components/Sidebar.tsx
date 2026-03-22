@@ -37,6 +37,9 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     } = useSidebarState();
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
+    const [resizeTooltipWidth, setResizeTooltipWidth] = React.useState<
+      number | null
+    >(null);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
     const [keyboardMode, setKeyboardMode] = React.useState(false);
     const [contextMenu, setContextMenu] = React.useState<{
@@ -192,24 +195,33 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
       e.preventDefault();
       setIsResizing(true);
+      setResizeTooltipWidth(sidebarWidth);
 
       const startX = e.clientX;
       const startWidth = sidebarWidth;
+      const minWidth = 160;
 
       const handleMouseMove = (e: MouseEvent) => {
         const delta = e.clientX - startX;
-        const newWidth = startWidth + delta;
+        const newWidth = Math.max(minWidth, startWidth + delta);
         setSidebarWidth(newWidth);
+        setResizeTooltipWidth(newWidth);
       };
 
-      const handleMouseUp = () => {
+      const cleanup = () => {
         setIsResizing(false);
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
+        setResizeTooltipWidth(null);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", cleanup);
+        window.removeEventListener("blur", cleanup);
+        document.removeEventListener("visibilitychange", cleanup);
       };
 
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
+      // Attach to window for global event handling
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", cleanup);
+      window.addEventListener("blur", cleanup); // 🔥 CRITICAL: Stop dragging if window loses focus
+      document.addEventListener("visibilitychange", cleanup); // Stop if tab becomes hidden
     };
 
     // Double-click handle to toggle collapse/expand
@@ -380,6 +392,53 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             zIndex: 10,
           }}
         />
+
+        {/* Resize width tooltip */}
+        {resizeTooltipWidth !== null && (
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: resizeTooltipWidth + 16,
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              zIndex: 50,
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(0, 0, 0, 0.85)",
+                color: "#ffffff",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 600,
+                fontFamily: "'Segoe UI', system-ui, sans-serif",
+                letterSpacing: "0.5px",
+                boxShadow:
+                  "0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+              }}
+            >
+              {Math.round(resizeTooltipWidth)}px
+            </div>
+            {/* Arrow pointing to rail */}
+            <div
+              style={{
+                position: "absolute",
+                left: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: 0,
+                height: 0,
+                borderTop: "6px solid transparent",
+                borderBottom: "6px solid transparent",
+                borderRight: "6px solid rgba(0, 0, 0, 0.85)",
+              }}
+            />
+          </div>
+        )}
 
         {/* Context menu */}
         {contextMenu && (
