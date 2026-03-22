@@ -509,6 +509,14 @@ export function InventoryWorkspace({
                                 View Batches
                                 <CommandShortcut>⌘B</CommandShortcut>
                               </CommandItem>
+                              <CommandItem
+                                onSelect={() => {
+                                  console.log("View History:", row.original);
+                                }}
+                              >
+                                View History
+                                <CommandShortcut>⌘H</CommandShortcut>
+                              </CommandItem>
                             </CommandGroup>
                             <CommandSeparator />
                             <CommandGroup heading="Actions">
