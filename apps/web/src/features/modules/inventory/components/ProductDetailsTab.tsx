@@ -75,41 +75,47 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
           <h3 className="text-[10px] font-semibold uppercase tracking-wide mb-1.5 text-primary">
             Basic Information
           </h3>
-          <div className="p-2.5 rounded-[4px] border border-border bg-card">
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-              <span className="text-[10px] text-muted-foreground">
-                Product Name
-              </span>
-              <p className="text-xs font-medium text-foreground">
-                {product.name}
-              </p>
+          <div className="rounded-[4px] border border-border bg-card overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-border">
+              {/* Top Left - Product Name */}
+              <div className="p-2.5 border-b border-border">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Product Name
+                </span>
+                <p className="text-sm font-normal mt-1 text-foreground">
+                  {product.name}
+                </p>
+              </div>
 
-              <span className="text-[10px] text-muted-foreground">SKU</span>
-              <p className="text-[11px] font-mono text-foreground">
-                {product.sku}
-              </p>
+              {/* Top Right - SKU */}
+              <div className="p-2.5 border-b border-border">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  SKU
+                </span>
+                <p className="text-sm font-normal font-mono mt-1 text-foreground">
+                  {product.sku}
+                </p>
+              </div>
 
-              {product.genericName && (
-                <>
-                  <span className="text-[10px] text-muted-foreground">
-                    Generic Name
-                  </span>
-                  <p className="text-[11px] text-foreground">
-                    {product.genericName}
-                  </p>
-                </>
-              )}
+              {/* Bottom Left - Generic Name */}
+              <div className="p-2.5">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Generic Name
+                </span>
+                <p className="text-sm font-normal mt-1 text-foreground">
+                  {product.genericName || "—"}
+                </p>
+              </div>
 
-              {product.manufacturer && (
-                <>
-                  <span className="text-[10px] text-muted-foreground">
-                    Manufacturer
-                  </span>
-                  <p className="text-[11px] text-foreground">
-                    {product.manufacturer}
-                  </p>
-                </>
-              )}
+              {/* Bottom Right - Manufacturer */}
+              <div className="p-2.5">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Manufacturer
+                </span>
+                <p className="text-sm font-normal mt-1 text-foreground">
+                  {product.manufacturer || "—"}
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -120,7 +126,7 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
             Classification
           </h3>
           <div className="p-2.5 rounded-[4px] border border-border bg-card">
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+            <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 items-center">
               <span className="text-[10px] text-muted-foreground">
                 Category
               </span>
@@ -136,12 +142,12 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
                   </span>
                   <div className="flex gap-1.5 flex-wrap">
                     {product.requiresPrescription && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-yellow-50 text-yellow-800 border border-yellow-200">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-yellow-50 text-yellow-800 border border-yellow-200 whitespace-nowrap">
                         Requires Prescription
                       </span>
                     )}
                     {product.controlledSubstance && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-red-50 text-red-800 border border-red-200">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-red-50 text-red-800 border border-red-200 whitespace-nowrap">
                         Controlled Substance
                       </span>
                     )}
@@ -151,58 +157,6 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
             </div>
           </div>
         </section>
-
-        {/* Supplier Section */}
-        {product.defaultSupplier && (
-          <section>
-            <h3 className="text-[10px] font-semibold uppercase tracking-wide mb-1.5 text-primary">
-              Supplier
-            </h3>
-            <div className="p-2.5 rounded-[4px] border border-border bg-card">
-              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-                <span className="text-[10px] text-muted-foreground">
-                  Default Supplier
-                </span>
-                <p className="text-xs font-medium text-foreground">
-                  {product.defaultSupplier.name}
-                </p>
-
-                {product.defaultSupplier.contactPerson && (
-                  <>
-                    <span className="text-[10px] text-muted-foreground">
-                      Contact Person
-                    </span>
-                    <p className="text-[11px] text-foreground">
-                      {product.defaultSupplier.contactPerson}
-                    </p>
-                  </>
-                )}
-
-                {product.defaultSupplier.email && (
-                  <>
-                    <span className="text-[10px] text-muted-foreground">
-                      Email
-                    </span>
-                    <p className="text-[11px] text-foreground">
-                      {product.defaultSupplier.email}
-                    </p>
-                  </>
-                )}
-
-                {product.defaultSupplier.phone && (
-                  <>
-                    <span className="text-[10px] text-muted-foreground">
-                      Phone
-                    </span>
-                    <p className="text-[11px] text-foreground">
-                      {product.defaultSupplier.phone}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Pricing Section */}
         <section>
@@ -226,10 +180,11 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
           <h3 className="text-[10px] font-semibold uppercase tracking-wide mb-1.5 text-primary">
             Stock Levels
           </h3>
-          <div className="p-2.5 rounded-[4px] border border-border bg-card">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-[10px] text-muted-foreground">
+          <div className="rounded-[4px] border border-border bg-card overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-border">
+              {/* Top Left - Available */}
+              <div className="p-2.5 border-b border-border">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   Available
                 </span>
                 <p
@@ -244,22 +199,30 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
                   {product.availableQuantity}
                 </p>
               </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground">Total</span>
+
+              {/* Top Right - Total */}
+              <div className="p-2.5 border-b border-border">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Total
+                </span>
                 <p className="text-xs font-semibold mt-0.5 text-foreground">
                   {product.totalQuantity}
                 </p>
               </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground">
+
+              {/* Bottom Left - Reserved */}
+              <div className="p-2.5">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   Reserved
                 </span>
                 <p className="text-xs font-semibold mt-0.5 text-foreground">
                   {product.reservedQuantity}
                 </p>
               </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground">
+
+              {/* Bottom Right - Reorder Level */}
+              <div className="p-2.5">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   Reorder Level
                 </span>
                 <p className="text-xs font-semibold mt-0.5 text-foreground">
@@ -303,6 +266,26 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
             </div>
           </div>
         </section>
+
+        {/* Supplier Section */}
+        {product.defaultSupplier && (
+          <section>
+            <h3 className="text-[10px] font-semibold uppercase tracking-wide mb-1.5 text-primary">
+              Supplier
+            </h3>
+            <div className="p-2.5 rounded-[4px] border border-border bg-card">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-normal text-foreground">
+                  {product.defaultSupplier.name}
+                </p>
+                <button className="text-xs font-normal text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+                  View Supplier
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
