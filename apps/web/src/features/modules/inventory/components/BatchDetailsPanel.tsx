@@ -20,8 +20,8 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { useBatches } from "../hooks/use-batches";
 import { ProductDetailsTab } from "./ProductDetailsTab";
+import { ProductLotsTab } from "./ProductLotsTab";
 
 /**
  * Props for BatchDetailsPanel component
@@ -66,7 +66,6 @@ export function BatchDetailsPanel({
   productName,
   onClose,
 }: BatchDetailsPanelProps) {
-  const { data: batches, isLoading, isError, error } = useBatches(productId);
   const [activeTab, setActiveTab] = React.useState<
     "details" | "lots" | "history"
   >("details");
@@ -81,8 +80,7 @@ export function BatchDetailsPanel({
               {productName || "Product Details"}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {batches?.length || 0}{" "}
-              {batches?.length === 1 ? "batch" : "batches"}
+              Product information and batches
             </p>
           </div>
           <button
@@ -133,84 +131,7 @@ export function BatchDetailsPanel({
       <div className="flex-1 min-h-0 overflow-auto">
         {activeTab === "details" && <ProductDetailsTab productId={productId} />}
 
-        {activeTab === "lots" && (
-          <div className="p-4">
-            {isLoading && (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                Loading batches...
-              </div>
-            )}
-
-            {isError && (
-              <div className="flex items-center justify-center h-full text-destructive text-sm">
-                Error loading batches: {error?.message}
-              </div>
-            )}
-
-            {!isLoading && !isError && batches && batches.length === 0 && (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                No batches found for this product.
-              </div>
-            )}
-
-            {!isLoading && !isError && batches && batches.length > 0 && (
-              <div className="space-y-4">
-                {batches.map((batch) => (
-                  <div
-                    key={batch.id}
-                    className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {batch.batchNumber}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {batch.supplier.name}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 text-xs rounded ${
-                          batch.status === "available"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {batch.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-muted-foreground">Expiry:</span>
-                        <span className="ml-1 text-foreground">
-                          {batch.expiryDate}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Quantity:</span>
-                        <span className="ml-1 text-foreground">
-                          {batch.quantityRemaining}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Received:</span>
-                        <span className="ml-1 text-foreground">
-                          {batch.receivedDate}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Cost:</span>
-                        <span className="ml-1 text-foreground">
-                          ${batch.costPerUnit}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {activeTab === "lots" && <ProductLotsTab productId={productId} />}
 
         {activeTab === "history" && (
           <div className="p-4">

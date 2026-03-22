@@ -606,7 +606,9 @@ describe("Batch Details - Integration Layer", () => {
       expect(lotsButtons.length).toBeGreaterThan(0);
     });
 
-    // Verify panel shows batch count
-    expect(screen.getByText(/1 batch/i)).toBeInTheDocument();
+    // Verify panel shows product information
+    expect(
+      screen.getByText("Product information and batches"),
+    ).toBeInTheDocument();
   });
 });
