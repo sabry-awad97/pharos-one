@@ -94,11 +94,13 @@ export function InventoryWorkspace({
   >(null);
   const [stockMovementsPanelProductId, setStockMovementsPanelProductId] =
     useState<number | null>(null);
+  const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
 
   // Callbacks for opening panels
   const handleBatchDetailsOpen = useCallback((productId: number) => {
     console.log("Opening batch details for product:", productId);
     setBatchDetailsPanelProductId(productId);
+    setFocusedRowId(productId);
   }, []);
 
   const handleStockMovementsOpen = useCallback((productId: number) => {
@@ -119,6 +121,10 @@ export function InventoryWorkspace({
       stockMovementsPanelProductId,
     );
   }, [stockMovementsPanelProductId]);
+
+  useEffect(() => {
+    console.log("focusedRowId changed to:", focusedRowId);
+  }, [focusedRowId]);
 
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
@@ -361,6 +367,7 @@ export function InventoryWorkspace({
                 <tbody>
                   {table.getRowModel().rows.map((row, idx) => {
                     const selected = row.getIsSelected();
+                    const focused = focusedRowId === row.original.id;
                     return (
                       <TableRowContextMenu
                         key={row.id}
@@ -369,16 +376,40 @@ export function InventoryWorkspace({
                         actionGroups={actionGroups}
                       >
                         <tr
-                          className="transition-colors duration-100 border-b border-border/50 hover:bg-blue-50/50"
                           style={{
-                            background: selected
-                              ? "hsl(var(--primary) / 0.1)"
-                              : idx % 2 === 1
-                                ? "hsl(var(--muted) / 0.3)"
-                                : "hsl(var(--card))",
-                            boxShadow: selected
-                              ? "inset 0 0 0 1.5px hsl(var(--primary))"
+                            borderBottom: "1px solid hsl(var(--border) / 0.5)",
+                            background: focused
+                              ? "rgba(0,120,212,0.07)"
+                              : selected
+                                ? "rgba(0,120,212,0.05)"
+                                : idx % 2 === 1
+                                  ? "hsl(var(--muted) / 0.3)"
+                                  : "hsl(var(--card))",
+                            boxShadow: focused
+                              ? "inset 0 0 0 1.5px #0078d4"
                               : "none",
+                            transition: "background 0.1s",
+                          }}
+                          onClick={() =>
+                            handleBatchDetailsOpen(row.original.id)
+                          }
+                          onMouseEnter={(e) => {
+                            if (!focused) {
+                              (
+                                e.currentTarget as HTMLTableRowElement
+                              ).style.background = "#f0f6ff";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            (
+                              e.currentTarget as HTMLTableRowElement
+                            ).style.background = focused
+                              ? "rgba(0,120,212,0.07)"
+                              : selected
+                                ? "rgba(0,120,212,0.05)"
+                                : idx % 2 === 1
+                                  ? "hsl(var(--muted) / 0.3)"
+                                  : "hsl(var(--card))";
                           }}
                         >
                           {row.getVisibleCells().map((cell) => (
