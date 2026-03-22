@@ -1,0 +1,129 @@
+# Issue Labels Configuration
+# Use: gh label create --file .github/labels.yml
+
+# Type Labels
+- name: "type:feature"
+  description: "New feature or enhancement"
+  color: "a2eeef"
+
+- name: "type:bug"
+  description: "Something isn't working"
+  color: "d73a4a"
+
+- name: "type:epic"
+  description: "Large feature epic or PRD"
+  color: "3e4b9e"
+
+- name: "type:refactor"
+  description: "Code refactoring without behavior change"
+  color: "fbca04"
+
+- name: "type:docs"
+  description: "Documentation improvements"
+  color: "0075ca"
+
+- name: "type:test"
+  description: "Test coverage improvements"
+  color: "1d76db"
+
+- name: "type:chore"
+  description: "Maintenance tasks"
+  color: "fef2c0"
+
+# Priority Labels
+- name: "priority:critical"
+  description: "Blocks development or users"
+  color: "b60205"
+
+- name: "priority:high"
+  description: "Important, should be done soon"
+  color: "d93f0b"
+
+- name: "priority:medium"
+  description: "Normal priority"
+  color: "fbca04"
+
+- name: "priority:low"
+  description: "Nice to have"
+  color: "0e8a16"
+
+# Status Labels
+- name: "status:ready"
+  description: "Ready to be picked up"
+  color: "0e8a16"
+
+- name: "status:in-progress"
+  description: "Currently being worked on"
+  color: "fbca04"
+
+- name: "status:blocked"
+  description: "Blocked by dependencies"
+  color: "d93f0b"
+
+- name: "status:review"
+  description: "In code review"
+  color: "5319e7"
+
+- name: "status:done"
+  description: "Completed and closed"
+  color: "28a745"
+
+# Classification Labels
+- name: "afk"
+  description: "Can be implemented without human interaction"
+  color: "c5def5"
+
+- name: "hitl"
+  description: "Requires human in the loop (design/architecture review)"
+  color: "f9d0c4"
+
+# Layer Labels
+- name: "layer:schema"
+  description: "Database/schema changes"
+  color: "bfdadc"
+
+- name: "layer:service"
+  description: "Business logic/service layer"
+  color: "c2e0c6"
+
+- name: "layer:ui"
+  description: "User interface changes"
+  color: "fef2c0"
+
+- name: "layer:test"
+  description: "Test layer changes"
+  color: "d4c5f9"
+
+# Module Labels
+- name: "module:inventory"
+  description: "Inventory module"
+  color: "e99695"
+
+- name: "module:pos"
+  description: "Point of Sale module"
+  color: "f9d0c4"
+
+- name: "module:dashboard"
+  description: "Dashboard module"
+  color: "c5def5"
+
+- name: "module:customers"
+  description: "Customers module"
+  color: "bfdadc"
+
+# Special Labels
+- name: "good first issue"
+  description: "Good for newcomers"
+  color: "7057ff"
+
+- name: "help wanted"
+  description: "Extra attention needed"
+  color: "008672"
+
+- name: "breaking change"
+  description: "Introduces breaking changes"
+  color: "d93f0b"
+
+- name: "needs discussion"
+  description: "Requires team discussion"
+  color: "d876e3"
