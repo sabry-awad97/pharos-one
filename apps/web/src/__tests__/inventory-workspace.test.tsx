@@ -79,10 +79,11 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     const checkbox = within(firstDataRow).getByRole("checkbox");
     fireEvent.click(checkbox);
 
-    // Verify the row uses box-shadow inset
+    // Verify the row uses box-shadow inset with CSS variable
     const computedStyle = window.getComputedStyle(firstDataRow);
     expect(computedStyle.boxShadow).toContain("inset");
-    expect(computedStyle.boxShadow).toContain("0078d4");
+    // Check for hsl format (CSS variable usage)
+    expect(computedStyle.boxShadow).toMatch(/hsl\(|oklch\(/);
   });
 
   it("should maintain consistent selection styling for all row positions", () => {
@@ -125,18 +126,22 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     // Select the row
     fireEvent.click(within(firstDataRow).getByRole("checkbox"));
 
-    // Verify selected background
-    let style = window.getComputedStyle(firstDataRow);
-    expect(style.background).toContain("rgba(0, 120, 212, 0.07)");
+    // Verify selected row has background style attribute with CSS variable
+    const styleAttr = firstDataRow.getAttribute("style");
+    expect(styleAttr).toContain("background");
+    expect(styleAttr).toContain("hsl(var(--primary)");
+
+    // Verify box-shadow
+    const style = window.getComputedStyle(firstDataRow);
     expect(style.boxShadow).toContain("inset");
 
     // Simulate hover
     fireEvent.mouseEnter(firstDataRow);
 
-    // Verify hover maintains selection background (not changed to hover color)
-    style = window.getComputedStyle(firstDataRow);
-    expect(style.background).toContain("rgba(0, 120, 212, 0.07)");
-    expect(style.boxShadow).toContain("inset");
+    // Verify hover maintains selection background
+    const styleAttrAfterHover = firstDataRow.getAttribute("style");
+    expect(styleAttrAfterHover).toContain("background");
+    expect(styleAttrAfterHover).toContain("hsl(var(--primary)");
   });
 
   it("should show consistent styling for adjacent selected rows without gaps", () => {
@@ -160,8 +165,11 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     expect(secondStyle.boxShadow).toContain("inset");
     expect(firstStyle.boxShadow).toBe(secondStyle.boxShadow);
 
-    // Verify both have selection background
-    expect(firstStyle.background).toContain("rgba(0, 120, 212, 0.07)");
-    expect(secondStyle.background).toContain("rgba(0, 120, 212, 0.07)");
+    // Verify both have selection background using CSS variables in style attribute
+    const firstStyleAttr = firstDataRow.getAttribute("style");
+    const secondStyleAttr = secondDataRow.getAttribute("style");
+
+    expect(firstStyleAttr).toContain("hsl(var(--primary)");
+    expect(secondStyleAttr).toContain("hsl(var(--primary)");
   });
 });

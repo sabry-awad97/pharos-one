@@ -50,7 +50,7 @@ export { InventoryWorkspace };
 
 // Export hooks (public API only)
 export { useProducts, useProduct } from "./hooks/use-products";
-export { useBatches, useProductBatches, useBatch } from "./hooks/use-batches";
+export { useBatches, useBatch } from "./hooks/use-batches";
 export { useSuppliers, useSupplier } from "./hooks/use-suppliers";
 export { useCategories, useCategory } from "./hooks/use-categories";
 

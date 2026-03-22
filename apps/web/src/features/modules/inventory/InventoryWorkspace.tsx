@@ -19,34 +19,10 @@ import {
 import { Checkbox } from "@pharos-one/ui/components/checkbox";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
+import { BatchDetailsPanel } from "./components/BatchDetailsPanel";
 import { inventoryActions, actionGroups } from "./config/inventory-actions";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
-
-// Color constants matching ModuleWorkspace.tsx
-const W = {
-  bg: "#f3f3f3",
-  surface: "#ffffff",
-  surfaceAlt: "#f9f9f9",
-  surfaceHov: "#f0f0f0",
-  border: "#e0e0e0",
-  borderLight: "#ebebeb",
-  text: "#1a1a1a",
-  textSub: "#616161",
-  textMuted: "#919191",
-  success: "#107c10",
-  warn: "#7a5e00",
-  danger: "#a4262c",
-  expiring: "#c43501",
-};
-
-// Status dot colors
-const statusDot: Record<string, string> = {
-  ok: "#107c10",
-  low: "#d4a017",
-  expiring: "#d83b01",
-  out: "#a4262c",
-};
 
 // Status badge component
 function StatusBadge({
@@ -56,46 +32,45 @@ function StatusBadge({
 }) {
   const config = {
     ok: {
-      bg: "#dff6dd",
-      color: statusDot.ok,
-      border: statusDot.ok,
+      className: "bg-green-50 text-green-700 border-green-200",
+      dotClassName: "bg-green-700",
       label: "In Stock",
     },
     low: {
-      bg: "#fff4ce",
-      color: statusDot.low,
-      border: statusDot.low,
+      className: "bg-yellow-50 text-yellow-800 border-yellow-200",
+      dotClassName: "bg-yellow-600",
       label: "Low Stock",
     },
     expiring: {
-      bg: "#fed9cc",
-      color: statusDot.expiring,
-      border: statusDot.expiring,
+      className: "bg-orange-50 text-orange-700 border-orange-200",
+      dotClassName: "bg-orange-600",
       label: "Expiring",
     },
     out: {
-      bg: "#fde7e9",
-      color: statusDot.out,
-      border: statusDot.out,
+      className: "bg-red-50 text-red-700 border-red-200",
+      dotClassName: "bg-red-700",
       label: "Out of Stock",
     },
   };
 
-  const { bg, color, border, label } = config[status];
+  const { className, label } = config[status];
 
   return (
     <span
-      className="text-[10px] px-1.5 py-0.5 rounded-[3px] font-medium border"
-      style={{
-        background: bg,
-        color: color,
-        borderColor: `${border}20`,
-      }}
+      className={`text-[10px] px-1.5 py-0.5 rounded-[3px] font-medium border ${className}`}
     >
       {label}
     </span>
   );
 }
+
+// Status dot color mapping
+const statusDotClass: Record<string, string> = {
+  ok: "bg-green-700",
+  low: "bg-yellow-600",
+  expiring: "bg-orange-600",
+  out: "bg-red-700",
+};
 
 /**
  * Inventory workspace showing product catalog with TanStack Table
@@ -110,6 +85,26 @@ export function InventoryWorkspace({
   const { data: products = [], isLoading, error } = useProducts();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
+    number | null
+  >(null);
+
+  // Create custom actions with batch details handler
+  const customActions = useMemo(
+    () =>
+      inventoryActions.map((action) => {
+        if (action.id === "batch-details") {
+          return {
+            ...action,
+            handler: (row: ProductStockSummary) => {
+              setBatchDetailsPanelProductId(row.id);
+            },
+          };
+        }
+        return action;
+      }),
+    [],
+  );
 
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
@@ -143,17 +138,9 @@ export function InventoryWorkspace({
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <span
-              className="w-[7px] h-[7px] rounded-full shrink-0"
-              style={{
-                background: statusDot[row.original.stockStatus],
-              }}
+              className={`w-[7px] h-[7px] rounded-full shrink-0 ${statusDotClass[row.original.stockStatus]}`}
             />
-            <span
-              className="text-xs font-medium"
-              style={{
-                color: W.text,
-              }}
-            >
+            <span className="text-xs font-medium text-foreground">
               {row.original.name}
             </span>
           </div>
@@ -164,12 +151,7 @@ export function InventoryWorkspace({
         accessorKey: "sku",
         header: "SKU",
         cell: ({ getValue }) => (
-          <span
-            className="text-[11px] font-mono"
-            style={{
-              color: W.textSub,
-            }}
-          >
+          <span className="text-[11px] font-mono text-muted-foreground">
             {getValue() as string}
           </span>
         ),
@@ -183,10 +165,13 @@ export function InventoryWorkspace({
           const reorder = row.original.reorderLevel;
           return (
             <span
-              className="text-xs font-semibold"
-              style={{
-                color: qty === 0 ? W.danger : qty < reorder ? W.warn : W.text,
-              }}
+              className={`text-xs font-semibold ${
+                qty === 0
+                  ? "text-red-700"
+                  : qty < reorder
+                    ? "text-yellow-700"
+                    : "text-foreground"
+              }`}
             >
               {qty}
             </span>
@@ -199,14 +184,11 @@ export function InventoryWorkspace({
         header: "Expiry",
         cell: ({ row }) => (
           <span
-            className="text-[11px]"
-            style={{
-              color:
-                row.original.stockStatus === "expiring"
-                  ? W.expiring
-                  : W.textSub,
-              whiteSpace: "nowrap",
-            }}
+            className={`text-[11px] whitespace-nowrap ${
+              row.original.stockStatus === "expiring"
+                ? "text-orange-700"
+                : "text-muted-foreground"
+            }`}
           >
             {row.original.nearestExpiry || "N/A"}
           </span>
@@ -217,12 +199,7 @@ export function InventoryWorkspace({
         accessorKey: "basePrice",
         header: "Price",
         cell: ({ getValue }) => (
-          <span
-            className="text-xs font-medium"
-            style={{
-              color: W.text,
-            }}
-          >
+          <span className="text-xs font-medium text-foreground">
             ₹{(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -232,13 +209,7 @@ export function InventoryWorkspace({
         accessorKey: "category.name",
         header: "Category",
         cell: ({ row }) => (
-          <span
-            className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
-            style={{
-              color: W.textSub,
-              borderColor: W.border,
-            }}
-          >
+          <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
             {row.original.category.name}
           </span>
         ),
@@ -248,12 +219,7 @@ export function InventoryWorkspace({
         accessorKey: "defaultSupplier.name",
         header: "Supplier",
         cell: ({ row }) => (
-          <span
-            className="text-[11px]"
-            style={{
-              color: W.textSub,
-            }}
-          >
+          <span className="text-[11px] text-muted-foreground">
             {row.original.defaultSupplier?.name || "N/A"}
           </span>
         ),
@@ -287,204 +253,149 @@ export function InventoryWorkspace({
 
   return (
     <div
-      className="flex-1 flex flex-col overflow-hidden font-sans"
-      style={{
-        background: W.bg,
-      }}
+      className={`flex ${batchDetailsPanelProductId !== null ? "flex-row" : "flex-col"} flex-1 overflow-hidden font-sans bg-background`}
     >
-      {/* Module header */}
+      {/* Table container - takes flex-1 when panel is open */}
       <div
-        className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0"
-        style={{
-          borderBottom: `1px solid ${W.border}`,
-          background: W.surface,
-        }}
+        className={`flex flex-col ${batchDetailsPanelProductId !== null ? "flex-1 min-h-0" : "flex-1"} overflow-hidden`}
       >
-        <div
-          className="w-7 h-7 rounded-md flex items-center justify-center"
-          style={{
-            background: "#107c1020",
-          }}
-        >
-          <Hash style={{ width: 14, height: 14, color: "#107c10" }} />
+        {/* Module header */}
+        <div className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0 border-b border-border bg-card">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center bg-green-700/10">
+            <Hash className="w-[14px] h-[14px] text-green-700" />
+          </div>
+          <div>
+            <p className="m-0 text-[13px] font-semibold text-foreground">
+              {label || "Inventory"}
+            </p>
+            <p className="m-0 text-[10px] text-muted-foreground">
+              {isLoading
+                ? "Loading..."
+                : `${products.length} items • Last updated: just now`}
+            </p>
+          </div>
+          <div className="flex-1" />
+          {!split && (
+            <div className="flex gap-1">
+              {[Filter, Download, RefreshCw].map((Icon, i) => (
+                <button
+                  key={i}
+                  className="w-[26px] h-[26px] flex items-center justify-center border border-border rounded bg-card text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Icon className="w-3 h-3" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div>
-          <p
-            style={{ margin: 0, fontSize: 13, fontWeight: 600, color: W.text }}
-          >
-            {label || "Inventory"}
-          </p>
-          <p style={{ margin: 0, fontSize: 10, color: W.textMuted }}>
-            {isLoading
-              ? "Loading..."
-              : `${products.length} items • Last updated: just now`}
-          </p>
-        </div>
-        <div style={{ flex: 1 }} />
-        {!split && (
-          <div style={{ display: "flex", gap: 4 }}>
-            {[Filter, Download, RefreshCw].map((Icon, i) => (
-              <button
-                key={i}
-                className="w-[26px] h-[26px] flex items-center justify-center border rounded cursor-pointer"
-                style={{
-                  borderColor: W.border,
-                  background: W.surface,
-                  color: W.textSub,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    W.surfaceHov;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    W.surface;
-                }}
-              >
-                <Icon style={{ width: 12, height: 12 }} />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Table content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
-        {error && (
-          <div
-            className="p-4 rounded-md border"
-            style={{
-              background: "#fde7e9",
-              borderColor: W.danger,
-              color: W.danger,
-            }}
-          >
-            Error loading inventory: {error.message}
-          </div>
-        )}
+        {/* Table content */}
+        <div className="flex-1 overflow-y-auto p-3">
+          {error && (
+            <div className="p-4 rounded-md border border-red-700 bg-red-50 text-red-700">
+              Error loading inventory: {error.message}
+            </div>
+          )}
 
-        {isLoading && (
-          <div
-            className="p-4 text-center"
-            style={{
-              color: W.textMuted,
-            }}
-          >
-            Loading inventory...
-          </div>
-        )}
+          {isLoading && (
+            <div className="p-4 text-center text-muted-foreground">
+              Loading inventory...
+            </div>
+          )}
 
-        {!isLoading && !error && (
-          <div
-            className="rounded-md overflow-hidden shadow-sm border"
-            style={{
-              background: W.surface,
-              borderColor: W.border,
-            }}
-          >
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="bg-[#f5f5f5] sticky top-0 z-10"
-                    style={{
-                      borderBottom: `1px solid ${W.border}`,
-                    }}
-                  >
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                        style={{
-                          color: W.textMuted,
-                          width:
-                            header.column.getSize() !== 150
-                              ? header.column.getSize()
-                              : undefined,
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                        {{
-                          asc: " ↑",
-                          desc: " ↓",
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row, idx) => {
-                  const selected = row.getIsSelected();
-                  return (
-                    <TableRowContextMenu
-                      key={row.id}
-                      row={row.original}
-                      actions={inventoryActions}
-                      actionGroups={actionGroups}
+          {!isLoading && !error && (
+            <div className="rounded-md overflow-hidden shadow-sm border border-border bg-card">
+              <table className="w-full border-collapse">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="bg-muted/50 sticky top-0 z-10 border-b border-border"
                     >
-                      <tr
-                        className="transition-[background] duration-100"
-                        style={{
-                          borderBottom: `1px solid ${W.borderLight}`,
-                          background: selected
-                            ? "rgba(0,120,212,0.07)"
-                            : idx % 2 === 1
-                              ? W.surfaceAlt
-                              : W.surface,
-                          boxShadow: selected
-                            ? "inset 0 0 0 1.5px #0078d4"
-                            : "none",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!selected)
-                            (
-                              e.currentTarget as HTMLTableRowElement
-                            ).style.background = "#f0f6ff";
-                        }}
-                        onMouseLeave={(e) => {
-                          (
-                            e.currentTarget as HTMLTableRowElement
-                          ).style.background = selected
-                            ? "rgba(0,120,212,0.07)"
-                            : idx % 2 === 1
-                              ? W.surfaceAlt
-                              : W.surface;
-                        }}
+                      {headerGroup.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
+                          style={{
+                            width:
+                              header.column.getSize() !== 150
+                                ? header.column.getSize()
+                                : undefined,
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                          {{
+                            asc: " ↑",
+                            desc: " ↓",
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((row, idx) => {
+                    const selected = row.getIsSelected();
+                    return (
+                      <TableRowContextMenu
+                        key={row.id}
+                        row={row.original}
+                        actions={customActions}
+                        actionGroups={actionGroups}
                       >
-                        {row.getVisibleCells().map((cell) => (
-                          <td
-                            key={cell.id}
-                            style={{
-                              padding: "6px 12px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    </TableRowContextMenu>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        <tr
+                          className="transition-colors duration-100 border-b border-border/50 hover:bg-blue-50/50"
+                          style={{
+                            background: selected
+                              ? "hsl(var(--primary) / 0.1)"
+                              : idx % 2 === 1
+                                ? "hsl(var(--muted) / 0.3)"
+                                : "hsl(var(--card))",
+                            boxShadow: selected
+                              ? "inset 0 0 0 1.5px hsl(var(--primary))"
+                              : "none",
+                          }}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              className="py-1.5 px-3 whitespace-nowrap"
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      </TableRowContextMenu>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {/* Annotation callouts - only shown when not in split view */}
-        {!split && <AnnotationCallouts />}
+          {/* Annotation callouts - only shown when not in split view */}
+          {!split && <AnnotationCallouts />}
+        </div>
       </div>
+
+      {/* Batch Details Panel - inline side-by-side */}
+      {batchDetailsPanelProductId !== null && (
+        <aside role="complementary" className="w-[360px] flex-none">
+          <BatchDetailsPanel
+            productId={batchDetailsPanelProductId}
+            onClose={() => setBatchDetailsPanelProductId(null)}
+          />
+        </aside>
+      )}
     </div>
   );
 }

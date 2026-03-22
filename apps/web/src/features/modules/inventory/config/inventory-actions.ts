@@ -57,15 +57,15 @@ export const inventoryActions: InventoryAction[] = [
   // ============================================================================
 
   {
-    id: "view-batches",
-    label: "View Batches",
+    id: "batch-details",
+    label: "Batch Details",
     group: "view",
-    shortcut: "⌘B",
+    shortcut: "⌘D",
     icon: Package,
-    isVisible: () => true,
+    isVisible: (row) => row.batchCount > 0,
     handler: (row) => {
-      console.log("View Batches:", row);
-      // TODO: Open batches panel showing all batches for this product
+      console.log("Batch Details:", row);
+      // TODO: Open batch details panel showing all batches for this product
     },
   },
 
