@@ -138,6 +138,12 @@ export const stockTransactionSchema = z.object({
   timestamp: z.string().datetime(),
 });
 
+// Stock transaction with relations
+export const stockTransactionWithRelationsSchema =
+  stockTransactionSchema.extend({
+    batch: batchWithRelationsSchema,
+  });
+
 // ============================================================================
 // COMPUTED VIEWS
 // ============================================================================
@@ -180,6 +186,9 @@ export type BatchWithRelations = z.infer<typeof batchWithRelationsSchema>;
 
 export type TransactionType = z.infer<typeof transactionTypeSchema>;
 export type StockTransaction = z.infer<typeof stockTransactionSchema>;
+export type StockTransactionWithRelations = z.infer<
+  typeof stockTransactionWithRelationsSchema
+>;
 
 export type ProductStockSummary = z.infer<typeof productStockSummarySchema>;
 export type InventoryFilters = z.infer<typeof inventoryFiltersSchema>;
@@ -199,6 +208,9 @@ export const batchesWithRelationsArraySchema = z.array(
   batchWithRelationsSchema,
 );
 export const stockTransactionsArraySchema = z.array(stockTransactionSchema);
+export const stockTransactionsWithRelationsArraySchema = z.array(
+  stockTransactionWithRelationsSchema,
+);
 export const productStockSummariesArraySchema = z.array(
   productStockSummarySchema,
 );

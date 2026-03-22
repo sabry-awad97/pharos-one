@@ -56,6 +56,7 @@ export { useProducts, useProduct } from "./hooks/use-products";
 export { useBatches, useBatch } from "./hooks/use-batches";
 export { useSuppliers, useSupplier } from "./hooks/use-suppliers";
 export { useCategories, useCategory } from "./hooks/use-categories";
+export { useStockTransactions } from "./hooks/use-transactions";
 
 // Export types only (schemas are internal implementation details)
 export type {
@@ -66,6 +67,7 @@ export type {
   BatchWithRelations,
   BatchStatus,
   StockTransaction,
+  StockTransactionWithRelations,
   TransactionType,
   Supplier,
   Category,
