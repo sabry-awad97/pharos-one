@@ -256,7 +256,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         }}
       >
         {/* Navigation items */}
-        <nav style={{ flex: 1, paddingTop: 6, overflow: "auto" }}>
+        <nav
+          style={{ flex: 1, paddingTop: 6, overflow: "auto" }}
+          className="custom-scrollbar"
+        >
           {visibleTemplates.map((template, moduleIndex) => {
             const hasSubItems =
               template.subItems && template.subItems.length > 0;

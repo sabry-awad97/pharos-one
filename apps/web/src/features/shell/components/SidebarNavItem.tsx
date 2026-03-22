@@ -51,19 +51,11 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
       onClick(id);
     };
 
-    const handleContextMenu = (e: React.MouseEvent) => {
-      if (onContextMenu) {
-        e.preventDefault();
-        onContextMenu(e, id);
-      }
-    };
-
     return (
       <button
         ref={ref}
         type="button"
         onClick={handleClick}
-        onContextMenu={handleContextMenu}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         title={!expanded ? label : undefined}

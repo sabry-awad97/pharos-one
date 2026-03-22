@@ -33,19 +33,11 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
       onClick(id);
     };
 
-    const handleContextMenu = (e: React.MouseEvent) => {
-      if (onContextMenu) {
-        e.preventDefault();
-        onContextMenu(e, id);
-      }
-    };
-
     return (
       <button
         ref={ref}
         type="button"
         onClick={handleClick}
-        onContextMenu={handleContextMenu}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -103,8 +95,8 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
             style={{
               fontSize: 10,
               fontWeight: 600,
-              color: "#616161",
-              background: "#f0f0f0",
+              color: active ? "#0078d4" : "#616161",
+              background: active ? "rgba(0,120,212,0.1)" : "#f0f0f0",
               borderRadius: 10,
               padding: "2px 6px",
               marginLeft: 8,
@@ -125,28 +117,32 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
             }}
             style={{
               opacity: isHovered ? 1 : 0,
-              transition: "opacity 0.1s",
+              transition: "opacity 0.1s, background 0.1s ease",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               padding: 2,
               borderRadius: 4,
+              background: active ? "rgba(0,120,212,0.15)" : "transparent",
               flexShrink: 0,
               marginLeft: 4,
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background = "#f0f0f0";
+              (e.currentTarget as HTMLDivElement).style.background = active
+                ? "rgba(0,120,212,0.2)"
+                : "#f0f0f0";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background =
-                "transparent";
+              (e.currentTarget as HTMLDivElement).style.background = active
+                ? "rgba(0,120,212,0.15)"
+                : "transparent";
             }}
           >
             <MoreVertical
               style={{
                 width: 14,
                 height: 14,
-                color: "#616161",
+                color: active ? "#0078d4" : "#616161",
               }}
             />
           </div>
