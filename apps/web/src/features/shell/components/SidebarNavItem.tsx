@@ -74,7 +74,7 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
           alignItems: "center",
           justifyContent: expanded ? "flex-start" : "flex-start",
           height: 36,
-          padding: expanded ? "6px 12px" : "6px 8px",
+          padding: expanded ? "6px 12px" : "6px 14px 6px 12px",
           border: "none",
           cursor: "pointer",
           background: active

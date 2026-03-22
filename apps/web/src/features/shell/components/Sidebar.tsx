@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 import { useSidebarState } from "../hooks/use-sidebar-state";
 import { SidebarNavItem } from "./SidebarNavItem";
@@ -34,11 +34,12 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       toggleHide,
       sidebarWidth,
       setSidebarWidth,
-      resetWidth,
     } = useSidebarState();
-    const [hoveredToggle, setHoveredToggle] = React.useState(false);
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
+    const [resizeTooltipWidth, setResizeTooltipWidth] = React.useState<
+      number | null
+    >(null);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
     const [keyboardMode, setKeyboardMode] = React.useState(false);
     const [contextMenu, setContextMenu] = React.useState<{
@@ -194,31 +195,38 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
       e.preventDefault();
       setIsResizing(true);
+      setResizeTooltipWidth(sidebarWidth);
 
       const startX = e.clientX;
       const startWidth = sidebarWidth;
+      const minWidth = 160;
 
       const handleMouseMove = (e: MouseEvent) => {
         const delta = e.clientX - startX;
-        const newWidth = startWidth + delta;
+        const newWidth = Math.max(minWidth, startWidth + delta);
         setSidebarWidth(newWidth);
+        setResizeTooltipWidth(newWidth);
       };
 
-      const handleMouseUp = () => {
+      const cleanup = () => {
         setIsResizing(false);
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
+        setResizeTooltipWidth(null);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", cleanup);
+        window.removeEventListener("blur", cleanup);
+        document.removeEventListener("visibilitychange", cleanup);
       };
 
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
+      // Attach to window for global event handling
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", cleanup);
+      window.addEventListener("blur", cleanup); // 🔥 CRITICAL: Stop dragging if window loses focus
+      document.addEventListener("visibilitychange", cleanup); // Stop if tab becomes hidden
     };
 
-    // Double-click handle to reset width
+    // Double-click handle to toggle collapse/expand
     const handleDoubleClick = () => {
-      if (expanded) {
-        resetWidth();
-      }
+      toggle();
     };
 
     // Clean up event listeners on unmount
@@ -366,51 +374,70 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         {/* Stats panel (only when expanded) */}
         {expanded && stats && <SidebarStats stats={stats} />}
 
-        {/* Collapse toggle button */}
-        <button
-          onClick={toggle}
-          onMouseEnter={() => setHoveredToggle(true)}
-          onMouseLeave={() => setHoveredToggle(false)}
+        {/* Drag handle for resizing */}
+        <div
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+          onMouseEnter={() => setHoveredHandle(true)}
+          onMouseLeave={() => setHoveredHandle(false)}
           style={{
-            height: 32,
-            borderTop: "1px solid #e8e8e8",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: hoveredToggle ? "#f5f5f5" : "transparent",
-            border: "none",
-            cursor: "pointer",
-            color: "#919191",
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 2,
+            height: "100%",
+            cursor: "col-resize",
+            background: hoveredHandle || isResizing ? "#91c9f7" : "transparent",
             transition: "background 0.1s",
+            zIndex: 10,
           }}
-        >
-          {expanded ? (
-            <ChevronLeft style={{ width: 14, height: 14 }} />
-          ) : (
-            <ChevronRight style={{ width: 14, height: 14 }} />
-          )}
-        </button>
+        />
 
-        {/* Drag handle for resizing (only when expanded) */}
-        {expanded && (
+        {/* Resize width tooltip */}
+        {resizeTooltipWidth !== null && (
           <div
-            onMouseDown={handleMouseDown}
-            onDoubleClick={handleDoubleClick}
-            onMouseEnter={() => setHoveredHandle(true)}
-            onMouseLeave={() => setHoveredHandle(false)}
             style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: 2,
-              height: "100%",
-              cursor: "col-resize",
-              background:
-                hoveredHandle || isResizing ? "#91c9f7" : "transparent",
-              transition: "background 0.1s",
-              zIndex: 10,
+              position: "fixed",
+              top: "50%",
+              left: resizeTooltipWidth + 16,
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              zIndex: 50,
             }}
-          />
+          >
+            <div
+              style={{
+                background: "rgba(0, 0, 0, 0.85)",
+                color: "#ffffff",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: 600,
+                fontFamily: "'Segoe UI', system-ui, sans-serif",
+                letterSpacing: "0.5px",
+                boxShadow:
+                  "0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+              }}
+            >
+              {Math.round(resizeTooltipWidth)}px
+            </div>
+            {/* Arrow pointing to rail */}
+            <div
+              style={{
+                position: "absolute",
+                left: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: 0,
+                height: 0,
+                borderTop: "6px solid transparent",
+                borderBottom: "6px solid transparent",
+                borderRight: "6px solid rgba(0, 0, 0, 0.85)",
+              }}
+            />
+          </div>
         )}
 
         {/* Context menu */}
