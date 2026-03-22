@@ -76,7 +76,7 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
           height: 36,
           padding: expanded ? "6px 12px" : "6px 14px 6px 12px",
           border: "none",
-          cursor: "pointer",
+          cursor: "default",
           background: active
             ? "rgba(0,120,212,0.1)"
             : isHovered

@@ -56,7 +56,7 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
           height: 32,
           padding: "6px 8px",
           border: "none",
-          cursor: "pointer",
+          cursor: "default",
           background: active
             ? "rgba(0,120,212,0.05)"
             : isHovered

@@ -311,6 +311,20 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                         e.stopPropagation();
                         toggleModule(template.id);
                       }}
+                      onMouseEnter={(e) => {
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.background = isActive
+                          ? "rgba(0,120,212,0.2)"
+                          : "#f0f0f0";
+                      }}
+                      onMouseLeave={(e) => {
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.background = isActive
+                          ? "rgba(0,120,212,0.15)"
+                          : "transparent";
+                      }}
                       style={{
                         position: "absolute",
                         right: 8,
@@ -319,14 +333,17 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "transparent",
+                        background: isActive
+                          ? "rgba(0,120,212,0.15)"
+                          : "transparent",
                         border: "none",
-                        cursor: "pointer",
-                        color: "#616161",
-                        transition: "transform 0.2s ease",
+                        cursor: "default",
+                        color: isActive ? "#0078d4" : "#616161",
+                        transition: "transform 0.2s ease, background 0.1s ease",
                         transform: isModuleExpanded
                           ? "rotate(0deg)"
                           : "rotate(-90deg)",
+                        borderRadius: "50%",
                       }}
                     >
                       <ChevronDown style={{ width: 12, height: 12 }} />
@@ -335,35 +352,45 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 </div>
 
                 {/* Sub-items (only when module is expanded and sidebar is expanded) */}
-                {hasSubItems && expanded && isModuleExpanded && (
+                {hasSubItems && expanded && (
                   <div
                     style={{
-                      overflow: "hidden",
-                      transition: "max-height 0.2s ease",
-                      marginTop: 2,
-                      marginBottom: 4,
-                      paddingLeft: 28,
-                      paddingRight: 8,
+                      display: "grid",
+                      gridTemplateRows: isModuleExpanded ? "1fr" : "0fr",
+                      opacity: isModuleExpanded ? 1 : 0,
+                      transition: "all 0.2s ease-in-out",
+                      marginTop: isModuleExpanded ? 4 : 0,
+                      marginBottom: isModuleExpanded ? 4 : 0,
                     }}
                   >
-                    {template.subItems!.map((subItem, subIndex) => {
-                      const subItemIndex = itemIndex + 1 + subIndex;
-                      const isSubItemFocused =
-                        keyboardMode && focusedIndex === subItemIndex;
+                    <div
+                      style={{
+                        overflow: "hidden",
+                        paddingLeft: 28,
+                        paddingRight: 8,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      {template.subItems!.map((subItem, subIndex) => {
+                        const subItemIndex = itemIndex + 1 + subIndex;
+                        const isSubItemFocused =
+                          keyboardMode && focusedIndex === subItemIndex;
 
-                      return (
-                        <SidebarSubItem
-                          key={subItem.id}
-                          id={subItem.id}
-                          label={subItem.label}
-                          active={activeModule === subItem.id}
-                          onClick={onModuleClick}
-                          focused={isSubItemFocused}
-                          onContextMenu={handleContextMenu}
-                          badge={subItem.badge}
-                        />
-                      );
-                    })}
+                        return (
+                          <SidebarSubItem
+                            key={subItem.id}
+                            id={subItem.id}
+                            label={subItem.label}
+                            active={activeModule === subItem.id}
+                            onClick={onModuleClick}
+                            focused={isSubItemFocused}
+                            onContextMenu={handleContextMenu}
+                            badge={subItem.badge}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
