@@ -432,8 +432,9 @@ export function InventoryWorkspace({
                           : idx % 2 === 1
                             ? W.surfaceAlt
                             : W.surface,
-                        outline: selected ? "1.5px solid #0078d4" : "none",
-                        outlineOffset: -1,
+                        boxShadow: selected
+                          ? "inset 0 0 0 1.5px #0078d4"
+                          : "none",
                       }}
                       onMouseEnter={(e) => {
                         if (!selected)

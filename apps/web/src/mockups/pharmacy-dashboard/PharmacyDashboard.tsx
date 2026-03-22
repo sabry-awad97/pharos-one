@@ -796,8 +796,9 @@ export function PharmacyDashboard() {
                                 ? "#f9f9f9"
                                 : "white",
                             cursor: "pointer",
-                            outline: selected ? "1.5px solid #0078d4" : "none",
-                            outlineOffset: -1,
+                            boxShadow: selected
+                              ? "inset 0 0 0 1.5px #0078d4"
+                              : "none",
                             transition: "background 0.1s",
                           }}
                           onMouseEnter={(e) => {
