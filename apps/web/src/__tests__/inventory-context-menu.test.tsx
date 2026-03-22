@@ -3,6 +3,57 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
+// Mock the action registry
+vi.mock("../features/modules/inventory/config/inventory-actions", () => ({
+  inventoryActions: [
+    {
+      id: "edit-product",
+      label: "Edit Product",
+      group: "edit",
+      shortcut: "⌘E",
+      isVisible: () => true,
+      handler: vi.fn((row: unknown) => console.log("Edit Product:", row)),
+    },
+    {
+      id: "view-batches",
+      label: "View Batches",
+      group: "view",
+      shortcut: "⌘B",
+      isVisible: () => true,
+      handler: vi.fn((row: unknown) => console.log("View Batches:", row)),
+    },
+    {
+      id: "view-history",
+      label: "View History",
+      group: "view",
+      shortcut: "⌘H",
+      isVisible: () => true,
+      handler: vi.fn((row: unknown) => console.log("View History:", row)),
+    },
+    {
+      id: "adjust-stock",
+      label: "Adjust Stock",
+      group: "stock",
+      shortcut: "⌘S",
+      isVisible: () => true,
+      handler: vi.fn((row: unknown) => console.log("Adjust Stock:", row)),
+    },
+    {
+      id: "mark-expiring",
+      label: "Mark as Expiring",
+      group: "stock",
+      isVisible: (row: { stockStatus: string }) =>
+        row.stockStatus === "expiring",
+      handler: vi.fn((row: unknown) => console.log("Mark as Expiring:", row)),
+    },
+  ],
+  actionGroups: {
+    edit: { id: "edit", label: "Edit", order: 1 },
+    view: { id: "view", label: "View", order: 2 },
+    stock: { id: "stock", label: "Actions", order: 3 },
+  },
+}));
+
 // Mock the hooks
 vi.mock("../features/modules/inventory/hooks/use-products", () => ({
   useProducts: () => ({
