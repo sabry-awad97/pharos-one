@@ -54,7 +54,7 @@ export function AnnotationCallouts() {
       style={{
         marginTop: 12,
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
         gap: 8,
       }}
     >

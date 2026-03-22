@@ -5,7 +5,6 @@
  */
 
 import { Hash, Filter, Download, RefreshCw } from "lucide-react";
-import { AnnotationCallouts } from "./AnnotationCallouts";
 
 // Color constants matching old implementation
 const W = {
@@ -135,7 +134,15 @@ export function ModuleWorkspace({
       </div>
 
       {/* Data table */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 12,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <table
           style={{
             width: "100%",
@@ -207,9 +214,6 @@ export function ModuleWorkspace({
             ))}
           </tbody>
         </table>
-
-        {/* Annotation callouts - only shown when not in split view */}
-        {!split && <AnnotationCallouts />}
       </div>
     </div>
   );

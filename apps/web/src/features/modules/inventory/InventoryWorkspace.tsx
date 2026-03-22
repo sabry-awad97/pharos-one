@@ -16,7 +16,6 @@ import {
   type SortingState,
   type RowSelectionState,
 } from "@tanstack/react-table";
-import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
 import { BatchDetailsPanel } from "./components/ProductDetailsPanel";
 import { StockMovementsPanel } from "./components/StockMovementsPanel";
@@ -476,7 +475,6 @@ export function InventoryWorkspace({
           )}
 
           {/* Annotation callouts - only shown when not in split view */}
-          {!split && <AnnotationCallouts />}
         </div>
       </div>
 
