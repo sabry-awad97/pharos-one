@@ -19,6 +19,10 @@ import { Route as AppHomePosRouteImport } from './routes/_app/home/pos'
 import { Route as AppHomeInventoryRouteImport } from './routes/_app/home/inventory'
 import { Route as AppHomeCustomersRouteImport } from './routes/_app/home/customers'
 import { Route as AppHomeDashboardIndexRouteImport } from './routes/_app/home/dashboard/index'
+import { Route as AppHomeInventoryLowStockRouteImport } from './routes/_app/home/inventory/low-stock'
+import { Route as AppHomeInventoryExpiringRouteImport } from './routes/_app/home/inventory/expiring'
+import { Route as AppHomeInventoryCategoriesRouteImport } from './routes/_app/home/inventory/categories'
+import { Route as AppHomeInventoryAllRouteImport } from './routes/_app/home/inventory/all'
 import { Route as AppHomeDashboardOverviewRouteImport } from './routes/_app/home/dashboard/overview'
 import { Route as AppHomeDashboardAlertsRouteImport } from './routes/_app/home/dashboard/alerts'
 
@@ -71,6 +75,29 @@ const AppHomeDashboardIndexRoute = AppHomeDashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => AppHomeRouteRoute,
 } as any)
+const AppHomeInventoryLowStockRoute =
+  AppHomeInventoryLowStockRouteImport.update({
+    id: '/low-stock',
+    path: '/low-stock',
+    getParentRoute: () => AppHomeInventoryRoute,
+  } as any)
+const AppHomeInventoryExpiringRoute =
+  AppHomeInventoryExpiringRouteImport.update({
+    id: '/expiring',
+    path: '/expiring',
+    getParentRoute: () => AppHomeInventoryRoute,
+  } as any)
+const AppHomeInventoryCategoriesRoute =
+  AppHomeInventoryCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AppHomeInventoryRoute,
+  } as any)
+const AppHomeInventoryAllRoute = AppHomeInventoryAllRouteImport.update({
+  id: '/all',
+  path: '/all',
+  getParentRoute: () => AppHomeInventoryRoute,
+} as any)
 const AppHomeDashboardOverviewRoute =
   AppHomeDashboardOverviewRouteImport.update({
     id: '/dashboard/overview',
@@ -88,12 +115,16 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
-  '/home/inventory': typeof AppHomeInventoryRoute
+  '/home/inventory': typeof AppHomeInventoryRouteWithChildren
   '/home/pos': typeof AppHomePosRoute
   '/home/purchases': typeof AppHomePurchasesRoute
   '/home/reports': typeof AppHomeReportsRoute
   '/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
   '/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/home/inventory/all': typeof AppHomeInventoryAllRoute
+  '/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
+  '/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
+  '/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
   '/home/dashboard/': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -101,12 +132,16 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
-  '/home/inventory': typeof AppHomeInventoryRoute
+  '/home/inventory': typeof AppHomeInventoryRouteWithChildren
   '/home/pos': typeof AppHomePosRoute
   '/home/purchases': typeof AppHomePurchasesRoute
   '/home/reports': typeof AppHomeReportsRoute
   '/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
   '/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/home/inventory/all': typeof AppHomeInventoryAllRoute
+  '/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
+  '/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
+  '/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
   '/home/dashboard': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -116,12 +151,16 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRouteRouteWithChildren
   '/demo/tabs': typeof DemoTabsRoute
   '/_app/home/customers': typeof AppHomeCustomersRoute
-  '/_app/home/inventory': typeof AppHomeInventoryRoute
+  '/_app/home/inventory': typeof AppHomeInventoryRouteWithChildren
   '/_app/home/pos': typeof AppHomePosRoute
   '/_app/home/purchases': typeof AppHomePurchasesRoute
   '/_app/home/reports': typeof AppHomeReportsRoute
   '/_app/home/dashboard/alerts': typeof AppHomeDashboardAlertsRoute
   '/_app/home/dashboard/overview': typeof AppHomeDashboardOverviewRoute
+  '/_app/home/inventory/all': typeof AppHomeInventoryAllRoute
+  '/_app/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
+  '/_app/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
+  '/_app/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
   '/_app/home/dashboard/': typeof AppHomeDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +176,10 @@ export interface FileRouteTypes {
     | '/home/reports'
     | '/home/dashboard/alerts'
     | '/home/dashboard/overview'
+    | '/home/inventory/all'
+    | '/home/inventory/categories'
+    | '/home/inventory/expiring'
+    | '/home/inventory/low-stock'
     | '/home/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,6 +193,10 @@ export interface FileRouteTypes {
     | '/home/reports'
     | '/home/dashboard/alerts'
     | '/home/dashboard/overview'
+    | '/home/inventory/all'
+    | '/home/inventory/categories'
+    | '/home/inventory/expiring'
+    | '/home/inventory/low-stock'
     | '/home/dashboard'
   id:
     | '__root__'
@@ -164,6 +211,10 @@ export interface FileRouteTypes {
     | '/_app/home/reports'
     | '/_app/home/dashboard/alerts'
     | '/_app/home/dashboard/overview'
+    | '/_app/home/inventory/all'
+    | '/_app/home/inventory/categories'
+    | '/_app/home/inventory/expiring'
+    | '/_app/home/inventory/low-stock'
     | '/_app/home/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -245,6 +296,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeDashboardIndexRouteImport
       parentRoute: typeof AppHomeRouteRoute
     }
+    '/_app/home/inventory/low-stock': {
+      id: '/_app/home/inventory/low-stock'
+      path: '/low-stock'
+      fullPath: '/home/inventory/low-stock'
+      preLoaderRoute: typeof AppHomeInventoryLowStockRouteImport
+      parentRoute: typeof AppHomeInventoryRoute
+    }
+    '/_app/home/inventory/expiring': {
+      id: '/_app/home/inventory/expiring'
+      path: '/expiring'
+      fullPath: '/home/inventory/expiring'
+      preLoaderRoute: typeof AppHomeInventoryExpiringRouteImport
+      parentRoute: typeof AppHomeInventoryRoute
+    }
+    '/_app/home/inventory/categories': {
+      id: '/_app/home/inventory/categories'
+      path: '/categories'
+      fullPath: '/home/inventory/categories'
+      preLoaderRoute: typeof AppHomeInventoryCategoriesRouteImport
+      parentRoute: typeof AppHomeInventoryRoute
+    }
+    '/_app/home/inventory/all': {
+      id: '/_app/home/inventory/all'
+      path: '/all'
+      fullPath: '/home/inventory/all'
+      preLoaderRoute: typeof AppHomeInventoryAllRouteImport
+      parentRoute: typeof AppHomeInventoryRoute
+    }
     '/_app/home/dashboard/overview': {
       id: '/_app/home/dashboard/overview'
       path: '/dashboard/overview'
@@ -262,9 +341,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppHomeInventoryRouteChildren {
+  AppHomeInventoryAllRoute: typeof AppHomeInventoryAllRoute
+  AppHomeInventoryCategoriesRoute: typeof AppHomeInventoryCategoriesRoute
+  AppHomeInventoryExpiringRoute: typeof AppHomeInventoryExpiringRoute
+  AppHomeInventoryLowStockRoute: typeof AppHomeInventoryLowStockRoute
+}
+
+const AppHomeInventoryRouteChildren: AppHomeInventoryRouteChildren = {
+  AppHomeInventoryAllRoute: AppHomeInventoryAllRoute,
+  AppHomeInventoryCategoriesRoute: AppHomeInventoryCategoriesRoute,
+  AppHomeInventoryExpiringRoute: AppHomeInventoryExpiringRoute,
+  AppHomeInventoryLowStockRoute: AppHomeInventoryLowStockRoute,
+}
+
+const AppHomeInventoryRouteWithChildren =
+  AppHomeInventoryRoute._addFileChildren(AppHomeInventoryRouteChildren)
+
 interface AppHomeRouteRouteChildren {
   AppHomeCustomersRoute: typeof AppHomeCustomersRoute
-  AppHomeInventoryRoute: typeof AppHomeInventoryRoute
+  AppHomeInventoryRoute: typeof AppHomeInventoryRouteWithChildren
   AppHomePosRoute: typeof AppHomePosRoute
   AppHomePurchasesRoute: typeof AppHomePurchasesRoute
   AppHomeReportsRoute: typeof AppHomeReportsRoute
@@ -275,7 +371,7 @@ interface AppHomeRouteRouteChildren {
 
 const AppHomeRouteRouteChildren: AppHomeRouteRouteChildren = {
   AppHomeCustomersRoute: AppHomeCustomersRoute,
-  AppHomeInventoryRoute: AppHomeInventoryRoute,
+  AppHomeInventoryRoute: AppHomeInventoryRouteWithChildren,
   AppHomePosRoute: AppHomePosRoute,
   AppHomePurchasesRoute: AppHomePurchasesRoute,
   AppHomeReportsRoute: AppHomeReportsRoute,

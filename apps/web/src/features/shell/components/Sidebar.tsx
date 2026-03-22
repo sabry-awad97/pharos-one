@@ -302,7 +302,15 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     label={template.label}
                     active={isActive}
                     expanded={expanded}
-                    onClick={onModuleClick}
+                    onClick={(id) => {
+                      // If item has sub-items, only toggle expansion (don't navigate)
+                      if (hasSubItems) {
+                        toggleModule(id);
+                      } else {
+                        // Leaf items navigate normally
+                        onModuleClick(id);
+                      }
+                    }}
                     focused={isModuleFocused}
                     onContextMenu={handleContextMenu}
                     badge={template.badge}

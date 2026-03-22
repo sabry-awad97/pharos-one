@@ -92,6 +92,7 @@ export function WorkspaceContainer({
   const ModuleComponent = module.component;
   return (
     <div
+      data-testid="workspace-container"
       style={{
         flex: 1,
         display: "flex",

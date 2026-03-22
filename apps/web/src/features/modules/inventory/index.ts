@@ -16,5 +16,34 @@ registerModule({
   component: InventoryWorkspace,
 });
 
+// Register inventory sub-item modules
+registerModule({
+  id: "inventory-all",
+  label: "Inventory - All Products",
+  icon: Package,
+  component: InventoryWorkspace,
+});
+
+registerModule({
+  id: "inventory-low-stock",
+  label: "Inventory - Low Stock Alerts",
+  icon: Package,
+  component: InventoryWorkspace,
+});
+
+registerModule({
+  id: "inventory-expiring",
+  label: "Inventory - Expiring Soon",
+  icon: Package,
+  component: InventoryWorkspace,
+});
+
+registerModule({
+  id: "inventory-categories",
+  label: "Inventory - Categories",
+  icon: Package,
+  component: InventoryWorkspace,
+});
+
 // Export components for direct use if needed
 export { InventoryWorkspace };
