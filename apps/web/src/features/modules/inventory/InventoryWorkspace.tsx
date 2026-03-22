@@ -7,6 +7,9 @@
 import { useState } from "react";
 import { Hash, Filter, Download, RefreshCw } from "lucide-react";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
+import { useDrugs } from "./hooks/use-drugs";
+import type { DrugWithRelations } from "./schema";
+import type { Drug } from "./schema";
 
 // Color constants matching ModuleWorkspace.tsx
 const W = {
@@ -25,133 +28,6 @@ const W = {
   expiring: "#c43501",
 };
 
-// Drug data structure
-interface Drug {
-  id: number;
-  name: string;
-  sku: string;
-  stock: number;
-  expiry: string;
-  price: number;
-  category: string;
-  supplier: string;
-  status: "ok" | "low" | "expiring" | "out";
-}
-
-// Sample data
-const drugs: Drug[] = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg",
-    sku: "AMX-500",
-    stock: 240,
-    expiry: "2026-03",
-    price: 12.5,
-    category: "Antibiotic",
-    supplier: "MedSupply Co",
-    status: "ok",
-  },
-  {
-    id: 2,
-    name: "Paracetamol 650mg",
-    sku: "PCT-650",
-    stock: 18,
-    expiry: "2025-09",
-    price: 4.2,
-    category: "Analgesic",
-    supplier: "PharmGen",
-    status: "low",
-  },
-  {
-    id: 3,
-    name: "Metformin 500mg",
-    sku: "MET-500",
-    stock: 302,
-    expiry: "2026-08",
-    price: 8.75,
-    category: "Antidiabetic",
-    supplier: "GeneriCo",
-    status: "ok",
-  },
-  {
-    id: 4,
-    name: "Omeprazole 20mg",
-    sku: "OMZ-020",
-    stock: 85,
-    expiry: "2025-06",
-    price: 15.0,
-    category: "GI",
-    supplier: "MedSupply Co",
-    status: "expiring",
-  },
-  {
-    id: 5,
-    name: "Atorvastatin 10mg",
-    sku: "ATV-010",
-    stock: 0,
-    expiry: "2026-11",
-    price: 22.3,
-    category: "Statin",
-    supplier: "CardioPharm",
-    status: "out",
-  },
-  {
-    id: 6,
-    name: "Lisinopril 5mg",
-    sku: "LSN-005",
-    stock: 145,
-    expiry: "2027-01",
-    price: 9.9,
-    category: "ACE Inhibitor",
-    supplier: "CardioPharm",
-    status: "ok",
-  },
-  {
-    id: 7,
-    name: "Cetirizine 10mg",
-    sku: "CTZ-010",
-    stock: 12,
-    expiry: "2025-08",
-    price: 6.4,
-    category: "Antihistamine",
-    supplier: "AllergyRx",
-    status: "low",
-  },
-  {
-    id: 8,
-    name: "Azithromycin 250mg",
-    sku: "AZT-250",
-    stock: 67,
-    expiry: "2025-05",
-    price: 18.6,
-    category: "Antibiotic",
-    supplier: "PharmGen",
-    status: "expiring",
-  },
-  {
-    id: 9,
-    name: "Ibuprofen 400mg",
-    sku: "IBU-400",
-    stock: 389,
-    expiry: "2027-03",
-    price: 5.1,
-    category: "NSAID",
-    supplier: "GeneriCo",
-    status: "ok",
-  },
-  {
-    id: 10,
-    name: "Losartan 50mg",
-    sku: "LST-050",
-    stock: 203,
-    expiry: "2026-06",
-    price: 11.2,
-    category: "ARB",
-    supplier: "CardioPharm",
-    status: "ok",
-  },
-];
-
 // Status dot colors
 const statusDot: Record<string, string> = {
   ok: "#107c10",
@@ -161,7 +37,7 @@ const statusDot: Record<string, string> = {
 };
 
 // Status badge component
-function StatusBadge({ status }: { status: Drug["status"] }) {
+function StatusBadge({ status }: { status: DrugWithRelations["status"] }) {
   const config = {
     ok: {
       bg: "#dff6dd",
@@ -217,6 +93,7 @@ export function InventoryWorkspace({
   label?: string;
 }) {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const { data: drugs = [], isLoading, error } = useDrugs();
 
   return (
     <div
@@ -248,7 +125,9 @@ export function InventoryWorkspace({
             {label || "Inventory"}
           </p>
           <p style={{ margin: 0, fontSize: 10, color: W.textMuted }}>
-            {drugs.length} items • Last updated: just now
+            {isLoading
+              ? "Loading..."
+              : `${drugs.length} items • Last updated: just now`}
           </p>
         </div>
         <div style={{ flex: 1 }} />
@@ -281,179 +160,205 @@ export function InventoryWorkspace({
 
       {/* Enhanced data table - based on PharmacyDashboard.tsx structure */}
       <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
-        <div
-          className="rounded-md overflow-hidden shadow-sm border"
-          style={{
-            background: W.surface,
-            borderColor: W.border,
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr
-                className="bg-[#f5f5f5] sticky top-0 z-10"
-                style={{
-                  borderBottom: `1px solid ${W.border}`,
-                }}
-              >
-                {[
-                  { label: "Drug Name", w: "auto" },
-                  { label: "SKU", w: 90 },
-                  { label: "Stock", w: 70 },
-                  { label: "Expiry", w: 80 },
-                  { label: "Price", w: 80 },
-                  { label: "Category", w: 110 },
-                  { label: "Supplier", w: 120 },
-                  { label: "Status", w: 100 },
-                ].map(({ label, w }) => (
-                  <th
-                    key={label}
-                    className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                    style={{
-                      color: W.textMuted,
-                      width: typeof w === "number" ? w : undefined,
-                    }}
-                  >
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {drugs.map((drug, idx) => {
-                const selected = selectedRow === drug.id;
-                return (
-                  <tr
-                    key={drug.id}
-                    onClick={() => setSelectedRow(drug.id)}
-                    className="cursor-pointer transition-[background] duration-100"
-                    style={{
-                      borderBottom: `1px solid ${W.borderLight}`,
-                      background: selected
-                        ? "rgba(0,120,212,0.07)"
-                        : idx % 2 === 1
-                          ? W.surfaceAlt
-                          : W.surface,
-                      outline: selected ? "1.5px solid #0078d4" : "none",
-                      outlineOffset: -1,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!selected)
+        {error && (
+          <div
+            className="p-4 rounded-md border"
+            style={{
+              background: "#fde7e9",
+              borderColor: W.danger,
+              color: W.danger,
+            }}
+          >
+            Error loading inventory: {error.message}
+          </div>
+        )}
+
+        {isLoading && (
+          <div
+            className="p-4 text-center"
+            style={{
+              color: W.textMuted,
+            }}
+          >
+            Loading inventory...
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <div
+            className="rounded-md overflow-hidden shadow-sm border"
+            style={{
+              background: W.surface,
+              borderColor: W.border,
+            }}
+          >
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr
+                  className="bg-[#f5f5f5] sticky top-0 z-10"
+                  style={{
+                    borderBottom: `1px solid ${W.border}`,
+                  }}
+                >
+                  {[
+                    { label: "Drug Name", w: "auto" },
+                    { label: "SKU", w: 90 },
+                    { label: "Stock", w: 70 },
+                    { label: "Expiry", w: 80 },
+                    { label: "Price", w: 80 },
+                    { label: "Category", w: 110 },
+                    { label: "Supplier", w: 120 },
+                    { label: "Status", w: 100 },
+                  ].map(({ label, w }) => (
+                    <th
+                      key={label}
+                      className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
+                      style={{
+                        color: W.textMuted,
+                        width: typeof w === "number" ? w : undefined,
+                      }}
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {drugs.map((drug, idx) => {
+                  const selected = selectedRow === drug.id;
+                  return (
+                    <tr
+                      key={drug.id}
+                      onClick={() => setSelectedRow(drug.id)}
+                      className="cursor-pointer transition-[background] duration-100"
+                      style={{
+                        borderBottom: `1px solid ${W.borderLight}`,
+                        background: selected
+                          ? "rgba(0,120,212,0.07)"
+                          : idx % 2 === 1
+                            ? W.surfaceAlt
+                            : W.surface,
+                        outline: selected ? "1.5px solid #0078d4" : "none",
+                        outlineOffset: -1,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!selected)
+                          (
+                            e.currentTarget as HTMLTableRowElement
+                          ).style.background = "#f0f6ff";
+                      }}
+                      onMouseLeave={(e) => {
                         (
                           e.currentTarget as HTMLTableRowElement
-                        ).style.background = "#f0f6ff";
-                    }}
-                    onMouseLeave={(e) => {
-                      (
-                        e.currentTarget as HTMLTableRowElement
-                      ).style.background = selected
-                        ? "rgba(0,120,212,0.07)"
-                        : idx % 2 === 1
-                          ? W.surfaceAlt
-                          : W.surface;
-                    }}
-                  >
-                    {/* Drug Name */}
-                    <td style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-[7px] h-[7px] rounded-full shrink-0"
-                          style={{
-                            background: statusDot[drug.status],
-                          }}
-                        />
-                        <span
-                          className="text-xs font-medium"
-                          style={{
-                            color: W.text,
-                          }}
-                        >
-                          {drug.name}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* SKU */}
-                    <td
-                      className="py-1.5 px-3 text-[11px] font-mono"
-                      style={{
-                        color: W.textSub,
+                        ).style.background = selected
+                          ? "rgba(0,120,212,0.07)"
+                          : idx % 2 === 1
+                            ? W.surfaceAlt
+                            : W.surface;
                       }}
                     >
-                      {drug.sku}
-                    </td>
+                      {/* Drug Name */}
+                      <td style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-[7px] h-[7px] rounded-full shrink-0"
+                            style={{
+                              background: statusDot[drug.status],
+                            }}
+                          />
+                          <span
+                            className="text-xs font-medium"
+                            style={{
+                              color: W.text,
+                            }}
+                          >
+                            {drug.name}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Stock */}
-                    <td className="py-1.5 px-3">
-                      <span
-                        className="text-xs font-semibold"
-                        style={{
-                          color:
-                            drug.stock === 0
-                              ? W.danger
-                              : drug.stock < 20
-                                ? W.warn
-                                : W.text,
-                        }}
-                      >
-                        {drug.stock}
-                      </span>
-                    </td>
-
-                    {/* Expiry */}
-                    <td
-                      className="py-1.5 px-3 text-[11px]"
-                      style={{
-                        color:
-                          drug.status === "expiring" ? W.expiring : W.textSub,
-                      }}
-                    >
-                      {drug.expiry}
-                    </td>
-
-                    {/* Price */}
-                    <td
-                      className="py-1.5 px-3 text-xs font-medium"
-                      style={{
-                        color: W.text,
-                      }}
-                    >
-                      ₹{drug.price.toFixed(2)}
-                    </td>
-
-                    {/* Category */}
-                    <td className="py-1.5 px-3">
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
+                      {/* SKU */}
+                      <td
+                        className="py-1.5 px-3 text-[11px] font-mono"
                         style={{
                           color: W.textSub,
-                          borderColor: W.border,
                         }}
                       >
-                        {drug.category}
-                      </span>
-                    </td>
+                        {drug.sku}
+                      </td>
 
-                    {/* Supplier */}
-                    <td
-                      className="py-1.5 px-3 text-[11px]"
-                      style={{
-                        color: W.textSub,
-                      }}
-                    >
-                      {drug.supplier}
-                    </td>
+                      {/* Stock */}
+                      <td className="py-1.5 px-3">
+                        <span
+                          className="text-xs font-semibold"
+                          style={{
+                            color:
+                              drug.stock === 0
+                                ? W.danger
+                                : drug.stock < 20
+                                  ? W.warn
+                                  : W.text,
+                          }}
+                        >
+                          {drug.stock}
+                        </span>
+                      </td>
 
-                    {/* Status */}
-                    <td className="py-1.5 px-3">
-                      <StatusBadge status={drug.status} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {/* Expiry */}
+                      <td
+                        className="py-1.5 px-3 text-[11px]"
+                        style={{
+                          color:
+                            drug.status === "expiring" ? W.expiring : W.textSub,
+                        }}
+                      >
+                        {drug.expiry}
+                      </td>
+
+                      {/* Price */}
+                      <td
+                        className="py-1.5 px-3 text-xs font-medium"
+                        style={{
+                          color: W.text,
+                        }}
+                      >
+                        ₹{drug.price.toFixed(2)}
+                      </td>
+
+                      {/* Category */}
+                      <td className="py-1.5 px-3">
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
+                          style={{
+                            color: W.textSub,
+                            borderColor: W.border,
+                          }}
+                        >
+                          {drug.category.name}
+                        </span>
+                      </td>
+
+                      {/* Supplier */}
+                      <td
+                        className="py-1.5 px-3 text-[11px]"
+                        style={{
+                          color: W.textSub,
+                        }}
+                      >
+                        {drug.supplier.name}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-1.5 px-3">
+                        <StatusBadge status={drug.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Annotation callouts - only shown when not in split view */}
         {!split && <AnnotationCallouts />}

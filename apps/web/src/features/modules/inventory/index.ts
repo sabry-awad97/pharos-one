@@ -47,3 +47,18 @@ registerModule({
 
 // Export components for direct use if needed
 export { InventoryWorkspace };
+
+// Export hooks (public API only)
+export { useDrugs, useDrug } from "./hooks/use-drugs";
+export { useSuppliers, useSupplier } from "./hooks/use-suppliers";
+export { useCategories, useCategory } from "./hooks/use-categories";
+
+// Export types only (schemas are internal implementation details)
+export type {
+  Drug,
+  DrugWithRelations,
+  DrugStatus,
+  Supplier,
+  Category,
+  InventoryFilters,
+} from "./schema";
