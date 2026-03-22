@@ -1,11 +1,21 @@
 /**
  * Inventory workspace component
- * Displays drug catalog table with stock levels
- * Enhanced table layout based on PharmacyDashboard.tsx mockup but using project styles
+ * Displays product catalog table with stock levels using TanStack Table
+ * Enhanced table layout with sorting, filtering, and selection
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Hash, Filter, Download, RefreshCw } from "lucide-react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type RowSelectionState,
+} from "@tanstack/react-table";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
@@ -85,8 +95,7 @@ function StatusBadge({
 }
 
 /**
- * Inventory workspace showing drug catalog with enhanced table
- * Based on PharmacyDashboard.tsx mockup structure but using project's established styles
+ * Inventory workspace showing product catalog with TanStack Table
  */
 export function InventoryWorkspace({
   split = false,
@@ -95,8 +104,160 @@ export function InventoryWorkspace({
   split?: boolean;
   label?: string;
 }) {
-  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const { data: products = [], isLoading, error } = useProducts();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Define columns
+  const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Product Name",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <span
+              className="w-[7px] h-[7px] rounded-full shrink-0"
+              style={{
+                background: statusDot[row.original.stockStatus],
+              }}
+            />
+            <span
+              className="text-xs font-medium"
+              style={{
+                color: W.text,
+              }}
+            >
+              {row.original.name}
+            </span>
+          </div>
+        ),
+        size: undefined, // auto width
+      },
+      {
+        accessorKey: "sku",
+        header: "SKU",
+        cell: ({ getValue }) => (
+          <span
+            className="text-[11px] font-mono"
+            style={{
+              color: W.textSub,
+            }}
+          >
+            {getValue() as string}
+          </span>
+        ),
+        size: 90,
+      },
+      {
+        accessorKey: "availableQuantity",
+        header: "Stock",
+        cell: ({ row }) => {
+          const qty = row.original.availableQuantity;
+          const reorder = row.original.reorderLevel;
+          return (
+            <span
+              className="text-xs font-semibold"
+              style={{
+                color: qty === 0 ? W.danger : qty < reorder ? W.warn : W.text,
+              }}
+            >
+              {qty}
+            </span>
+          );
+        },
+        size: 70,
+      },
+      {
+        accessorKey: "nearestExpiry",
+        header: "Expiry",
+        cell: ({ row }) => (
+          <span
+            className="text-[11px]"
+            style={{
+              color:
+                row.original.stockStatus === "expiring"
+                  ? W.expiring
+                  : W.textSub,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {row.original.nearestExpiry || "N/A"}
+          </span>
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "basePrice",
+        header: "Price",
+        cell: ({ getValue }) => (
+          <span
+            className="text-xs font-medium"
+            style={{
+              color: W.text,
+            }}
+          >
+            ₹{(getValue() as number).toFixed(2)}
+          </span>
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "category.name",
+        header: "Category",
+        cell: ({ row }) => (
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
+            style={{
+              color: W.textSub,
+              borderColor: W.border,
+            }}
+          >
+            {row.original.category.name}
+          </span>
+        ),
+        size: 110,
+      },
+      {
+        accessorKey: "defaultSupplier.name",
+        header: "Supplier",
+        cell: ({ row }) => (
+          <span
+            className="text-[11px]"
+            style={{
+              color: W.textSub,
+            }}
+          >
+            {row.original.defaultSupplier?.name || "N/A"}
+          </span>
+        ),
+        size: 120,
+      },
+      {
+        accessorKey: "stockStatus",
+        header: "Status",
+        cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
+        size: 100,
+      },
+    ],
+    [],
+  );
+
+  // Create table instance
+  const table = useReactTable({
+    data: products,
+    columns,
+    state: {
+      sorting,
+      rowSelection,
+    },
+    onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
+  });
 
   return (
     <div
@@ -105,7 +266,7 @@ export function InventoryWorkspace({
         background: W.bg,
       }}
     >
-      {/* Module header - matching ModuleWorkspace.tsx pattern */}
+      {/* Module header */}
       <div
         className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0"
         style={{
@@ -161,7 +322,7 @@ export function InventoryWorkspace({
         )}
       </div>
 
-      {/* Enhanced data table - based on PharmacyDashboard.tsx structure */}
+      {/* Table content */}
       <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
         {error && (
           <div
@@ -197,42 +358,49 @@ export function InventoryWorkspace({
           >
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr
-                  className="bg-[#f5f5f5] sticky top-0 z-10"
-                  style={{
-                    borderBottom: `1px solid ${W.border}`,
-                  }}
-                >
-                  {[
-                    { label: "Product Name", w: "auto" },
-                    { label: "SKU", w: 90 },
-                    { label: "Stock", w: 70 },
-                    { label: "Expiry", w: 80 },
-                    { label: "Price", w: 80 },
-                    { label: "Category", w: 110 },
-                    { label: "Supplier", w: 120 },
-                    { label: "Status", w: 100 },
-                  ].map(({ label, w }) => (
-                    <th
-                      key={label}
-                      className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
-                      style={{
-                        color: W.textMuted,
-                        width: typeof w === "number" ? w : undefined,
-                      }}
-                    >
-                      {label}
-                    </th>
-                  ))}
-                </tr>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="bg-[#f5f5f5] sticky top-0 z-10"
+                    style={{
+                      borderBottom: `1px solid ${W.border}`,
+                    }}
+                  >
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none"
+                        style={{
+                          color: W.textMuted,
+                          width:
+                            header.column.getSize() !== 150
+                              ? header.column.getSize()
+                              : undefined,
+                        }}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        {{
+                          asc: " ↑",
+                          desc: " ↓",
+                        }[header.column.getIsSorted() as string] ?? null}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {products.map((product, idx) => {
-                  const selected = selectedRow === product.id;
+                {table.getRowModel().rows.map((row, idx) => {
+                  const selected = row.getIsSelected();
                   return (
                     <tr
-                      key={product.id}
-                      onClick={() => setSelectedRow(product.id)}
+                      key={row.id}
+                      onClick={() => row.toggleSelected()}
                       className="cursor-pointer transition-[background] duration-100"
                       style={{
                         borderBottom: `1px solid ${W.borderLight}`,
@@ -260,105 +428,17 @@ export function InventoryWorkspace({
                             : W.surface;
                       }}
                     >
-                      {/* Product Name */}
-                      <td style={{ padding: "6px 12px", whiteSpace: "nowrap" }}>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-[7px] h-[7px] rounded-full shrink-0"
-                            style={{
-                              background: statusDot[product.stockStatus],
-                            }}
-                          />
-                          <span
-                            className="text-xs font-medium"
-                            style={{
-                              color: W.text,
-                            }}
-                          >
-                            {product.name}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* SKU */}
-                      <td
-                        className="py-1.5 px-3 text-[11px] font-mono"
-                        style={{
-                          color: W.textSub,
-                        }}
-                      >
-                        {product.sku}
-                      </td>
-
-                      {/* Stock */}
-                      <td className="py-1.5 px-3">
-                        <span
-                          className="text-xs font-semibold"
-                          style={{
-                            color:
-                              product.availableQuantity === 0
-                                ? W.danger
-                                : product.availableQuantity <
-                                    product.reorderLevel
-                                  ? W.warn
-                                  : W.text,
-                          }}
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          style={{ padding: "6px 12px", whiteSpace: "nowrap" }}
                         >
-                          {product.availableQuantity}
-                        </span>
-                      </td>
-
-                      {/* Expiry */}
-                      <td
-                        className="py-1.5 px-3 text-[11px]"
-                        style={{
-                          color:
-                            product.stockStatus === "expiring"
-                              ? W.expiring
-                              : W.textSub,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {product.nearestExpiry || "N/A"}
-                      </td>
-
-                      {/* Price */}
-                      <td
-                        className="py-1.5 px-3 text-xs font-medium"
-                        style={{
-                          color: W.text,
-                        }}
-                      >
-                        ₹{product.basePrice.toFixed(2)}
-                      </td>
-
-                      {/* Category */}
-                      <td className="py-1.5 px-3">
-                        <span
-                          className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-[#f0f0f0] border"
-                          style={{
-                            color: W.textSub,
-                            borderColor: W.border,
-                          }}
-                        >
-                          {product.category.name}
-                        </span>
-                      </td>
-
-                      {/* Supplier */}
-                      <td
-                        className="py-1.5 px-3 text-[11px]"
-                        style={{
-                          color: W.textSub,
-                        }}
-                      >
-                        {product.defaultSupplier?.name || "N/A"}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-1.5 px-3">
-                        <StatusBadge status={product.stockStatus} />
-                      </td>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
                     </tr>
                   );
                 })}
