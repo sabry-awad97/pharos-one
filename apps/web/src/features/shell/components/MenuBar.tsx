@@ -55,7 +55,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
           background: "#f8f8f8",
           borderBottomColor: "#e0e0e0",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-          zIndex: 200,
+          zIndex: 10,
           gap: 1,
         }}
         {...props}

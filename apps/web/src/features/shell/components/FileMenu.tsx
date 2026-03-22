@@ -134,7 +134,7 @@ export function FileMenu({
         background: "#ffffff",
         border: "1px solid #d1d1d1",
         boxShadow: "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
-        zIndex: 300,
+        zIndex: 20,
         borderRadius: "0 0 6px 6px",
         overflow: "visible",
         fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
@@ -226,7 +226,7 @@ export function FileMenu({
                   "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
                 borderRadius: 6,
                 padding: "4px 0",
-                zIndex: 400,
+                zIndex: 30,
               }}
             >
               <div

@@ -141,7 +141,7 @@ export function TabContextMenu({
         boxShadow: "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
         borderRadius: 6,
         padding: "4px 0",
-        zIndex: 500,
+        zIndex: 40,
       }}
     >
       {/* Tab header (if provided) */}
