@@ -294,6 +294,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     onClick={onModuleClick}
                     focused={isModuleFocused}
                     onContextMenu={handleContextMenu}
+                    badge={template.badge}
                   />
                   {/* Chevron for modules with sub-items */}
                   {hasSubItems && expanded && (
@@ -351,6 +352,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                           onClick={onModuleClick}
                           focused={isSubItemFocused}
                           onContextMenu={handleContextMenu}
+                          badge={subItem.badge}
                         />
                       );
                     })}

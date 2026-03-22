@@ -23,6 +23,8 @@ export interface SubItem {
   label: string;
   /** Optional filter parameter for filtered views */
   filter?: string;
+  /** Optional badge count or label */
+  badge?: number | string;
 }
 
 /**
@@ -39,6 +41,8 @@ export interface WorkspaceTemplate {
   desc: string;
   /** Optional sub-items for hierarchical navigation */
   subItems?: SubItem[];
+  /** Optional badge count or label */
+  badge?: number | string;
 }
 
 /**
@@ -53,7 +57,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     desc: "Overview, KPIs and alerts",
     subItems: [
       { id: "dashboard-overview", label: "Overview" },
-      { id: "dashboard-alerts", label: "Alerts & Notifications" },
+      { id: "dashboard-alerts", label: "Alerts & Notifications", badge: 3 },
     ],
   },
   {
@@ -63,8 +67,8 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     desc: "Drug catalog and stock levels",
     subItems: [
       { id: "inventory-all", label: "All Products" },
-      { id: "inventory-low-stock", label: "Low Stock Alerts" },
-      { id: "inventory-expiring", label: "Expiring Soon" },
+      { id: "inventory-low-stock", label: "Low Stock Alerts", badge: 7 },
+      { id: "inventory-expiring", label: "Expiring Soon", badge: 12 },
       { id: "inventory-categories", label: "Categories" },
     ],
   },
@@ -76,7 +80,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     subItems: [
       { id: "pos-new", label: "New Sale" },
       { id: "pos-returns", label: "Returns & Refunds" },
-      { id: "pos-hold", label: "Hold Transactions" },
+      { id: "pos-hold", label: "Hold Transactions", badge: 2 },
     ],
   },
   {
@@ -97,9 +101,9 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     label: "Purchase Orders",
     desc: "Supplier orders and receipts",
     subItems: [
-      { id: "purchases-active", label: "Active Orders" },
+      { id: "purchases-active", label: "Active Orders", badge: 3 },
       { id: "purchases-create", label: "Create Order" },
-      { id: "purchases-suppliers", label: "Supplier Management" },
+      { id: "purchases-suppliers", label: "Supplier Management", badge: 8 },
       { id: "purchases-receiving", label: "Receiving" },
     ],
   },
@@ -108,11 +112,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     icon: User,
     label: "Customers",
     desc: "Patient profiles and loyalty",
-    subItems: [
-      { id: "customers-list", label: "Customer List" },
-      { id: "customers-loyalty", label: "Loyalty Program" },
-      { id: "customers-prescriptions", label: "Prescriptions" },
-    ],
+    badge: 142,
   },
 ];
 

@@ -20,6 +20,8 @@ export interface SidebarNavItemProps {
   focused?: boolean;
   /** Optional context menu handler */
   onContextMenu?: (e: React.MouseEvent, id: string) => void;
+  /** Optional badge count or label */
+  badge?: number | string;
 }
 
 /**
@@ -39,6 +41,7 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
       style,
       focused = false,
       onContextMenu,
+      badge,
     },
     ref,
   ) => {
@@ -69,9 +72,9 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
           width: "100%",
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: expanded ? "flex-start" : "flex-start",
           height: 36,
-          padding: "6px 12px",
+          padding: expanded ? "6px 12px" : "6px 8px",
           border: "none",
           cursor: "pointer",
           background: active
@@ -80,7 +83,7 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
               ? "#f5f5f5"
               : "transparent",
           borderLeft: active ? "3px solid #0078d4" : "3px solid transparent",
-          gap: 10,
+          gap: expanded ? 10 : 0,
           transition: "background .1s",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
           outline: focused ? "2px solid #0078d4" : "none",
@@ -106,9 +109,29 @@ const SidebarNavItem = React.forwardRef<HTMLButtonElement, SidebarNavItemProps>(
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
+              flex: 1,
+              textAlign: "left",
             }}
           >
             {label}
+          </span>
+        )}
+
+        {expanded && badge !== undefined && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: active ? "#0078d4" : "#616161",
+              background: active ? "rgba(0,120,212,0.1)" : "#f0f0f0",
+              padding: "2px 6px",
+              borderRadius: 10,
+              minWidth: 20,
+              textAlign: "center",
+              flexShrink: 0,
+            }}
+          >
+            {badge}
           </span>
         )}
       </button>

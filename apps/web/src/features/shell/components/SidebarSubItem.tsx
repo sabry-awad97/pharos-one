@@ -13,6 +13,8 @@ export interface SidebarSubItemProps {
   focused?: boolean;
   /** Optional context menu handler */
   onContextMenu?: (e: React.MouseEvent, id: string) => void;
+  /** Optional badge count or label */
+  badge?: number | string;
 }
 
 /**
@@ -20,7 +22,10 @@ export interface SidebarSubItemProps {
  * Displays label only (no icon) with indentation
  */
 const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
-  ({ id, label, active, onClick, focused = false, onContextMenu }, ref) => {
+  (
+    { id, label, active, onClick, focused = false, onContextMenu, badge },
+    ref,
+  ) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     const handleClick = () => {
@@ -85,10 +90,29 @@ const SidebarSubItem = React.forwardRef<HTMLButtonElement, SidebarSubItemProps>(
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
+            flex: 1,
+            textAlign: "left",
           }}
         >
           {label}
         </span>
+        {/* Badge pill */}
+        {badge !== undefined && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#616161",
+              background: "#f0f0f0",
+              borderRadius: 10,
+              padding: "2px 6px",
+              marginLeft: 8,
+              flexShrink: 0,
+            }}
+          >
+            {badge}
+          </span>
+        )}
       </button>
     );
   },
