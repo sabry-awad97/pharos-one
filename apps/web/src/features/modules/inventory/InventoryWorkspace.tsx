@@ -127,7 +127,7 @@ export function InventoryWorkspace({
         });
         setLastSelectedRowId(productId);
       } else if (event.shiftKey) {
-        // Shift+Click: Range selection (don't change focus)
+        // Shift+Click: Range selection AND move focus to clicked row
         if (lastSelectedRowId !== null) {
           // Find indices of lastSelectedRowId and productId in products array
           const startIdx = products.findIndex(
@@ -149,6 +149,8 @@ export function InventoryWorkspace({
           setSelectedRowIds(new Set([productId]));
           setLastSelectedRowId(productId);
         }
+        // Move focus to the clicked row
+        setFocusedRowId(productId);
       } else {
         // Normal click: Single selection AND set focus
         setSelectedRowIds(new Set([productId]));

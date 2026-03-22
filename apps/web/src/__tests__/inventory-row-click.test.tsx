@@ -335,7 +335,7 @@ describe("InventoryWorkspace - Windows-style Multi-Selection", () => {
     });
   });
 
-  it("should select range when Shift+Click (range selection)", async () => {
+  it("should move focus when Shift+Click (range selection)", async () => {
     const user = userEvent.setup();
     renderComponent();
 
@@ -350,9 +350,10 @@ describe("InventoryWorkspace - Windows-style Multi-Selection", () => {
       within(firstDataRow).getByText("Amoxicillin 500mg");
     await user.click(firstProductName);
 
-    // Verify first row is selected
+    // Verify first row is selected and focused
     await waitFor(() => {
       expect(firstDataRow).toHaveAttribute("data-selected", "true");
+      expect(firstDataRow).toHaveAttribute("data-focused", "true");
     });
 
     // Shift+Click second row to select range
@@ -365,6 +366,10 @@ describe("InventoryWorkspace - Windows-style Multi-Selection", () => {
       expect(firstDataRow).toHaveAttribute("data-selected", "true");
       expect(secondDataRow).toHaveAttribute("data-selected", "true");
     });
+
+    // Verify focus moved to second row (the clicked row)
+    expect(secondDataRow).toHaveAttribute("data-focused", "true");
+    expect(firstDataRow).not.toHaveAttribute("data-focused", "true");
   });
 
   it("should not have checkbox column", async () => {
