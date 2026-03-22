@@ -16,6 +16,7 @@ import {
   type SortingState,
   type RowSelectionState,
 } from "@tanstack/react-table";
+import { Checkbox } from "@pharos-one/ui/components/checkbox";
 import { AnnotationCallouts } from "../components/AnnotationCallouts";
 import { useProducts } from "./hooks/use-products";
 import type { ProductStockSummary } from "./schema";
@@ -111,6 +112,29 @@ export function InventoryWorkspace({
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllRowsSelected()}
+            onCheckedChange={(checked) => {
+              table.toggleAllRowsSelected(!!checked);
+            }}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(checked) => {
+              row.toggleSelected(!!checked);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Select row"
+          />
+        ),
+        size: 40,
+      },
       {
         accessorKey: "name",
         header: "Product Name",
@@ -400,8 +424,7 @@ export function InventoryWorkspace({
                   return (
                     <tr
                       key={row.id}
-                      onClick={() => row.toggleSelected()}
-                      className="cursor-pointer transition-[background] duration-100"
+                      className="transition-[background] duration-100"
                       style={{
                         borderBottom: `1px solid ${W.borderLight}`,
                         background: selected
