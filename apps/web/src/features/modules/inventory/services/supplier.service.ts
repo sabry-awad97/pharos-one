@@ -15,6 +15,7 @@ const MOCK_SUPPLIERS: Supplier[] = [
     contactPerson: "John Smith",
     email: "john@medsupply.com",
     phone: "+1-555-0101",
+    address: null,
     isActive: true,
   },
   {
@@ -23,6 +24,7 @@ const MOCK_SUPPLIERS: Supplier[] = [
     contactPerson: "Sarah Johnson",
     email: "sarah@pharmgen.com",
     phone: "+1-555-0102",
+    address: null,
     isActive: true,
   },
   {
@@ -31,6 +33,7 @@ const MOCK_SUPPLIERS: Supplier[] = [
     contactPerson: "Mike Davis",
     email: "mike@generico.com",
     phone: "+1-555-0103",
+    address: null,
     isActive: true,
   },
   {
@@ -39,6 +42,7 @@ const MOCK_SUPPLIERS: Supplier[] = [
     contactPerson: "Emily Brown",
     email: "emily@cardiopharm.com",
     phone: "+1-555-0104",
+    address: null,
     isActive: true,
   },
   {
@@ -47,6 +51,7 @@ const MOCK_SUPPLIERS: Supplier[] = [
     contactPerson: "David Wilson",
     email: "david@allergyrx.com",
     phone: "+1-555-0105",
+    address: null,
     isActive: true,
   },
 ];

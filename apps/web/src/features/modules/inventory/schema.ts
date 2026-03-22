@@ -1,6 +1,10 @@
 /**
  * Inventory domain types
  * Shared type definitions for inventory feature
+ *
+ * CONVENTION: Use .nullable() instead of .optional()
+ * - nullable() = field exists but can be null (database NULL)
+ * - optional() = field may not exist in object (avoid this)
  */
 
 import { z } from "zod";
@@ -9,10 +13,10 @@ import { z } from "zod";
 export const supplierSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
-  contactPerson: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  contactPerson: z.string().nullable(),
+  email: z.string().email().nullable(),
+  phone: z.string().nullable(),
+  address: z.string().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -20,8 +24,8 @@ export const supplierSchema = z.object({
 export const categorySchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
-  description: z.string().optional(),
-  parentCategoryId: z.number().int().positive().nullable().optional(),
+  description: z.string().nullable(),
+  parentCategoryId: z.number().int().positive().nullable(),
 });
 
 // Drug status enum
@@ -48,10 +52,10 @@ export const drugWithRelationsSchema = drugSchema.extend({
 
 // Inventory filters
 export const inventoryFiltersSchema = z.object({
-  status: drugStatusSchema.optional(),
-  categoryId: z.number().int().positive().optional(),
-  supplierId: z.number().int().positive().optional(),
-  search: z.string().optional(),
+  status: drugStatusSchema.nullable(),
+  categoryId: z.number().int().positive().nullable(),
+  supplierId: z.number().int().positive().nullable(),
+  search: z.string().nullable(),
 });
 
 // TypeScript types inferred from schemas

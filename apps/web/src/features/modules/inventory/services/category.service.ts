@@ -13,15 +13,60 @@ import {
 
 // Mock categories - will be replaced with API calls
 const MOCK_CATEGORIES: Category[] = [
-  { id: 1, name: "Antibiotic", description: "Antibacterial medications" },
-  { id: 2, name: "Analgesic", description: "Pain relief medications" },
-  { id: 3, name: "Antidiabetic", description: "Diabetes management" },
-  { id: 4, name: "GI", description: "Gastrointestinal medications" },
-  { id: 5, name: "Statin", description: "Cholesterol management" },
-  { id: 6, name: "ACE Inhibitor", description: "Blood pressure management" },
-  { id: 7, name: "Antihistamine", description: "Allergy medications" },
-  { id: 8, name: "NSAID", description: "Non-steroidal anti-inflammatory" },
-  { id: 9, name: "ARB", description: "Angiotensin receptor blockers" },
+  {
+    id: 1,
+    name: "Antibiotic",
+    description: "Antibacterial medications",
+    parentCategoryId: null,
+  },
+  {
+    id: 2,
+    name: "Analgesic",
+    description: "Pain relief medications",
+    parentCategoryId: null,
+  },
+  {
+    id: 3,
+    name: "Antidiabetic",
+    description: "Diabetes management",
+    parentCategoryId: null,
+  },
+  {
+    id: 4,
+    name: "GI",
+    description: "Gastrointestinal medications",
+    parentCategoryId: null,
+  },
+  {
+    id: 5,
+    name: "Statin",
+    description: "Cholesterol management",
+    parentCategoryId: null,
+  },
+  {
+    id: 6,
+    name: "ACE Inhibitor",
+    description: "Blood pressure management",
+    parentCategoryId: null,
+  },
+  {
+    id: 7,
+    name: "Antihistamine",
+    description: "Allergy medications",
+    parentCategoryId: null,
+  },
+  {
+    id: 8,
+    name: "NSAID",
+    description: "Non-steroidal anti-inflammatory",
+    parentCategoryId: null,
+  },
+  {
+    id: 9,
+    name: "ARB",
+    description: "Angiotensin receptor blockers",
+    parentCategoryId: null,
+  },
 ];
 
 /**
