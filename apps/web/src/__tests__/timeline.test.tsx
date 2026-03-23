@@ -40,6 +40,63 @@ describe("TimelineMarker", () => {
 });
 
 describe("TimelineItem", () => {
+  const mockBatch = {
+    id: 1,
+    productId: 1,
+    batchNumber: "BATCH001",
+    expiryDate: "2026-12-31",
+    supplierId: 1,
+    purchaseOrderId: null,
+    receivedDate: "2024-01-10",
+    costPerUnit: 10.0,
+    quantityReceived: 100,
+    quantityRemaining: 100,
+    locationId: null,
+    status: "available" as const,
+    notes: null,
+    createdAt: "2024-01-10T00:00:00Z",
+    updatedAt: "2024-01-10T00:00:00Z",
+    product: {
+      id: 1,
+      name: "Test Product",
+      sku: "TEST-001",
+      genericName: null,
+      manufacturer: null,
+      categoryId: 1,
+      defaultSupplierId: 1,
+      basePrice: 15.0,
+      reorderLevel: 10,
+      requiresPrescription: false,
+      controlledSubstance: false,
+      description: null,
+      isActive: true,
+      category: {
+        id: 1,
+        name: "Test Category",
+        description: null,
+        parentCategoryId: null,
+      },
+      defaultSupplier: {
+        id: 1,
+        name: "Test Supplier",
+        contactPerson: null,
+        email: null,
+        phone: null,
+        address: null,
+        isActive: true,
+      },
+    },
+    supplier: {
+      id: 1,
+      name: "Test Supplier",
+      contactPerson: null,
+      email: null,
+      phone: null,
+      address: null,
+      isActive: true,
+    },
+  };
+
   const mockTransaction = {
     id: 1,
     batchId: 1,
@@ -49,10 +106,7 @@ describe("TimelineItem", () => {
     userId: 1,
     reason: "Initial stock",
     timestamp: "2024-01-15T10:30:00Z",
-    batch: {
-      batchNumber: "BATCH001",
-      quantityRemaining: 100,
-    },
+    batch: mockBatch,
   };
 
   test("displays transaction type", () => {
@@ -82,7 +136,7 @@ describe("TimelineItem", () => {
       type: "sale" as TransactionType,
       quantity: -50,
       batch: {
-        batchNumber: "BATCH001",
+        ...mockBatch,
         quantityRemaining: 50,
       },
     };
@@ -92,6 +146,63 @@ describe("TimelineItem", () => {
 });
 
 describe("TimelineGroup", () => {
+  const mockBatch = {
+    id: 1,
+    productId: 1,
+    batchNumber: "BATCH001",
+    expiryDate: "2026-12-31",
+    supplierId: 1,
+    purchaseOrderId: null,
+    receivedDate: "2024-01-10",
+    costPerUnit: 10.0,
+    quantityReceived: 100,
+    quantityRemaining: 100,
+    locationId: null,
+    status: "available" as const,
+    notes: null,
+    createdAt: "2024-01-10T00:00:00Z",
+    updatedAt: "2024-01-10T00:00:00Z",
+    product: {
+      id: 1,
+      name: "Test Product",
+      sku: "TEST-001",
+      genericName: null,
+      manufacturer: null,
+      categoryId: 1,
+      defaultSupplierId: 1,
+      basePrice: 15.0,
+      reorderLevel: 10,
+      requiresPrescription: false,
+      controlledSubstance: false,
+      description: null,
+      isActive: true,
+      category: {
+        id: 1,
+        name: "Test Category",
+        description: null,
+        parentCategoryId: null,
+      },
+      defaultSupplier: {
+        id: 1,
+        name: "Test Supplier",
+        contactPerson: null,
+        email: null,
+        phone: null,
+        address: null,
+        isActive: true,
+      },
+    },
+    supplier: {
+      id: 1,
+      name: "Test Supplier",
+      contactPerson: null,
+      email: null,
+      phone: null,
+      address: null,
+      isActive: true,
+    },
+  };
+
   const mockTransactions = [
     {
       id: 1,
@@ -102,10 +213,7 @@ describe("TimelineGroup", () => {
       userId: 1,
       reason: "Initial stock",
       timestamp: "2024-01-15T10:30:00Z",
-      batch: {
-        batchNumber: "BATCH001",
-        quantityRemaining: 100,
-      },
+      batch: mockBatch,
     },
     {
       id: 2,
@@ -117,7 +225,7 @@ describe("TimelineGroup", () => {
       reason: null,
       timestamp: "2024-01-15T14:45:00Z",
       batch: {
-        batchNumber: "BATCH001",
+        ...mockBatch,
         quantityRemaining: 80,
       },
     },
@@ -142,6 +250,63 @@ describe("TimelineGroup", () => {
 });
 
 describe("Timeline", () => {
+  const mockBatch = {
+    id: 1,
+    productId: 1,
+    batchNumber: "BATCH001",
+    expiryDate: "2026-12-31",
+    supplierId: 1,
+    purchaseOrderId: null,
+    receivedDate: "2024-01-10",
+    costPerUnit: 10.0,
+    quantityReceived: 100,
+    quantityRemaining: 100,
+    locationId: null,
+    status: "available" as const,
+    notes: null,
+    createdAt: "2024-01-10T00:00:00Z",
+    updatedAt: "2024-01-10T00:00:00Z",
+    product: {
+      id: 1,
+      name: "Test Product",
+      sku: "TEST-001",
+      genericName: null,
+      manufacturer: null,
+      categoryId: 1,
+      defaultSupplierId: 1,
+      basePrice: 15.0,
+      reorderLevel: 10,
+      requiresPrescription: false,
+      controlledSubstance: false,
+      description: null,
+      isActive: true,
+      category: {
+        id: 1,
+        name: "Test Category",
+        description: null,
+        parentCategoryId: null,
+      },
+      defaultSupplier: {
+        id: 1,
+        name: "Test Supplier",
+        contactPerson: null,
+        email: null,
+        phone: null,
+        address: null,
+        isActive: true,
+      },
+    },
+    supplier: {
+      id: 1,
+      name: "Test Supplier",
+      contactPerson: null,
+      email: null,
+      phone: null,
+      address: null,
+      isActive: true,
+    },
+  };
+
   const mockTransactions = [
     {
       id: 1,
@@ -152,10 +317,7 @@ describe("Timeline", () => {
       userId: 1,
       reason: "Initial stock",
       timestamp: "2024-01-15T10:30:00Z",
-      batch: {
-        batchNumber: "BATCH001",
-        quantityRemaining: 100,
-      },
+      batch: mockBatch,
     },
     {
       id: 2,
@@ -167,7 +329,7 @@ describe("Timeline", () => {
       reason: null,
       timestamp: "2024-01-16T09:15:00Z",
       batch: {
-        batchNumber: "BATCH001",
+        ...mockBatch,
         quantityRemaining: 80,
       },
     },

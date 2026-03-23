@@ -17,7 +17,7 @@
 import * as React from "react";
 import { cn } from "@pharos-one/ui/lib/utils";
 import { TimelineItem } from "./TimelineItem";
-import type { StockTransaction } from "../../schema";
+import type { StockTransactionWithRelations } from "../../schema";
 
 /**
  * Format date to readable format
@@ -43,7 +43,7 @@ export interface TimelineGroupProps extends React.HTMLAttributes<HTMLDivElement>
   /**
    * Transactions for this date
    */
-  transactions: StockTransaction[];
+  transactions: StockTransactionWithRelations[];
 }
 
 /**

@@ -31,7 +31,7 @@ import {
   actionGroups,
 } from "./hooks/use-inventory-actions";
 import { useProducts } from "./hooks/use-products";
-import { useDataTable } from "@/hooks/useDataTable";
+import { useDataTable } from "@/components/data-table/hooks/useDataTable";
 import type { ProductStockSummary } from "./schema";
 
 // Page size options

@@ -864,7 +864,7 @@ export function PharmacyInventory() {
                 icon={ChevronDown}
                 label="Actions"
                 dropdown
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                 }}
               />
@@ -877,7 +877,7 @@ export function PharmacyInventory() {
               {/* Column visibility */}
               <div style={{ position: "relative" }}>
                 <button
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     setShowColMenu(!showColMenu);
                   }}
@@ -1031,7 +1031,9 @@ export function PharmacyInventory() {
                     color: M.warn,
                   },
                 ] as const
-              ).map(({ k, label, color }) => {
+              ).map((item) => {
+                const { k, label } = item;
+                const color = "color" in item ? item.color : undefined;
                 const active = filter === (k as any);
                 return (
                   <button
