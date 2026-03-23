@@ -83,6 +83,7 @@ export function useDataTable<TData>({
       rowSelection,
       columnVisibility,
       columnFilters,
+      pagination,
     },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
