@@ -226,13 +226,13 @@ export function InventoryWorkspace() {
       },
       {
         id: "category.name",
-        accessorFn: (row) => row.category.name,
+        accessorFn: (row) => row.category?.name ?? "Uncategorized",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Category" />
         ),
         cell: ({ row }) => (
           <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
-            {row.original.category.name}
+            {row.original.category?.name ?? "Uncategorized"}
           </span>
         ),
         filterFn: (row, id, value) => {
@@ -541,7 +541,9 @@ function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
   // Get unique categories from products
   const categoryOptions = useMemo(() => {
     const uniqueCategories = new Set(
-      products.map((p) => p.category.name).filter(Boolean),
+      products
+        .map((p) => p.category?.name)
+        .filter((name): name is string => Boolean(name)),
     );
     return Array.from(uniqueCategories)
       .sort()

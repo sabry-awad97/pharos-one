@@ -57,10 +57,28 @@ export const productSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-// Product with relations
+// Product with relations (from TanStack DB joins)
+// NOTE: Left joins return fields with undefined in their types
 export const productWithRelationsSchema = productSchema.extend({
-  category: categorySchema,
-  defaultSupplier: supplierSchema.nullable(),
+  category: categorySchema
+    .extend({
+      id: z.number().int().positive().optional(),
+      name: z.string().min(1).optional(),
+      description: z.string().nullable().optional(),
+      parentCategoryId: z.number().int().positive().nullable().optional(),
+    })
+    .nullable(),
+  defaultSupplier: supplierSchema
+    .extend({
+      id: z.number().int().positive().optional(),
+      name: z.string().min(1).optional(),
+      contactPerson: z.string().nullable().optional(),
+      email: z.string().email().nullable().optional(),
+      phone: z.string().nullable().optional(),
+      address: z.string().nullable().optional(),
+      isActive: z.boolean().default(true).optional(),
+    })
+    .nullable(),
 });
 
 // ============================================================================

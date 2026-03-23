@@ -195,3 +195,68 @@ export function generateBatch(id: number, productId: number): Batch {
     updatedAt: now.toISOString(),
   };
 }
+
+import type { StockTransaction } from "../schema";
+
+/**
+ * Generate a single stock transaction with deterministic data
+ * @param id - Transaction ID (1-indexed)
+ * @param batchId - Batch ID this transaction belongs to
+ * @param baseDate - Base date for transaction (defaults to now)
+ * @returns StockTransaction object matching stockTransactionSchema
+ */
+export function generateStockTransaction(
+  id: number,
+  batchId: number,
+  baseDate: Date = new Date(),
+): StockTransaction {
+  const types = [
+    "purchase",
+    "sale",
+    "adjustment",
+    "transfer",
+    "return",
+    "damage",
+    "expiry",
+  ] as const;
+
+  const reasons = [
+    "Initial stock",
+    "Customer purchase",
+    "Inventory correction",
+    "Location transfer",
+    "Customer return",
+    "Damaged goods",
+    "Expired product",
+  ];
+
+  const index = (id - 1) % types.length;
+
+  // Generate timestamp within a range (last 365 days)
+  const daysAgo = id % 365;
+  const timestamp = new Date(
+    baseDate.getTime() - daysAgo * 24 * 60 * 60 * 1000,
+  );
+
+  // Quantity: positive for purchases/returns, negative for sales/damage/expiry
+  const type = types[index];
+  let quantity: number;
+  if (type === "purchase" || type === "return") {
+    quantity = 10 + (id % 90); // Positive
+  } else if (type === "sale") {
+    quantity = -(1 + (id % 20)); // Negative
+  } else {
+    quantity = -(1 + (id % 10)); // Negative for damage/expiry/adjustment
+  }
+
+  return {
+    id,
+    batchId,
+    type,
+    quantity,
+    orderId: type === "sale" ? id : null,
+    userId: ((id - 1) % 10) + 1,
+    reason: reasons[index],
+    timestamp: timestamp.toISOString(),
+  };
+}

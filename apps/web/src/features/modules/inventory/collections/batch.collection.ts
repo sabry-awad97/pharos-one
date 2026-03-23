@@ -4,18 +4,16 @@
  *
  * CRITICAL: Uses on-demand mode (NOT eager like categories/suppliers)
  * This enables predicate push-down for large datasets
+ *
+ * NOTE: This collection returns raw Batch[] data (just the batches table).
+ * Relations (product, supplier) are joined in the hooks using TanStack DB joins.
  */
 
 import { createCollection } from "@tanstack/react-db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import type { QueryClient } from "@tanstack/react-query";
-import {
-  generateBatch,
-  generateProduct,
-  generateCategory,
-  generateSupplier,
-} from "../utils/generators";
-import type { BatchWithRelations } from "../schema";
+import { generateBatch } from "../utils/generators";
+import type { Batch } from "../schema";
 
 /**
  * Batch filters for on-demand loading
@@ -25,50 +23,28 @@ export interface BatchFilters {
 }
 
 /**
- * Generate a BatchWithRelations from a Batch
- * Adds populated product and supplier relations
- */
-function generateBatchWithRelations(
-  id: number,
-  productId: number,
-): BatchWithRelations {
-  const batch = generateBatch(id, productId);
-  const product = generateProduct(productId);
-  const category = generateCategory(product.categoryId);
-  const supplier = generateSupplier(batch.supplierId);
-  const defaultSupplier = product.defaultSupplierId
-    ? generateSupplier(product.defaultSupplierId)
-    : null;
-
-  return {
-    ...batch,
-    product: {
-      ...product,
-      category,
-      defaultSupplier,
-    },
-    supplier,
-  };
-}
-
-/**
  * Fetch batches with on-demand filtering by productId
- * In production, this would call the Tauri API with predicate push-down
+ * In production, this would call the Tauri API: invoke("get_batches", { filters })
  *
- * CRITICAL: Uses synchronous function (async doesn't work in tests for complex types)
- * See .temp/async-queryFn-investigation.md for details
+ * Returns raw Batch[] (just the batches table, no relations)
+ * Relations will be joined in the hooks using TanStack DB joins
  *
  * @returns Filtered batch subset matching query predicates
  */
-function fetchBatches(): BatchWithRelations[] {
-  // TODO: Implement predicate push-down for on-demand mode
+async function fetchBatches(): Promise<Batch[]> {
+  // TODO: Replace with Tauri API call
+  // return await invoke("get_batches", { filters });
+
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
   // For now, generate a default subset (batches for product 1)
   const defaultProductId = 1;
   const batchesPerProduct = 5;
 
-  // Generate batches on-demand (not all batches)
+  // Generate raw batches (no relations embedded)
   return Array.from({ length: batchesPerProduct }, (_, i) =>
-    generateBatchWithRelations(i + 1, defaultProductId),
+    generateBatch(i + 1, defaultProductId),
   );
 }
 
@@ -94,7 +70,7 @@ export function createBatchCollection(queryClient: QueryClient) {
       queryClient,
       queryKey: ["inventory", "batches"],
       queryFn: fetchBatches,
-      getKey: (item: BatchWithRelations) => item.id,
+      getKey: (item: Batch) => item.id,
       // NOTE: Starting with eager mode to get tests passing
       // Will migrate to on-demand mode once basic functionality works
       // syncMode: "on-demand", // ← CRITICAL: On-demand mode for large datasets

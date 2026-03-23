@@ -4,17 +4,16 @@
  *
  * CRITICAL: Uses on-demand mode (NOT eager like categories/suppliers)
  * This enables predicate push-down for large datasets
+ *
+ * NOTE: This collection returns raw Product[] data (just the products table).
+ * Relations (category, supplier) are joined in the hooks using TanStack DB joins.
  */
 
 import { createCollection } from "@tanstack/react-db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import type { QueryClient } from "@tanstack/react-query";
-import {
-  generateProduct,
-  generateCategory,
-  generateSupplier,
-} from "../utils/generators";
-import type { ProductStockSummary } from "../schema";
+import { generateProduct } from "../utils/generators";
+import type { Product } from "../schema";
 
 /**
  * Product filters for on-demand loading
@@ -27,67 +26,26 @@ export interface ProductFilters {
 }
 
 /**
- * Generate a ProductStockSummary from a Product
- * Adds aggregated stock information
- */
-function generateProductStockSummary(id: number): ProductStockSummary {
-  const product = generateProduct(id);
-  const category = generateCategory(product.categoryId);
-  const supplier = product.defaultSupplierId
-    ? generateSupplier(product.defaultSupplierId)
-    : null;
-
-  // Generate stock quantities
-  const totalQuantity = 50 + (id % 300);
-  const availableQuantity = totalQuantity;
-  const reservedQuantity = 0;
-
-  // Generate expiry date (1-2 years from now)
-  const now = new Date();
-  const expiryDate = new Date(
-    now.getTime() + (365 + (id % 365)) * 24 * 60 * 60 * 1000,
-  );
-
-  // Determine stock status
-  let stockStatus: "ok" | "low" | "out" | "expiring";
-  if (totalQuantity === 0) {
-    stockStatus = "out";
-  } else if (totalQuantity < product.reorderLevel) {
-    stockStatus = "low";
-  } else if (expiryDate.getTime() - now.getTime() < 90 * 24 * 60 * 60 * 1000) {
-    stockStatus = "expiring";
-  } else {
-    stockStatus = "ok";
-  }
-
-  return {
-    ...product,
-    category,
-    defaultSupplier: supplier,
-    totalQuantity,
-    availableQuantity,
-    reservedQuantity,
-    nearestExpiry: expiryDate.toISOString().split("T")[0],
-    batchCount: 1 + (id % 3),
-    stockStatus,
-  };
-}
-
-/**
  * Fetch products with on-demand filtering
- * In production, this would call the Tauri API with predicate push-down
+ * In production, this would call the Tauri API: invoke("get_products", { filters })
+ *
+ * Returns raw Product[] (just the products table, no relations)
+ * Relations will be joined in the hooks using TanStack DB joins
  *
  * @returns Filtered product subset matching query predicates
  */
-function fetchProducts(): ProductStockSummary[] {
-  // TODO: Implement predicate push-down for on-demand mode
+async function fetchProducts(): Promise<Product[]> {
+  // TODO: Replace with Tauri API call
+  // return await invoke("get_products", { filters });
+
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
   // For now, generate a default subset (50 products)
   const defaultLimit = 50;
 
-  // Generate products on-demand (not all 1M)
-  return Array.from({ length: defaultLimit }, (_, i) =>
-    generateProductStockSummary(i + 1),
-  );
+  // Generate raw products (no relations embedded)
+  return Array.from({ length: defaultLimit }, (_, i) => generateProduct(i + 1));
 }
 
 /**
@@ -112,7 +70,7 @@ export function createProductCollection(queryClient: QueryClient) {
       queryClient,
       queryKey: ["inventory", "products"],
       queryFn: fetchProducts,
-      getKey: (item: ProductStockSummary) => item.id,
+      getKey: (item: Product) => item.id,
       // NOTE: Starting with eager mode to get tests passing
       // Will migrate to on-demand mode once basic functionality works
       // syncMode: "on-demand", // ← CRITICAL: On-demand mode for large datasets

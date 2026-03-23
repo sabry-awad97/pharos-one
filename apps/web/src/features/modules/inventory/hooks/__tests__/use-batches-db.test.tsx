@@ -68,6 +68,7 @@ describe("useBatches with TanStack DB (On-Demand Mode)", () => {
     await waitFor(
       () => {
         expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
       },
       { timeout: 3000 },
     );
@@ -80,11 +81,17 @@ describe("useBatches with TanStack DB (On-Demand Mode)", () => {
     // Verify data is an array
     expect(Array.isArray(result.current.data)).toBe(true);
 
-    // Verify each batch has required relations
+    // Verify each batch has required relations (can be null from left joins)
     const batch = result.current.data![0];
-    expect(batch.product).toBeDefined();
-    expect(batch.product.category).toBeDefined();
-    expect(batch.supplier).toBeDefined();
+    expect(batch).toBeDefined();
+    expect(batch).toHaveProperty("product");
+    expect(batch).toHaveProperty("supplier");
+
+    // If product exists, it should have category and defaultSupplier properties
+    if (batch.product) {
+      expect(batch.product).toHaveProperty("category");
+      expect(batch.product).toHaveProperty("defaultSupplier");
+    }
   });
 
   /**
