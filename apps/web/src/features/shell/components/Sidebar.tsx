@@ -253,13 +253,11 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
           width: expanded ? sidebarWidth : 48,
           transition: isResizing ? "none" : "width 0.15s ease",
           position: "relative",
+          zIndex: 5,
         }}
       >
         {/* Navigation items */}
-        <nav
-          style={{ flex: 1, paddingTop: 6, overflow: "auto" }}
-          className="custom-scrollbar"
-        >
+        <nav style={{ flex: 1, overflow: "auto" }} className="custom-scrollbar">
           {visibleTemplates.map((template, moduleIndex) => {
             const hasSubItems =
               template.subItems && template.subItems.length > 0;
@@ -414,6 +412,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
         {/* Drag handle for resizing */}
         <div
+          data-testid="sidebar-drag-handle"
           onMouseDown={handleMouseDown}
           onDoubleClick={handleDoubleClick}
           onMouseEnter={() => setHoveredHandle(true)}
@@ -424,10 +423,10 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             right: 0,
             width: 2,
             height: "100%",
-            cursor: "col-resize",
+            cursor: "ew-resize",
             background: hoveredHandle || isResizing ? "#91c9f7" : "transparent",
             transition: "background 0.1s",
-            zIndex: 10,
+            zIndex: 15,
           }}
         />
 

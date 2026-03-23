@@ -9,6 +9,7 @@ import { describe, it, expect } from "vitest";
 import { MenuBar } from "../features/shell/components/MenuBar";
 import { FileMenu } from "../features/shell/components/FileMenu";
 import { TabBar } from "../features/workspace/components/TabBar";
+import { Sidebar } from "../features/shell/components/Sidebar";
 import { LayoutDashboard, Package } from "lucide-react";
 
 describe("UI chrome z-index hierarchy", () => {
@@ -93,5 +94,36 @@ describe("UI chrome z-index hierarchy", () => {
     // Should be < 50 to render below Sheet overlay (z-50)
     expect(zIndex).toBeLessThan(50);
     expect(zIndex).toBeGreaterThan(0);
+  });
+
+  it("should render Sidebar with z-index lower than menu dropdowns", () => {
+    const { getByTestId } = render(
+      <Sidebar activeModule="dashboard" onModuleClick={() => {}} />,
+    );
+
+    const sidebar = getByTestId("sidebar");
+    expect(sidebar).toBeInTheDocument();
+
+    // Get inline z-index from style
+    const zIndex = parseInt(sidebar.style.zIndex, 10);
+
+    // Should be < 20 (menu dropdowns are at z-index 20)
+    // This ensures menus always appear above sidebar
+    expect(zIndex).toBeLessThan(20);
+    expect(zIndex).toBeGreaterThan(0);
+  });
+
+  it("should render Sidebar drag handle with z-index between sidebar and menu dropdowns", () => {
+    const { getByTestId } = render(
+      <Sidebar activeModule="dashboard" onModuleClick={() => {}} />,
+    );
+
+    const dragHandle = getByTestId("sidebar-drag-handle");
+    expect(dragHandle).toBeInTheDocument();
+
+    const zIndex = parseInt(dragHandle.style.zIndex, 10);
+
+    // Should be 15 (between sidebar at 5 and menu dropdowns at 20)
+    expect(zIndex).toBe(15);
   });
 });
