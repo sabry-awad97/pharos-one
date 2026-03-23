@@ -49,4 +49,90 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
     expect(result.current.data![0]).toHaveProperty("name");
     expect(result.current.data![0]).toHaveProperty("sku");
   });
+
+  /**
+   * Test 2: Products load with joined relations (category, supplier)
+   * Verifies TanStack DB joins work correctly
+   */
+  it("useProducts loads products with joined relations", async () => {
+    const { result } = renderHook(() => useProducts(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
+
+    const product = result.current.data![0];
+
+    // Verify joined category (can be null due to left join)
+    if (product.category) {
+      expect(product.category).toHaveProperty("id");
+      expect(product.category).toHaveProperty("name");
+    }
+
+    // Verify joined supplier (can be null due to left join)
+    if (product.defaultSupplier) {
+      expect(product.defaultSupplier).toHaveProperty("id");
+      expect(product.defaultSupplier).toHaveProperty("name");
+    }
+
+    // Verify computed stock fields exist
+    expect(product).toHaveProperty("totalQuantity");
+    expect(product).toHaveProperty("availableQuantity");
+    expect(product).toHaveProperty("stockStatus");
+  });
+
+  /**
+   * Test 3: Performance - Initial load under 200ms
+   * Verifies on-demand mode provides fast initial load
+   */
+  it("useProducts initial load completes under 200ms", async () => {
+    const start = performance.now();
+
+    const { result } = renderHook(() => useProducts(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+      },
+      { timeout: 3000 },
+    );
+
+    const duration = performance.now() - start;
+
+    // Should load quickly with on-demand mode
+    expect(duration).toBeLessThan(200);
+  });
+
+  /**
+   * Test 4: Backward compatibility with existing API
+   * Verifies hook maintains same shape as TanStack Query version
+   */
+  it("useProducts maintains backward-compatible API shape", async () => {
+    const { result } = renderHook(() => useProducts(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+      },
+      { timeout: 3000 },
+    );
+
+    // Verify TanStack Query-compatible shape
+    expect(result.current).toHaveProperty("data");
+    expect(result.current).toHaveProperty("isLoading");
+    expect(result.current).toHaveProperty("error");
+
+    // Verify data is array
+    expect(Array.isArray(result.current.data)).toBe(true);
+  });
 });
