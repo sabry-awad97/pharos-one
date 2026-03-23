@@ -5,15 +5,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  Hash,
-  Filter,
-  Download,
-  RefreshCw,
-  ChevronRight,
-  Edit2,
-  Trash2,
-} from "lucide-react";
+import { Hash, Download, ChevronRight, Edit2, Trash2 } from "lucide-react";
 import { CopyWrapper } from "@/components/copy-wrapper";
 import { flexRender, type ColumnDef } from "@tanstack/react-table";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
@@ -30,10 +22,20 @@ import {
   DataTablePagination,
   DataTable,
   DataTableColumnHeader,
+  DataTableFilters,
+  type ColumnFilter,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
 
 const STORAGE_KEY = "inventory-page-size";
+
+// Filter options
+const stockStatusOptions = [
+  { label: "In Stock", value: "ok" },
+  { label: "Low Stock", value: "low" },
+  { label: "Expiring", value: "expiring" },
+  { label: "Out of Stock", value: "out" },
+];
 
 // Status badge component
 function StatusBadge({
@@ -211,7 +213,8 @@ export function InventoryWorkspace() {
         size: 80,
       },
       {
-        accessorKey: "category.name",
+        id: "category.name",
+        accessorFn: (row) => row.category.name,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Category" />
         ),
@@ -220,6 +223,10 @@ export function InventoryWorkspace() {
             {row.original.category.name}
           </span>
         ),
+        filterFn: (row, id, value) => {
+          return value.includes(row.getValue(id));
+        },
+        enableColumnFilter: true,
         size: 110,
       },
       {
@@ -249,6 +256,10 @@ export function InventoryWorkspace() {
           <DataTableColumnHeader column={column} title="Status" />
         ),
         cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
+        filterFn: (row, id, value) => {
+          return value.includes(row.getValue(id));
+        },
+        enableColumnFilter: true,
         size: 100,
       },
       {
@@ -291,7 +302,17 @@ export function InventoryWorkspace() {
   if (isLoading || error) {
     return (
       <div className="flex flex-col flex-1 overflow-hidden font-sans bg-background">
-        <InventoryToolbar products={products} />
+        <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
+          <span className="text-[11px] text-muted-foreground">Pharos One</span>
+          <ChevronRight className="w-3 h-3 text-border" />
+          <span className="text-[11px] text-primary font-semibold">
+            Inventory
+          </span>
+          <span className="w-px h-4 bg-border mx-1" />
+          <span className="text-[11px] text-muted-foreground">
+            {products.length} items
+          </span>
+        </div>
         <div className="flex-1 flex flex-col overflow-hidden">
           {error && (
             <div className="p-4 m-3 rounded-md border border-red-700 bg-red-50 text-red-700">
@@ -479,6 +500,45 @@ function InventoryWorkspaceContent({
  * Inventory toolbar component
  */
 function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
+  const { table } = useDataTableContext<ProductStockSummary>();
+
+  // Get unique categories from products
+  const categoryOptions = useMemo(() => {
+    const uniqueCategories = new Set(
+      products.map((p) => p.category.name).filter(Boolean),
+    );
+    return Array.from(uniqueCategories)
+      .sort()
+      .map((cat) => ({ label: cat, value: cat }));
+  }, [products]);
+
+  // Get the columns for filtering
+  const statusColumn = table.getColumn("stockStatus");
+  const categoryColumn = table.getColumn("category.name");
+
+  // Prepare filters array
+  const filters: ColumnFilter<ProductStockSummary, any>[] = useMemo(() => {
+    const result: ColumnFilter<ProductStockSummary, any>[] = [];
+
+    if (statusColumn) {
+      result.push({
+        column: statusColumn,
+        options: stockStatusOptions,
+        title: "Status",
+      });
+    }
+
+    if (categoryColumn) {
+      result.push({
+        column: categoryColumn,
+        options: categoryOptions,
+        title: "Category",
+      });
+    }
+
+    return result;
+  }, [statusColumn, categoryColumn, categoryOptions]);
+
   return (
     <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
       <span className="text-[11px] text-muted-foreground">Pharos One</span>
@@ -489,20 +549,11 @@ function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
         {products.length} items
       </span>
       <div className="flex-1" />
-      <button
-        title="Filter"
-        className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
-      >
-        <Filter className="w-3.5 h-3.5" />
-        <span>Filter</span>
-      </button>
-      <button
-        title="Sort"
-        className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
-      >
-        <RefreshCw className="w-3.5 h-3.5" />
-        <span>Sort</span>
-      </button>
+
+      {/* Unified Filters */}
+      {filters.length > 0 && <DataTableFilters filters={filters} />}
+
+      <span className="w-px h-4 bg-border mx-0.5" />
       <button
         title="Export"
         className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"

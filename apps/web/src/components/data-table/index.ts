@@ -41,3 +41,13 @@ export {
   DataTableColumnHeader,
   type DataTableColumnHeaderProps,
 } from "./components/DataTableColumnHeader";
+export {
+  DataTableFacetedFilter,
+  type DataTableFacetedFilterProps,
+} from "./components/DataTableFacetedFilter";
+export {
+  DataTableFilters,
+  type DataTableFiltersProps,
+  type FilterOption,
+  type ColumnFilter,
+} from "./components/DataTableFilters";

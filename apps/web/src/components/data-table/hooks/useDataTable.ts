@@ -9,6 +9,10 @@ import {
   type SortingState,
   type RowSelectionState,
   type PaginationState,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  type ColumnFiltersState,
+  type VisibilityState,
 } from "@tanstack/react-table";
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -30,6 +34,9 @@ export function useDataTable<TData>({
 }: UseDataTableOptions<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   const [pageSize, setPageSize] = useState<number>(() => {
     if (!persistenceKey) return DEFAULT_PAGE_SIZE;
     try {
@@ -74,15 +81,20 @@ export function useDataTable<TData>({
     state: {
       sorting,
       rowSelection,
-      pagination,
+      columnVisibility,
+      columnFilters,
     },
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
   });
 
