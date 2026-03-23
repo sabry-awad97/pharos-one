@@ -32,6 +32,7 @@ import {
   DataTableColumnHeader,
   DataTableFilters,
   DataTableEmptyState,
+  DataTableLoadingSkeleton,
   type ColumnFilter,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
@@ -330,7 +331,7 @@ export function InventoryWorkspace() {
               Error loading inventory: {error.message}
             </div>
           )}
-          {isLoading && <LoadingSkeleton />}
+          {isLoading && <DataTableLoadingSkeleton columns={columns} />}
         </div>
       </div>
     );
@@ -605,106 +606,6 @@ function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
         <Hash className="w-3 h-3" />
         Add Product
       </button>
-    </div>
-  );
-}
-
-/**
- * Loading skeleton component
- */
-function LoadingSkeleton() {
-  return (
-    <div className="flex-1 overflow-auto custom-scrollbar bg-card">
-      <table
-        className="w-full border-collapse"
-        style={{
-          boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-        }}
-      >
-        <thead>
-          <tr
-            className="bg-muted/30 sticky top-0 z-10 border-b"
-            style={{ borderBottomColor: "#e0e0e0" }}
-          >
-            {[
-              "Product Name",
-              "SKU",
-              "Stock",
-              "Expiry",
-              "Price",
-              "Category",
-              "Supplier",
-              "Status",
-              "",
-            ].map((header) => (
-              <th
-                key={header}
-                className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap text-muted-foreground"
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 25 }).map((_, idx) => (
-            <tr
-              key={idx}
-              className="border-b"
-              style={{
-                borderBottomColor: "#ebebeb",
-                background: idx % 2 === 1 ? "#f9f9f9" : "#ffffff",
-              }}
-            >
-              <td className="py-1.5 px-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-[7px] h-[7px] rounded-full bg-muted animate-pulse" />
-                  <div
-                    className="h-3 bg-muted rounded animate-pulse"
-                    style={{ width: `${120 + Math.random() * 80}px` }}
-                  />
-                </div>
-              </td>
-              <td className="py-1.5 px-3">
-                <div
-                  className="h-3 bg-muted rounded animate-pulse"
-                  style={{ width: `${60 + Math.random() * 20}px` }}
-                />
-              </td>
-              <td className="py-1.5 px-3">
-                <div className="h-3 bg-muted rounded animate-pulse w-8" />
-              </td>
-              <td className="py-1.5 px-3">
-                <div className="h-3 bg-muted rounded animate-pulse w-16" />
-              </td>
-              <td className="py-1.5 px-3">
-                <div className="h-3 bg-muted rounded animate-pulse w-12" />
-              </td>
-              <td className="py-1.5 px-3">
-                <div
-                  className="h-4 bg-muted rounded animate-pulse"
-                  style={{ width: `${60 + Math.random() * 30}px` }}
-                />
-              </td>
-              <td className="py-1.5 px-3">
-                <div
-                  className="h-3 bg-muted rounded animate-pulse"
-                  style={{ width: `${70 + Math.random() * 40}px` }}
-                />
-              </td>
-              <td className="py-1.5 px-3">
-                <div className="h-4 bg-muted rounded animate-pulse w-20" />
-              </td>
-              <td className="py-1.5 px-2">
-                <div className="flex gap-0.5">
-                  <div className="w-6 h-6 bg-muted rounded animate-pulse" />
-                  <div className="w-6 h-6 bg-muted rounded animate-pulse" />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

@@ -55,3 +55,7 @@ export {
   DataTableEmptyState,
   type DataTableEmptyStateProps,
 } from "./components/DataTableEmptyState";
+export {
+  DataTableLoadingSkeleton,
+  type DataTableLoadingSkeletonProps,
+} from "./components/DataTableLoadingSkeleton";
