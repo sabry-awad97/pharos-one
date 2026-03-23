@@ -1,12 +1,19 @@
-# Hook Wrapper
+# Hook Utilities
 
-Abstraction layer for maintaining backward-compatible APIs during TanStack DB migration.
+Utility functions and abstractions for inventory hooks using TanStack DB.
 
 ## Overview
 
-The hook wrapper allows gradual migration from TanStack Query to TanStack DB without breaking existing components. It provides a thin wrapper that maintains the same API shape.
+This directory contains:
 
-## Problem
+1. **hook-wrapper.ts** - Backward-compatible API wrapper for TanStack Query → TanStack DB migration
+2. **useCollections** - Centralized collection access (see parent directory)
+
+## Hook Wrapper
+
+The hook wrapper maintains backward-compatible APIs during TanStack DB migration without breaking existing components.
+
+### Problem
 
 When migrating from TanStack Query to TanStack DB:
 
@@ -18,67 +25,145 @@ const { data, isLoading, error } = useQuery({
 });
 
 // After (TanStack DB)
-const { data, isLoading, error } = useLiveQuery(productsCollection.query());
+const liveResult = useLiveQuery((q) => q.from({ product: products }));
+// Returns different shape - breaks components!
 ```
 
-Components expect the same API shape, but the underlying implementation changes.
+Components expect the same API shape, but TanStack DB's `useLiveQuery` returns a different structure.
 
-## Solution
+### Solution
 
 Use `wrapLiveQuery` to maintain backward compatibility:
 
 ```typescript
-// Wrapped hook maintains same API
+import { wrapLiveQuery } from "./utils/hook-wrapper";
+import { useLiveQuery } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+
 export function useProducts() {
-  const liveResult = useLiveQuery(productsCollection.query());
-  return wrapLiveQuery(liveResult);
+  const { products } = useCollections();
+
+  const liveResult = useLiveQuery((q) => q.from({ product: products }));
+
+  return wrapLiveQuery(liveResult); // ← Maintains TanStack Query API
 }
 
-// Components work unchanged
+// Components work unchanged ✓
 const { data, isLoading, error } = useProducts();
 ```
 
-## Usage
+## Usage Patterns
 
-### Basic Wrapper
+### Pattern 1: Simple Query (Categories, Suppliers)
 
 ```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
 import { useLiveQuery } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
 
-export function useProducts() {
-  const liveResult = useLiveQuery(productsCollection.query());
+export function useCategories() {
+  const { categories } = useCollections();
+
+  const liveResult = useLiveQuery((q) => q.from({ category: categories }));
+
   return wrapLiveQuery(liveResult);
 }
 ```
 
-### With Parameters
+### Pattern 2: Query with Joins (Products)
 
 ```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
+import { useLiveQuery, eq } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
+
+export function useProducts() {
+  const { products, categories, suppliers } = useCollections();
+
+  const liveResult = useLiveQuery((q) =>
+    q
+      .from({ product: products })
+      .join(
+        { category: categories },
+        ({ product, category }) => eq(product.categoryId, category.id),
+        "left",
+      )
+      .join(
+        { supplier: suppliers },
+        ({ product, supplier }) => eq(product.defaultSupplierId, supplier.id),
+        "left",
+      )
+      .select(({ product, category, supplier }) => ({
+        ...product,
+        category: category ?? null,
+        defaultSupplier: supplier ?? null,
+      })),
+  );
+
+  return wrapLiveQuery(liveResult);
+}
+```
+
+### Pattern 3: Filtered Query (Batches)
+
+```typescript
+import { useLiveQuery, eq } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
+
+export function useBatches(productId: number) {
+  const { batches, products } = useCollections();
+
+  const liveResult = useLiveQuery(
+    (q) =>
+      q
+        .from({ batch: batches })
+        .where(({ batch }) => eq(batch.productId, productId))
+        .join(
+          { product: products },
+          ({ batch, product }) => eq(batch.productId, product.id),
+          "left",
+        ),
+    [productId, batches, products], // ← Dependencies for re-query
+  );
+
+  return wrapLiveQuery(liveResult);
+}
+```
+
+### Pattern 4: Single Item Query
+
+```typescript
+import { useLiveQuery, eq } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
 
 export function useProduct(id: number) {
+  const { products, categories, suppliers } = useCollections();
+
   const liveResult = useLiveQuery(
-    productsCollection.query().where("id", "==", id),
+    (q) => {
+      if (!id) return undefined;
+
+      return q
+        .from({ product: products })
+        .where(({ product }) => eq(product.id, id))
+        .join(
+          { category: categories },
+          ({ product, category }) => eq(product.categoryId, category.id),
+          "left",
+        )
+        .select(({ product, category }) => ({
+          ...product,
+          category: category ?? null,
+        }))
+        .findOne(); // ← Returns single item
+    },
+    [id, products, categories, suppliers],
   );
+
   return wrapLiveQuery(liveResult);
 }
-```
-
-### Create Hook Wrapper Factory
-
-```typescript
-import { createHookWrapper } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
-
-// Create wrapped hook
-const useProducts = createHookWrapper(() => {
-  return useLiveQuery(productsCollection.query());
-});
-
-// Use like normal hook
-const { data, isLoading, error } = useProducts();
 ```
 
 ## API Reference
@@ -96,9 +181,9 @@ interface QueryResult<TData> {
 }
 ```
 
-This matches the TanStack Query API shape exactly.
+This matches the TanStack Query API shape exactly, ensuring zero breaking changes.
 
-### `wrapLiveQuery<TData>(liveQueryResult: QueryResult<TData>): QueryResult<TData>`
+### `wrapLiveQuery<TData>(liveQueryResult): QueryResult<TData>`
 
 Wraps a TanStack DB `useLiveQuery` result to match TanStack Query API.
 
@@ -108,12 +193,12 @@ Wraps a TanStack DB `useLiveQuery` result to match TanStack Query API.
 
 **Returns:**
 
-- `QueryResult<TData>` - Wrapped result with same API shape
+- `QueryResult<TData>` - Wrapped result with TanStack Query-compatible shape
 
 **Example:**
 
 ```typescript
-const liveResult = useLiveQuery(collection.query());
+const liveResult = useLiveQuery((q) => q.from({ product: products }));
 const wrapped = wrapLiveQuery(liveResult);
 
 // Use like TanStack Query result
@@ -122,36 +207,55 @@ if (wrapped.error) return <Error error={wrapped.error} />;
 return <List data={wrapped.data} />;
 ```
 
-### `createHookWrapper<TData, TArgs>(useLiveQueryHook: (...args: TArgs) => QueryResult<TData>)`
+### `createHookWrapper<TData, TArgs>(useLiveQueryHook)`
 
 Creates a wrapped hook function that maintains TanStack Query API.
 
+**Note:** This is rarely needed now that we use `useCollections` + `wrapLiveQuery` pattern.
+
 **Parameters:**
 
-- `useLiveQueryHook` - Hook function that returns `QueryResult`
+- `useLiveQueryHook` - Hook function that returns live query result
 
 **Returns:**
 
 - Wrapped hook function with same signature
 
-**Example:**
+## useCollections Hook
+
+The `useCollections` hook provides centralized access to all inventory collections:
 
 ```typescript
-const useProducts = createHookWrapper(() => {
-  return useLiveQuery(productsCollection.query());
-});
+import { useCollections } from "./use-collections";
 
-const useProduct = createHookWrapper((id: number) => {
-  return useLiveQuery(productsCollection.query().where("id", "==", id));
-});
+export function useProducts() {
+  const { products, categories, suppliers } = useCollections();
+
+  // Use collections in queries...
+}
 ```
+
+**Benefits:**
+
+- ✅ Single source of truth for collections
+- ✅ Memoized - collections don't recreate on every render
+- ✅ Type-safe access to all collections
+- ✅ Eliminates repetitive collection creation code
+
+**Available Collections:**
+
+- `products` - Product collection
+- `categories` - Category collection
+- `suppliers` - Supplier collection
+- `batches` - Batch collection
+- `transactions` - Transaction collection
 
 ## Migration Strategy
 
-### Phase 1: Add Wrapper (No Breaking Changes)
+### Phase 1: Add Wrapper (No Breaking Changes) ✅ DONE
 
 ```typescript
-// Before
+// Before (TanStack Query)
 export function useProducts() {
   return useQuery({
     queryKey: ["products"],
@@ -159,213 +263,108 @@ export function useProducts() {
   });
 }
 
-// After (with wrapper)
+// After (TanStack DB with wrapper)
 export function useProducts() {
-  const liveResult = useLiveQuery(productsCollection.query());
+  const { products } = useCollections();
+  const liveResult = useLiveQuery((q) => q.from({ product: products }));
   return wrapLiveQuery(liveResult);
 }
 
 // Components unchanged ✓
 ```
 
-### Phase 2: Migrate Components (Gradual)
+### Phase 2: Migrate Components (Gradual) ← CURRENT
 
 ```typescript
 // Old components still work
 const { data, isLoading, error } = useProducts();
 
-// New components can use TanStack DB directly
-const liveResult = useLiveQuery(productsCollection.query());
+// New components can use TanStack DB directly if needed
+const liveResult = useLiveQuery((q) => q.from({ product: products }));
 ```
 
-### Phase 3: Remove Wrapper (Optional)
+### Phase 3: Remove Wrapper (Future - Optional)
 
-Once all components are migrated, you can optionally remove the wrapper:
+Once all components are comfortable with TanStack DB, you can optionally remove the wrapper:
 
 ```typescript
 // Direct TanStack DB usage
 export function useProducts() {
-  return useLiveQuery(productsCollection.query());
+  const { products } = useCollections();
+  return useLiveQuery((q) => q.from({ product: products }));
 }
 ```
 
-## Examples
+## Current Implementation Status
 
-### Example 1: Simple List Hook
+### ✅ Migrated Hooks (Using Wrapper)
 
-```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
+- `useProducts()` - Products with joins
+- `useProduct(id)` - Single product with joins
+- `useBatches(productId)` - Batches filtered by product
+- `useBatch(id)` - Single batch with joins
+- `useCategories()` - All categories
+- `useCategory(id)` - Single category
+- `useSuppliers()` - All suppliers
+- `useSupplier(id)` - Single supplier
 
-export function useCategories() {
-  const liveResult = useLiveQuery(categoriesCollection.query());
-  return wrapLiveQuery(liveResult);
-}
+### ✅ All Tests Passing
 
-// Component
-function CategoriesList() {
-  const { data, isLoading, error } = useCategories();
-
-  if (isLoading) return <Spinner />;
-  if (error) return <Error error={error} />;
-
-  return (
-    <ul>
-      {data?.map((cat) => (
-        <li key={cat.id}>{cat.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-### Example 2: Filtered Hook
-
-```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
-
-export function useActiveProducts() {
-  const liveResult = useLiveQuery(
-    productsCollection.query().where("isActive", "==", true)
-  );
-  return wrapLiveQuery(liveResult);
-}
-
-// Component
-function ActiveProductsList() {
-  const { data, isLoading } = useActiveProducts();
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div>
-      <h2>Active Products ({data?.length})</h2>
-      {/* ... */}
-    </div>
-  );
-}
-```
-
-### Example 3: Parameterized Hook
-
-```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
-
-export function useProductsByCategory(categoryId: number) {
-  const liveResult = useLiveQuery(
-    productsCollection.query().where("categoryId", "==", categoryId)
-  );
-  return wrapLiveQuery(liveResult);
-}
-
-// Component
-function CategoryProducts({ categoryId }: { categoryId: number }) {
-  const { data, isLoading } = useProductsByCategory(categoryId);
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div>
-      <h3>Products in Category {categoryId}</h3>
-      {data?.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
-  );
-}
-```
-
-### Example 4: Multiple Hooks
-
-```typescript
-import { wrapLiveQuery } from "./hook-wrapper";
-import { useLiveQuery } from "@tanstack/react-db";
-
-export function useProducts() {
-  const liveResult = useLiveQuery(productsCollection.query());
-  return wrapLiveQuery(liveResult);
-}
-
-export function useCategories() {
-  const liveResult = useLiveQuery(categoriesCollection.query());
-  return wrapLiveQuery(liveResult);
-}
-
-export function useSuppliers() {
-  const liveResult = useLiveQuery(suppliersCollection.query());
-  return wrapLiveQuery(liveResult);
-}
-
-// Component using multiple hooks
-function InventoryDashboard() {
-  const { data: products, isLoading: productsLoading } = useProducts();
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
-  const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
-
-  if (productsLoading || categoriesLoading || suppliersLoading) {
-    return <Spinner />;
-  }
-
-  return (
-    <div>
-      <h1>Inventory Dashboard</h1>
-      <Stats
-        products={products?.length}
-        categories={categories?.length}
-        suppliers={suppliers?.length}
-      />
-    </div>
-  );
-}
-```
+- 4 test files, 13 tests total
+- Products: 4 tests
+- Batches: 3 tests
+- Categories: 3 tests
+- Suppliers: 3 tests
 
 ## Testing
 
-Run hook wrapper tests:
+Run hook tests:
 
 ```bash
-npm test -- hook-wrapper.test
+npm run test:run -- src/features/modules/inventory/hooks/__tests__/
 ```
 
 Expected output:
 
 ```
-✓ returns same shape as TanStack Query
-✓ handles loading state
-✓ handles error state
+Test Files  4 passed (4)
+     Tests  13 passed (13)
 ```
 
 ## Design Decisions
 
 ### Why Thin Wrapper?
 
-The wrapper is intentionally thin (just passes through properties) because:
+The wrapper is intentionally thin because:
 
-- Minimal overhead
-- Easy to understand
-- Easy to remove later
-- No hidden behavior
+- ✅ Minimal overhead
+- ✅ Easy to understand
+- ✅ Easy to remove later
+- ✅ No hidden behavior
+- ✅ Direct pass-through of properties
 
-### Why Not Transform?
+### Why useCollections?
+
+Centralized collection access because:
+
+- ✅ Eliminates repetitive `useMemo` + `createCollection` code
+- ✅ Ensures collections are properly memoized
+- ✅ Single source of truth
+- ✅ Type-safe access
+- ✅ Easier to test
+
+### Why Not Transform Data?
 
 We don't transform the data because:
 
-- TanStack DB and TanStack Query have compatible APIs
-- Transformation adds complexity
-- Transformation adds overhead
-- Direct pass-through is simpler
-
-### Why Separate Function?
-
-We provide both `wrapLiveQuery` and `createHookWrapper` because:
-
-- `wrapLiveQuery`: Explicit, clear, easy to understand
-- `createHookWrapper`: Convenient for creating multiple hooks
+- ✅ TanStack DB joins handle relations
+- ✅ Transformation adds complexity
+- ✅ Transformation adds overhead
+- ✅ Direct pass-through is simpler
 
 ## See Also
 
-- [Mock Generators](../../utils/README.md) - Data generation
-- [Collection Factory](../../db/README.md) - TanStack DB collections
-- [Test Utilities](../../test/README.md) - Large dataset testing
+- [useCollections](../use-collections.ts) - Centralized collection access
+- [Collections](../../collections/) - TanStack DB collection definitions
+- [Mock Generators](../../utils/README.md) - Data generation for tests
+- [Test Utilities](../../test/README.md) - Testing helpers

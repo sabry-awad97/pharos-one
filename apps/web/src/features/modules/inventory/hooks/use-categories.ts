@@ -3,10 +3,8 @@
  * Migrated from TanStack Query to TanStack DB with eager mode
  */
 
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { createCategoryCollection } from "../collections/category.collection";
+import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 import type { QueryResult } from "./utils/hook-wrapper";
 import type { Category } from "../schema";
@@ -21,17 +19,9 @@ import type { Category } from "../schema";
  * const { data: categories, isLoading } = useCategories();
  */
 export function useCategories(): QueryResult<Category[]> {
-  const queryClient = useQueryClient();
+  const { categories } = useCollections();
 
-  // Create collection with QueryClient (memoized)
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
-
-  const liveResult = useLiveQuery((q) =>
-    q.from({ category: categoryCollection }),
-  );
+  const liveResult = useLiveQuery((q) => q.from({ category: categories }));
 
   return wrapLiveQuery(liveResult);
 }
@@ -43,24 +33,18 @@ export function useCategories(): QueryResult<Category[]> {
  * const { data: category, isLoading } = useCategory(2);
  */
 export function useCategory(id: number): QueryResult<Category | undefined> {
-  const queryClient = useQueryClient();
-
-  // Create collection with QueryClient (memoized)
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
+  const { categories } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
       if (!id) return undefined;
 
       return q
-        .from({ category: categoryCollection })
+        .from({ category: categories })
         .where(({ category }) => eq(category.id, id))
         .findOne();
     },
-    [id, categoryCollection],
+    [id, categories],
   );
 
   return wrapLiveQuery(liveResult);

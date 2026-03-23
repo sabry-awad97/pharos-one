@@ -3,10 +3,8 @@
  * Migrated from TanStack Query to TanStack DB with eager mode
  */
 
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { createSupplierCollection } from "../collections/supplier.collection";
+import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 import type { QueryResult } from "./utils/hook-wrapper";
 import type { Supplier } from "../schema";
@@ -21,17 +19,9 @@ import type { Supplier } from "../schema";
  * const { data: suppliers, isLoading } = useSuppliers();
  */
 export function useSuppliers(): QueryResult<Supplier[]> {
-  const queryClient = useQueryClient();
+  const { suppliers } = useCollections();
 
-  // Create collection with QueryClient (memoized)
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
-
-  const liveResult = useLiveQuery((q) =>
-    q.from({ supplier: supplierCollection }),
-  );
+  const liveResult = useLiveQuery((q) => q.from({ supplier: suppliers }));
 
   return wrapLiveQuery(liveResult);
 }
@@ -43,24 +33,18 @@ export function useSuppliers(): QueryResult<Supplier[]> {
  * const { data: supplier, isLoading } = useSupplier(3);
  */
 export function useSupplier(id: number): QueryResult<Supplier | undefined> {
-  const queryClient = useQueryClient();
-
-  // Create collection with QueryClient (memoized)
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
+  const { suppliers } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
       if (!id) return undefined;
 
       return q
-        .from({ supplier: supplierCollection })
+        .from({ supplier: suppliers })
         .where(({ supplier }) => eq(supplier.id, id))
         .findOne();
     },
-    [id, supplierCollection],
+    [id, suppliers],
   );
 
   return wrapLiveQuery(liveResult);

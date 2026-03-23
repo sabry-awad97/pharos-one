@@ -6,12 +6,8 @@
  * Collections return raw table data, joins happen in the hooks.
  */
 
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { createProductCollection } from "../collections/product.collection";
-import { createCategoryCollection } from "../collections/category.collection";
-import { createSupplierCollection } from "../collections/supplier.collection";
+import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 
 /**
@@ -29,32 +25,18 @@ import { wrapLiveQuery } from "./utils/hook-wrapper";
  * const { data: products, isLoading } = useProducts();
  */
 export function useProducts() {
-  const queryClient = useQueryClient();
-
-  // Create collections with QueryClient (memoized)
-  const productCollection = useMemo(
-    () => createProductCollection(queryClient),
-    [queryClient],
-  );
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
+  const { products, categories, suppliers } = useCollections();
 
   const liveResult = useLiveQuery((q) =>
     q
-      .from({ product: productCollection })
+      .from({ product: products })
       .join(
-        { category: categoryCollection },
+        { category: categories },
         ({ product, category }) => eq(product.categoryId, category.id),
         "left", // Left join to include products without category
       )
       .join(
-        { supplier: supplierCollection },
+        { supplier: suppliers },
         ({ product, supplier }) => eq(product.defaultSupplierId, supplier.id),
         "left", // Left join to include products without supplier
       )
@@ -83,36 +65,22 @@ export function useProducts() {
  * const { data: product, isLoading } = useProduct(5);
  */
 export function useProduct(id: number) {
-  const queryClient = useQueryClient();
-
-  // Create collections with QueryClient (memoized)
-  const productCollection = useMemo(
-    () => createProductCollection(queryClient),
-    [queryClient],
-  );
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
+  const { products, categories, suppliers } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
       if (!id) return undefined;
 
       return q
-        .from({ product: productCollection })
+        .from({ product: products })
         .where(({ product }) => eq(product.id, id))
         .join(
-          { category: categoryCollection },
+          { category: categories },
           ({ product, category }) => eq(product.categoryId, category.id),
           "left",
         )
         .join(
-          { supplier: supplierCollection },
+          { supplier: suppliers },
           ({ product, supplier }) => eq(product.defaultSupplierId, supplier.id),
           "left",
         )
@@ -131,7 +99,7 @@ export function useProduct(id: number) {
         }))
         .findOne();
     },
-    [id, productCollection, categoryCollection, supplierCollection],
+    [id, products, categories, suppliers],
   );
 
   return wrapLiveQuery(liveResult);

@@ -6,13 +6,8 @@
  * Collections return raw table data, joins happen in the hooks.
  */
 
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { createBatchCollection } from "../collections/batch.collection";
-import { createProductCollection } from "../collections/product.collection";
-import { createCategoryCollection } from "../collections/category.collection";
-import { createSupplierCollection } from "../collections/supplier.collection";
+import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 
 /**
@@ -30,48 +25,30 @@ import { wrapLiveQuery } from "./utils/hook-wrapper";
  * const { data: batches, isLoading } = useBatches(5);
  */
 export function useBatches(productId: number) {
-  const queryClient = useQueryClient();
-
-  // Create collections with QueryClient (memoized)
-  const batchCollection = useMemo(
-    () => createBatchCollection(queryClient),
-    [queryClient],
-  );
-  const productCollection = useMemo(
-    () => createProductCollection(queryClient),
-    [queryClient],
-  );
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
+  const { batches, products, categories, suppliers } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) =>
       q
-        .from({ batch: batchCollection })
+        .from({ batch: batches })
         .where(({ batch }) => eq(batch.productId, productId))
         .join(
-          { product: productCollection },
+          { product: products },
           ({ batch, product }) => eq(batch.productId, product.id),
           "left",
         )
         .join(
-          { category: categoryCollection },
+          { category: categories },
           ({ product, category }) => eq(product.categoryId, category.id),
           "left",
         )
         .join(
-          { batchSupplier: supplierCollection },
+          { batchSupplier: suppliers },
           ({ batch, batchSupplier }) => eq(batch.supplierId, batchSupplier.id),
           "left",
         )
         .join(
-          { productSupplier: supplierCollection },
+          { productSupplier: suppliers },
           ({ product, productSupplier }) =>
             eq(product.defaultSupplierId, productSupplier.id),
           "left",
@@ -87,13 +64,7 @@ export function useBatches(productId: number) {
             supplier: batchSupplier ?? null,
           }),
         ),
-    [
-      productId,
-      batchCollection,
-      productCollection,
-      categoryCollection,
-      supplierCollection,
-    ],
+    [productId, batches, products, categories, suppliers],
   );
 
   return wrapLiveQuery(liveResult);
@@ -106,50 +77,32 @@ export function useBatches(productId: number) {
  * const { data: batch, isLoading } = useBatch(10);
  */
 export function useBatch(id: number) {
-  const queryClient = useQueryClient();
-
-  // Create collections with QueryClient (memoized)
-  const batchCollection = useMemo(
-    () => createBatchCollection(queryClient),
-    [queryClient],
-  );
-  const productCollection = useMemo(
-    () => createProductCollection(queryClient),
-    [queryClient],
-  );
-  const categoryCollection = useMemo(
-    () => createCategoryCollection(queryClient),
-    [queryClient],
-  );
-  const supplierCollection = useMemo(
-    () => createSupplierCollection(queryClient),
-    [queryClient],
-  );
+  const { batches, products, categories, suppliers } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
       if (!id) return undefined;
 
       return q
-        .from({ batch: batchCollection })
+        .from({ batch: batches })
         .where(({ batch }) => eq(batch.id, id))
         .join(
-          { product: productCollection },
+          { product: products },
           ({ batch, product }) => eq(batch.productId, product.id),
           "left",
         )
         .join(
-          { category: categoryCollection },
+          { category: categories },
           ({ product, category }) => eq(product.categoryId, category.id),
           "left",
         )
         .join(
-          { batchSupplier: supplierCollection },
+          { batchSupplier: suppliers },
           ({ batch, batchSupplier }) => eq(batch.supplierId, batchSupplier.id),
           "left",
         )
         .join(
-          { productSupplier: supplierCollection },
+          { productSupplier: suppliers },
           ({ product, productSupplier }) =>
             eq(product.defaultSupplierId, productSupplier.id),
           "left",
@@ -167,13 +120,7 @@ export function useBatch(id: number) {
         )
         .findOne();
     },
-    [
-      id,
-      batchCollection,
-      productCollection,
-      categoryCollection,
-      supplierCollection,
-    ],
+    [id, batches, products, categories, suppliers],
   );
 
   return wrapLiveQuery(liveResult);
