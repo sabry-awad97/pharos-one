@@ -57,6 +57,38 @@ function getItemsDisplayText(
 }
 
 /**
+ * Loading skeleton for pagination
+ */
+function PaginationSkeleton() {
+  return (
+    <div
+      className="flex-none flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-3 border-t border-border bg-card transition-opacity duration-150"
+      data-testid="pagination-skeleton"
+    >
+      {/* Left side skeleton */}
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+        <div className="h-8 w-[130px] bg-muted animate-pulse rounded" />
+      </div>
+
+      {/* Center skeleton */}
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="h-8 w-8 bg-muted animate-pulse rounded"
+            data-testid="pagination-skeleton"
+          />
+        ))}
+      </div>
+
+      {/* Right side skeleton */}
+      <div className="h-4 w-32 bg-muted animate-pulse rounded hidden md:block" />
+    </div>
+  );
+}
+
+/**
  * Props for DataTablePagination
  */
 export interface DataTablePaginationProps {
@@ -82,6 +114,12 @@ export interface DataTablePaginationProps {
    * @default true
    */
   showItemsCount?: boolean;
+
+  /**
+   * Loading state - shows skeleton when true
+   * @default false
+   */
+  isLoading?: boolean;
 }
 
 /**
@@ -94,6 +132,10 @@ export interface DataTablePaginationProps {
  * - Go to page input
  * - Items count display
  * - Fully accessible with ARIA labels
+ * - Loading skeleton
+ * - Empty state handling
+ * - Single page hiding
+ * - Responsive design
  *
  * @example
  * ```typescript
@@ -108,6 +150,7 @@ export function DataTablePagination({
   showPageSize = true,
   showGoToPage = true,
   showItemsCount = true,
+  isLoading = false,
 }: DataTablePaginationProps = {}) {
   const {
     table,
@@ -134,20 +177,30 @@ export function DataTablePagination({
     setAnnouncement(`Navigated to page ${currentPage} of ${pageCount}`);
   }, [pageIndex, pageCount]);
 
+  // Show loading skeleton
+  if (isLoading) {
+    return <PaginationSkeleton />;
+  }
+
+  // Hide pagination if only 1 page or no data
+  if (pageCount <= 1) {
+    return null;
+  }
+
   return (
-    <div className="flex-none flex items-center justify-between px-3 py-3 border-t border-border bg-card">
+    <div className="flex-none flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-3 border-t border-border bg-card transition-opacity duration-150">
       {/* Left side: Page size selector and go to page */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         {showPageSize && (
           <>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               Items per page:
             </span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => setPageSize(parseInt(value, 10))}
             >
-              <SelectTrigger className="h-8 w-[130px]">
+              <SelectTrigger className="h-8 w-full sm:w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -162,10 +215,10 @@ export function DataTablePagination({
         )}
 
         {showGoToPage && (
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-0 sm:ml-4">
             <label
               htmlFor="go-to-page"
-              className="text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground hidden sm:inline"
             >
               Go to page:
             </label>
@@ -190,20 +243,20 @@ export function DataTablePagination({
       {/* Center: Pagination controls */}
       <nav
         aria-label="pagination"
-        className="flex justify-center"
+        className="flex justify-center w-full sm:w-auto"
         onKeyDown={handleKeyDown}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-center">
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            className="px-2 sm:px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Go to previous page"
           >
             Previous
           </button>
 
-          {/* Page number buttons */}
+          {/* Page number buttons - show fewer on mobile */}
           {Array.from({ length: pageCount }, (_, i) => i).map((pageIdx) => {
             const isActive = pageIdx === pageIndex;
             return (
@@ -226,7 +279,7 @@ export function DataTablePagination({
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            className="px-2 sm:px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Go to next page"
           >
             Next
@@ -235,9 +288,12 @@ export function DataTablePagination({
       </nav>
 
       {/* Right side: Items display and screen reader announcements */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
         {showItemsCount && (
-          <div className="text-xs text-muted-foreground" aria-live="polite">
+          <div
+            className="text-xs text-muted-foreground hidden md:block"
+            aria-live="polite"
+          >
             {getItemsDisplayText(pageIndex, pageSize, totalItems)}
           </div>
         )}

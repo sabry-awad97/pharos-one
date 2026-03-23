@@ -31,6 +31,7 @@ import {
   DataTable,
   DataTableColumnHeader,
   DataTableFilters,
+  DataTableEmptyState,
   type ColumnFilter,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
@@ -352,6 +353,7 @@ export function InventoryWorkspace() {
         customActions={customActions}
         products={products}
         density={density}
+        isLoading={isLoading}
       />
     </DataTableProvider>
   );
@@ -369,6 +371,7 @@ function InventoryWorkspaceContent({
   customActions,
   products,
   density,
+  isLoading,
 }: {
   isPanelOpen: boolean;
   batchDetailsPanelProductId: number | null;
@@ -378,6 +381,7 @@ function InventoryWorkspaceContent({
   customActions: ReturnType<typeof useInventoryActions>;
   products: ProductStockSummary[];
   density: string;
+  isLoading: boolean;
 }) {
   const {
     selectedRowIds,
@@ -385,6 +389,7 @@ function InventoryWorkspaceContent({
     setFocusedRowId,
     handleRowClick,
     handleRowDoubleClick,
+    table,
   } = useDataTableContext<ProductStockSummary>();
 
   // Sync focusedRowId when batch details panel opens
@@ -393,6 +398,8 @@ function InventoryWorkspaceContent({
       setFocusedRowId(batchDetailsPanelProductId);
     }
   }, [batchDetailsPanelProductId, setFocusedRowId]);
+
+  const hasData = table.getFilteredRowModel().rows.length > 0;
 
   return (
     <div
@@ -410,82 +417,91 @@ function InventoryWorkspaceContent({
           data-density={density}
         >
           {/* Scrollable table area */}
-          <DataTable<ProductStockSummary>
-            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
-            className="w-full border-collapse"
-            style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-            }}
-            renderRow={(row, idx) => {
-              const selected = selectedRowIds.has(row.original.id);
-              const focused = focusedRowId === row.original.id;
-              return (
-                <TableRowContextMenu
-                  key={row.id}
-                  row={row.original}
-                  actions={customActions}
-                  actionGroups={actionGroups}
-                >
-                  <tr
-                    data-selected={selected ? "true" : undefined}
-                    data-focused={focused ? "true" : undefined}
-                    className="border-b transition-[background]"
-                    style={{
-                      borderBottomColor: focused ? "transparent" : "#ebebeb",
-                      background: focused
-                        ? "oklch(from var(--primary) l c h / 0.07)"
-                        : selected
-                          ? "oklch(from var(--primary) l c h / 0.05)"
-                          : idx % 2 === 1
-                            ? "#f9f9f9"
-                            : "#ffffff",
-                      boxShadow: focused
-                        ? "inset 0 0 0 1.5px var(--primary)"
-                        : "none",
-                    }}
-                    onClick={(e) => handleRowClick(row.original.id, e)}
-                    onDoubleClick={() => handleRowDoubleClick(row.original.id)}
-                    onMouseEnter={(e) => {
-                      if (!focused) {
+          {hasData ? (
+            <DataTable<ProductStockSummary>
+              containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
+              className="w-full border-collapse"
+              style={{
+                boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+              }}
+              renderRow={(row, idx) => {
+                const selected = selectedRowIds.has(row.original.id);
+                const focused = focusedRowId === row.original.id;
+                return (
+                  <TableRowContextMenu
+                    key={row.id}
+                    row={row.original}
+                    actions={customActions}
+                    actionGroups={actionGroups}
+                  >
+                    <tr
+                      data-selected={selected ? "true" : undefined}
+                      data-focused={focused ? "true" : undefined}
+                      className="border-b transition-[background]"
+                      style={{
+                        borderBottomColor: focused ? "transparent" : "#ebebeb",
+                        background: focused
+                          ? "oklch(from var(--primary) l c h / 0.07)"
+                          : selected
+                            ? "oklch(from var(--primary) l c h / 0.05)"
+                            : idx % 2 === 1
+                              ? "#f9f9f9"
+                              : "#ffffff",
+                        boxShadow: focused
+                          ? "inset 0 0 0 1.5px var(--primary)"
+                          : "none",
+                      }}
+                      onClick={(e) => handleRowClick(row.original.id, e)}
+                      onDoubleClick={() =>
+                        handleRowDoubleClick(row.original.id)
+                      }
+                      onMouseEnter={(e) => {
+                        if (!focused) {
+                          (
+                            e.currentTarget as HTMLTableRowElement
+                          ).style.background = "#f0f6ff";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
                         (
                           e.currentTarget as HTMLTableRowElement
-                        ).style.background = "#f0f6ff";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      (
-                        e.currentTarget as HTMLTableRowElement
-                      ).style.background = focused
-                        ? "oklch(from var(--primary) l c h / 0.07)"
-                        : selected
-                          ? "oklch(from var(--primary) l c h / 0.05)"
-                          : idx % 2 === 1
-                            ? "#f9f9f9"
-                            : "#ffffff";
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="whitespace-nowrap"
-                        style={{
-                          padding: "var(--density-padding)",
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                </TableRowContextMenu>
-              );
-            }}
-          />
+                        ).style.background = focused
+                          ? "oklch(from var(--primary) l c h / 0.07)"
+                          : selected
+                            ? "oklch(from var(--primary) l c h / 0.05)"
+                            : idx % 2 === 1
+                              ? "#f9f9f9"
+                              : "#ffffff";
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="whitespace-nowrap"
+                          style={{
+                            padding: "var(--density-padding)",
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  </TableRowContextMenu>
+                );
+              }}
+            />
+          ) : (
+            <DataTableEmptyState
+              hasFilters={table.getState().columnFilters.length > 0}
+              onClearFilters={() => table.resetColumnFilters()}
+            />
+          )}
 
           {/* Pagination controls */}
-          <DataTablePagination />
+          <DataTablePagination isLoading={isLoading} />
         </div>
       </div>
 

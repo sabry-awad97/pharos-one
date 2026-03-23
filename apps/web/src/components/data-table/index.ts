@@ -51,3 +51,7 @@ export {
   type FilterOption,
   type ColumnFilter,
 } from "./components/DataTableFilters";
+export {
+  DataTableEmptyState,
+  type DataTableEmptyStateProps,
+} from "./components/DataTableEmptyState";

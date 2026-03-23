@@ -352,7 +352,7 @@ describe("DataTablePagination", () => {
       });
     });
 
-    it("should display 'No items' when data is empty", () => {
+    it("should not display pagination when data is empty", () => {
       render(
         <DataTableProvider
           columns={mockColumns}
@@ -363,7 +363,10 @@ describe("DataTablePagination", () => {
         </DataTableProvider>,
       );
 
-      expect(screen.getByText("No items")).toBeInTheDocument();
+      // Pagination should not render when there's no data
+      expect(
+        screen.queryByRole("navigation", { name: /pagination/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("should update count when page size changes", async () => {
