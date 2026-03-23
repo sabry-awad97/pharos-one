@@ -82,6 +82,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
             label={menu.charAt(0).toUpperCase() + menu.slice(1)}
             active={activeMenu === menu}
             isFileMenu={menu === "file"}
+            anyMenuActive={activeMenu !== null}
             onClick={() => onMenuClick(menu)}
           />
         ))}
@@ -144,11 +145,15 @@ interface MenuBarItemProps {
   label: string;
   active: boolean;
   isFileMenu?: boolean;
+  anyMenuActive?: boolean;
   onClick: () => void;
 }
 
 const MenuBarItem = React.forwardRef<HTMLButtonElement, MenuBarItemProps>(
-  ({ label, active, isFileMenu = false, onClick }, ref) => {
+  (
+    { label, active, isFileMenu = false, anyMenuActive = false, onClick },
+    ref,
+  ) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     // File menu uses blue background when active, other menus use gray
@@ -160,12 +165,20 @@ const MenuBarItem = React.forwardRef<HTMLButtonElement, MenuBarItemProps>(
       onClick();
     };
 
+    const handleMouseEnter = () => {
+      setIsHovered(true);
+      // If any menu is active, open this menu on hover
+      if (anyMenuActive) {
+        onClick();
+      }
+    };
+
     return (
       <button
         ref={ref}
         type="button"
         onClick={handleClick}
-        onMouseEnter={() => setIsHovered(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsHovered(false)}
         className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         style={{
