@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import type { DensityMode } from "../types";
 
 // localStorage keys
 const SIDEBAR_VISIBLE_KEY = "pharmos-sidebar-visible";
@@ -16,11 +17,6 @@ const FOCUS_MODE_KEY = "pharmos-focus-mode";
 // Zoom levels supported
 const ZOOM_LEVELS = [50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
 const DEFAULT_ZOOM = 100;
-
-/**
- * Density mode type
- */
-export type DensityMode = "compact" | "comfortable" | "spacious";
 
 /**
  * Return type for useViewState hook

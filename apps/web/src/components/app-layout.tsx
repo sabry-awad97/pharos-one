@@ -4,6 +4,7 @@ import {
   MenuBar,
   StatusBar,
   useMenuState,
+  useViewState,
   type QuickAction,
   type TabStatistics,
 } from "@/features/shell";
@@ -45,6 +46,7 @@ export function AppLayout({
   className,
 }: AppLayoutProps) {
   const { activeMenu, toggleMenu, closeMenu } = useMenuState();
+  const { statusBarVisible, toggleStatusBar, toggleSidebar } = useViewState();
 
   // Close menu when clicking outside
   const handleLayoutClick = React.useCallback(() => {
@@ -52,6 +54,18 @@ export function AppLayout({
       closeMenu();
     }
   }, [activeMenu, closeMenu]);
+
+  // Keyboard shortcut: Ctrl+B to toggle sidebar
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "b") {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
 
   return (
     <div
@@ -77,16 +91,20 @@ export function AppLayout({
         branchInfo={branchInfo}
         userInfo={userInfo}
         shiftInfo={shiftInfo}
+        onToggleSidebar={toggleSidebar}
+        onToggleStatusBar={toggleStatusBar}
       />
 
       {/* Main content area - flex-1 with min-h-0 for proper scrolling */}
       <main className="flex-1 min-h-0 overflow-auto">{children}</main>
 
-      {/* Status bar with statistics */}
-      <StatusBar
-        statistics={statistics}
-        keyboardShortcuts={keyboardShortcuts}
-      />
+      {/* Status bar with statistics - conditionally rendered */}
+      {statusBarVisible && (
+        <StatusBar
+          statistics={statistics}
+          keyboardShortcuts={keyboardShortcuts}
+        />
+      )}
     </div>
   );
 }

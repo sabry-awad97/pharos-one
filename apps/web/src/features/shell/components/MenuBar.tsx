@@ -4,6 +4,7 @@ import type { MenuType } from "../types";
 import { cn } from "@pharos-one/ui/lib/utils";
 import { FileMenu } from "./FileMenu";
 import { EditMenu } from "./EditMenu";
+import { ViewMenu } from "./ViewMenu";
 
 interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   activeMenu: MenuType | null;
@@ -23,6 +24,9 @@ interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPaste?: () => void;
   onFind?: () => void;
   onReplace?: () => void;
+  onToggleSidebar?: () => void;
+  onToggleStatusBar?: () => void;
+  onToggleToolbar?: () => void;
 }
 
 const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
@@ -46,6 +50,9 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       onPaste,
       onFind,
       onReplace,
+      onToggleSidebar,
+      onToggleStatusBar,
+      onToggleToolbar,
       ...props
     },
     ref,
@@ -132,6 +139,16 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
             onPaste={onPaste}
             onFind={onFind}
             onReplace={onReplace}
+          />
+        )}
+
+        {/* View Menu Dropdown */}
+        {activeMenu === "view" && (
+          <ViewMenu
+            onClose={() => onMenuClick("view")}
+            onToggleSidebar={onToggleSidebar}
+            onToggleStatusBar={onToggleStatusBar}
+            onToggleToolbar={onToggleToolbar}
           />
         )}
       </div>
