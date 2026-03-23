@@ -14,7 +14,7 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
-import { CopyWrapper } from "@/components/CopyWrapper";
+import { CopyWrapper } from "@/components/copy-wrapper";
 import { flexRender, type ColumnDef } from "@tanstack/react-table";
 import {
   Select,
