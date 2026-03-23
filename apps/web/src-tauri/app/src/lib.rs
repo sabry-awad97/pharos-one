@@ -33,7 +33,10 @@ pub async fn run() {
     tracing::info!("Starting Tauri application");
     tauri::Builder::default()
         .manage(container)
-        .invoke_handler(tauri::generate_handler![pharos_tauri_commands::inventory,])
+        .invoke_handler(tauri::generate_handler![
+            // Unified inventory command (single entry point for all operations)
+            pharos_tauri_commands::inventory,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

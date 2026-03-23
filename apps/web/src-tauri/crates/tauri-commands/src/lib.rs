@@ -1,3 +1,4 @@
 pub mod inventory;
 
-pub use inventory::inventory;
+// Export unified inventory command and types
+pub use inventory::{inventory, InventoryOperation, InventoryResponse};
