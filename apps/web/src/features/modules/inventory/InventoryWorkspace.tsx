@@ -23,6 +23,7 @@ import {
   actionGroups,
 } from "./hooks/use-inventory-actions";
 import { useProducts } from "./hooks/use-products";
+import { formatCurrency } from "@/constants/currency";
 import {
   DataTableProvider,
   useDataTableContext,
@@ -216,7 +217,7 @@ export function InventoryWorkspace() {
         ),
         cell: ({ getValue }) => (
           <span className="text-xs font-medium text-foreground">
-            ₹{(getValue() as number).toFixed(2)}
+            {formatCurrency(getValue() as number)}
           </span>
         ),
         size: 80,

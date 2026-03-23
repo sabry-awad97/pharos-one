@@ -15,6 +15,7 @@
  */
 
 import { useProduct } from "../hooks/use-products";
+import { formatCurrency } from "@/constants/currency";
 
 /**
  * Props for ProductDetailsTab component
@@ -169,7 +170,7 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
                 Base Price
               </span>
               <p className="text-xs font-semibold mt-0.5 text-foreground">
-                ₹{product.basePrice.toFixed(2)}
+                {formatCurrency(product.basePrice)}
               </p>
             </div>
           </div>
