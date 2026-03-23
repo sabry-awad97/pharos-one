@@ -14,6 +14,7 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
+import { CopyWrapper } from "@/components/CopyWrapper";
 import {
   useReactTable,
   getCoreRowModel,
@@ -274,9 +275,11 @@ export function InventoryWorkspace({
             <span
               className={`w-[7px] h-[7px] rounded-full shrink-0 ${statusDotClass[row.original.stockStatus]}`}
             />
-            <span className="text-xs font-medium text-foreground">
-              {row.original.name}
-            </span>
+            <CopyWrapper value={row.original.name} size="xs">
+              <span className="text-xs font-medium text-foreground">
+                {row.original.name}
+              </span>
+            </CopyWrapper>
           </div>
         ),
         size: undefined, // auto width
@@ -285,9 +288,11 @@ export function InventoryWorkspace({
         accessorKey: "sku",
         header: "SKU",
         cell: ({ getValue }) => (
-          <span className="text-[11px] font-mono text-muted-foreground">
-            {getValue() as string}
-          </span>
+          <CopyWrapper value={getValue() as string} size="xs">
+            <span className="text-[11px] font-mono text-muted-foreground">
+              {getValue() as string}
+            </span>
+          </CopyWrapper>
         ),
         size: 90,
       },
@@ -352,11 +357,20 @@ export function InventoryWorkspace({
       {
         accessorKey: "defaultSupplier.name",
         header: "Supplier",
-        cell: ({ row }) => (
-          <span className="text-[11px] text-muted-foreground">
-            {row.original.defaultSupplier?.name || "N/A"}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const supplierName = row.original.defaultSupplier?.name || "N/A";
+          return (
+            <CopyWrapper
+              value={supplierName}
+              size="xs"
+              className={supplierName === "N/A" ? "pointer-events-none" : ""}
+            >
+              <span className="text-[11px] text-muted-foreground">
+                {supplierName}
+              </span>
+            </CopyWrapper>
+          );
+        },
         size: 120,
       },
       {
@@ -513,7 +527,7 @@ export function InventoryWorkspace({
               >
                 <thead>
                   <tr
-                    className="bg-card sticky top-0 z-10 border-b"
+                    className="bg-muted/30 sticky top-0 z-10 border-b"
                     style={{ borderBottomColor: "#e0e0e0" }}
                   >
                     {[
@@ -529,7 +543,7 @@ export function InventoryWorkspace({
                     ].map((header) => (
                       <th
                         key={header}
-                        className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap text-muted-foreground"
+                        className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap text-muted-foreground"
                       >
                         {header}
                       </th>
@@ -621,13 +635,13 @@ export function InventoryWorkspace({
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr
                         key={headerGroup.id}
-                        className="bg-card sticky top-0 z-10 border-b"
+                        className="bg-muted/30 sticky top-0 z-10 border-b"
                         style={{ borderBottomColor: "#e0e0e0" }}
                       >
                         {headerGroup.headers.map((header) => (
                           <th
                             key={header.id}
-                            className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer select-none text-muted-foreground"
+                            className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors group"
                             style={{
                               width:
                                 header.column.getSize() !== 150
@@ -636,16 +650,23 @@ export function InventoryWorkspace({
                             }}
                             onClick={header.column.getToggleSortingHandler()}
                           >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                            {{
-                              asc: " ↑",
-                              desc: " ↓",
-                            }[header.column.getIsSorted() as string] ?? null}
+                            <div className="flex items-center gap-1.5">
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                  )}
+                              {header.column.getIsSorted() && (
+                                <span className="text-primary font-bold">
+                                  {{
+                                    asc: "↑",
+                                    desc: "↓",
+                                  }[header.column.getIsSorted() as string] ??
+                                    null}
+                                </span>
+                              )}
+                            </div>
                           </th>
                         ))}
                       </tr>
@@ -667,7 +688,9 @@ export function InventoryWorkspace({
                             data-focused={focused ? "true" : undefined}
                             className="border-b transition-[background]"
                             style={{
-                              borderBottomColor: "#ebebeb",
+                              borderBottomColor: focused
+                                ? "transparent"
+                                : "#ebebeb",
                               background: focused
                                 ? "oklch(from var(--primary) l c h / 0.07)"
                                 : selected
