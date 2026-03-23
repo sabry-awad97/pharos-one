@@ -28,9 +28,7 @@ describe("Sidebar Rail Interaction", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
     expect(rail).toBeInTheDocument();
 
     // Collapse the sidebar using rail double-click
@@ -42,7 +40,7 @@ describe("Sidebar Rail Interaction", () => {
     }
 
     // Rail should still exist and be visible when collapsed
-    const railAfterCollapse = sidebar.querySelector('div[style*="col-resize"]');
+    const railAfterCollapse = screen.getByTestId("sidebar-drag-handle");
     expect(railAfterCollapse).toBeInTheDocument();
   });
 
@@ -52,9 +50,7 @@ describe("Sidebar Rail Interaction", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
     expect(rail).toBeInTheDocument();
 
     // Ensure sidebar is expanded first
@@ -85,9 +81,7 @@ describe("Sidebar Rail Interaction", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
     expect(rail).toBeInTheDocument();
 
     // Ensure sidebar is collapsed first
@@ -118,9 +112,7 @@ describe("Sidebar Rail Interaction", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
     expect(rail).toBeInTheDocument();
 
     // Ensure sidebar is expanded first
@@ -153,9 +145,7 @@ describe("Sidebar Rail Interaction", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
     expect(rail).toBeInTheDocument();
 
     // Ensure sidebar is collapsed first
@@ -187,16 +177,19 @@ describe("Sidebar Rail Interaction", () => {
 
     const sidebar = screen.getByTestId("sidebar");
 
-    // The collapse button was the last button in the sidebar
-    // After removal, we should not find a button with ChevronLeft or ChevronRight icons
-    // We can check by looking for buttons at the bottom with specific styling
+    // The collapse button was removed - sidebar now uses double-click on drag handle
+    // Verify that there's no dedicated collapse/expand button
     const allButtons = within(sidebar).getAllByRole("button");
 
-    // Check that no button has the collapse button styling (height: 32, borderTop)
+    // All buttons should be navigation items or chevron toggles
+    // None should have the old collapse button styling
     const collapseButton = Array.from(allButtons).find((button) => {
       const styles = window.getComputedStyle(button);
+      // Old collapse button had height: 32px and a border-top
       return (
-        styles.height === "32px" && styles.borderTop !== "0px none rgb(0, 0, 0)"
+        styles.height === "32px" &&
+        styles.borderTopWidth !== "0px" &&
+        !button.querySelector("svg") // Exclude chevron buttons which have SVG icons
       );
     });
 

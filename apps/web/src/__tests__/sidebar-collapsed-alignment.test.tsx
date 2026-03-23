@@ -28,9 +28,7 @@ describe("Sidebar Collapsed Alignment", () => {
     const sidebar = screen.getByTestId("sidebar");
 
     // Get the rail element to collapse the sidebar
-    const rail = sidebar.querySelector(
-      'div[style*="col-resize"]',
-    ) as HTMLElement;
+    const rail = screen.getByTestId("sidebar-drag-handle");
 
     // Check if sidebar is expanded, if so collapse it using rail double-click
     let currentStyles = window.getComputedStyle(sidebar);

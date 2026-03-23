@@ -8,9 +8,7 @@ describe("Sidebar Drag State Management", () => {
     render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
 
     const sidebar = screen.getByTestId("sidebar");
-    const dragHandle = sidebar.querySelector(
-      'div[style*="cursor: col-resize"]',
-    ) as HTMLElement;
+    const dragHandle = screen.getByTestId("sidebar-drag-handle");
 
     // Start dragging
     act(() => {
@@ -63,9 +61,7 @@ describe("Sidebar Drag State Management", () => {
     render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
 
     const sidebar = screen.getByTestId("sidebar");
-    const dragHandle = sidebar.querySelector(
-      'div[style*="cursor: col-resize"]',
-    ) as HTMLElement;
+    const dragHandle = screen.getByTestId("sidebar-drag-handle");
 
     // Start dragging
     act(() => {
@@ -123,9 +119,7 @@ describe("Sidebar Drag State Management", () => {
     render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
 
     const sidebar = screen.getByTestId("sidebar");
-    const dragHandle = sidebar.querySelector(
-      'div[style*="cursor: col-resize"]',
-    ) as HTMLElement;
+    const dragHandle = screen.getByTestId("sidebar-drag-handle");
 
     // Start dragging
     act(() => {
@@ -175,9 +169,7 @@ describe("Sidebar Drag State Management", () => {
     render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
 
     const sidebar = screen.getByTestId("sidebar");
-    const dragHandle = sidebar.querySelector(
-      'div[style*="cursor: col-resize"]',
-    ) as HTMLElement;
+    const dragHandle = screen.getByTestId("sidebar-drag-handle");
 
     // Start dragging from position 240
     act(() => {
@@ -214,9 +206,7 @@ describe("Sidebar Drag State Management", () => {
     render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
 
     const sidebar = screen.getByTestId("sidebar");
-    const dragHandle = sidebar.querySelector(
-      'div[style*="cursor: col-resize"]',
-    ) as HTMLElement;
+    const dragHandle = screen.getByTestId("sidebar-drag-handle");
 
     // Collapse sidebar by double-clicking the rail
     act(() => {
