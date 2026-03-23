@@ -6,6 +6,7 @@
  * - useDataTable: Core table logic hook
  * - DataTableProvider: Context provider for composition
  * - useDataTableContext: Hook to access table state
+ * - DataTablePagination: Reusable pagination component
  *
  * USAGE PATTERNS:
  *
@@ -31,3 +32,7 @@ export {
   useDataTableContext,
   type DataTableProviderProps,
 } from "./context/DataTableContext";
+export {
+  DataTablePagination,
+  type DataTablePaginationProps,
+} from "./components/DataTablePagination";

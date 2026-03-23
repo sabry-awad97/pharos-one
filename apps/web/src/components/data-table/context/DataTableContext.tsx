@@ -120,15 +120,12 @@ export function DataTableProvider<TData>({
     onRowDoubleClick,
   });
 
-  // Memoize context value to prevent unnecessary re-renders
-  const value = React.useMemo(
-    () => ({
-      ...tableState,
-      columns,
-      data,
-    }),
-    [tableState, columns, data],
-  );
+  // Create context value with table state and original props
+  const value = {
+    ...tableState,
+    columns,
+    data,
+  };
 
   return (
     <DataTableContext.Provider value={value}>
