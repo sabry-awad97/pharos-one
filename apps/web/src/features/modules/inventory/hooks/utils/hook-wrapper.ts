@@ -19,6 +19,17 @@ export interface QueryResult<TData> {
 }
 
 /**
+ * TanStack DB useLiveQuery result shape
+ */
+interface LiveQueryResult<TData> {
+  data: TData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error?: Error | null; // Optional because TanStack DB might not always include it
+  [key: string]: unknown; // Other properties from TanStack DB
+}
+
+/**
  * Wrap a TanStack DB useLiveQuery result to match TanStack Query API
  *
  * @param liveQueryResult - Result from TanStack DB useLiveQuery
@@ -39,17 +50,30 @@ export interface QueryResult<TData> {
  * ```
  */
 export function wrapLiveQuery<TData>(
-  liveQueryResult: QueryResult<TData>,
+  liveQueryResult: LiveQueryResult<TData>,
 ): QueryResult<TData> {
-  // Thin wrapper - just pass through all properties
-  // This maintains the same API shape as TanStack Query
+  // Transform TanStack DB result to TanStack Query shape
+  const hasData = liveQueryResult.data !== undefined;
+  const hasError = liveQueryResult.isError && liveQueryResult.error !== null;
+  const isLoading = liveQueryResult.isLoading;
+
+  // Determine status based on state
+  let status: "pending" | "error" | "success";
+  if (isLoading) {
+    status = "pending";
+  } else if (hasError) {
+    status = "error";
+  } else {
+    status = "success";
+  }
+
   return {
     data: liveQueryResult.data,
-    isLoading: liveQueryResult.isLoading,
-    error: liveQueryResult.error,
-    isError: liveQueryResult.isError,
-    isSuccess: liveQueryResult.isSuccess,
-    status: liveQueryResult.status,
+    isLoading,
+    error: liveQueryResult.error ?? null, // Ensure null instead of undefined
+    isError: hasError,
+    isSuccess: status === "success",
+    status,
   };
 }
 
@@ -74,7 +98,7 @@ export function wrapLiveQuery<TData>(
  * ```
  */
 export function createHookWrapper<TData, TArgs extends unknown[]>(
-  useLiveQueryHook: (...args: TArgs) => QueryResult<TData>,
+  useLiveQueryHook: (...args: TArgs) => LiveQueryResult<TData>,
 ) {
   return (...args: TArgs): QueryResult<TData> => {
     const result = useLiveQueryHook(...args);
