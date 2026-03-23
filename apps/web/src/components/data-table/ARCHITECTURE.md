@@ -1,402 +1,349 @@
-# DataTable Architecture
+# DataTable Component Library - Architecture
 
 ## Overview
 
-The DataTable component library provides a reusable, type-safe table implementation built on TanStack Table with React Context for state management.
+The DataTable component library provides reusable, composable components for building data tables with TanStack Table. The architecture follows the **Deep Module** principle: small interface with lots of implementation hidden behind it.
 
-## Architectural Decisions
+## Design Philosophy
 
-### Decision 1: Thin Context Wrapper Pattern
+### Minimal Interface, Maximum Flexibility
 
-**Approach**: Wrap existing `useDataTable` hook in a React Context provider without adding additional abstraction layers.
+The DataTable component is designed as a **minimal abstraction** over TanStack Table:
 
-**Confidence**: 85%
+- **Small interface**: Few props, simple API
+- **Deep implementation**: Complex table logic hidden inside
+- **Feature-specific customization**: Features control their own rendering through render props
 
-**Rationale**:
+This approach avoids the pitfall of creating a "shallow module" (large interface, little implementation) that would be hard to maintain and inflexible for unique feature needs.
 
-- Leverages existing, tested `useDataTable` logic
-- Minimal complexity - easy to understand and maintain
-- Provides composition benefits without over-engineering
-- Allows gradual migration from direct hook usage
-
-**Assumptions**:
-
-- Most features need basic table state sharing (sorting, pagination, selection)
-- Complex state management (bulk actions, cross-page selection) can be added later
-- TanStack Table provides sufficient built-in functionality
-
-**Would change if**:
-
-- Multiple features require complex shared state beyond table instance
-- Need for global table state across multiple table instances
-- Performance issues with context re-renders (would split contexts)
-
-**Alternative** (if <80%): Headless UI pattern with complete separation of logic and rendering, but this adds unnecessary complexity for current needs.
-
-### Decision 2: Single Generic Type Parameter
-
-**Approach**: Use only `TData` generic, not `TData, TValue` pair.
-
-**Confidence**: 90%
-
-**Rationale**:
-
-- `useDataTable` hook only uses `TData` generic
-- `TValue` is column-specific, not table-level concern
-- Simpler API reduces cognitive load
-- Matches actual usage patterns in codebase
-
-**Assumptions**:
-
-- Column value types are inferred from column definitions
-- No need for table-level value type constraints
-
-**Would change if**: Need to enforce specific value types across all columns (unlikely scenario).
-
-### Decision 3: Expose Full Hook Return Value
-
-**Approach**: Context provides entire `useDataTable` return value plus original columns/data.
-
-**Confidence**: 95%
-
-**Rationale**:
-
-- Maximum flexibility for consumers
-- No need to predict which state will be needed
-- Maintains backward compatibility with direct hook usage
-- Enables advanced use cases (custom selection, keyboard navigation)
-
-**Assumptions**:
-
-- Consumers may need any part of table state
-- Performance impact of larger context value is negligible
-- Memoization prevents unnecessary re-renders
-
-**Would change if**: Performance profiling shows context re-renders are a bottleneck (would split into multiple contexts).
-
-## Architecture Layers
+## Component Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│         Consumer Features               │
-│  (InventoryWorkspace, OrdersTable, etc) │
-└─────────────────┬───────────────────────┘
-                  │
-                  │ uses
-                  ▼
-┌─────────────────────────────────────────┐
-│      DataTable Component Library        │
-│                                          │
-│  ┌────────────────────────────────────┐ │
-│  │  DataTableProvider (Context)       │ │
-│  │  - Wraps useDataTable              │ │
-│  │  - Provides state to children      │ │
-│  └────────────┬───────────────────────┘ │
-│               │                          │
-│               │ uses                     │
-│               ▼                          │
-│  ┌────────────────────────────────────┐ │
-│  │  useDataTable (Hook)               │ │
-│  │  - Table instance creation         │ │
-│  │  - State management                │ │
-│  │  - Selection logic                 │ │
-│  │  - Pagination persistence          │ │
-│  └────────────┬───────────────────────┘ │
-│               │                          │
-└───────────────┼──────────────────────────┘
-                │
-                │ uses
-                ▼
-┌─────────────────────────────────────────┐
-│      TanStack Table (External)          │
-│  - Core table logic                     │
-│  - Sorting, filtering, pagination       │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                  DataTableProvider                      │
+│  (Context wrapper around useDataTable hook)             │
+│  - Provides table instance and state to children        │
+│  - Enables composition of table subcomponents           │
+└─────────────────────────────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+        ▼                 ▼                 ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  DataTable   │  │ DataTable    │  │   Custom     │
+│              │  │ Pagination   │  │  Components  │
+│ - Renders    │  │              │  │              │
+│   table      │  │ - Page size  │  │ - Toolbars   │
+│   structure  │  │ - Navigation │  │ - Filters    │
+│ - Delegates  │  │ - Go to page │  │ - Actions    │
+│   row/header │  │ - Item count │  │              │
+│   rendering  │  │              │  │              │
+└──────────────┘  └──────────────┘  └──────────────┘
 ```
 
-## Component Structure
+## Core Components
 
-```
-data-table/
-├── hooks/
-│   └── useDataTable.ts          # Core table logic
-│       - Table instance creation
-│       - State management (sorting, pagination, selection)
-│       - Windows-style multi-select
-│       - LocalStorage persistence
-│
-├── context/
-│   └── DataTableContext.tsx     # Context provider
-│       - Wraps useDataTable hook
-│       - Provides state to descendants
-│       - Type-safe generic interface
-│
-├── examples/
-│   └── BasicExample.tsx         # Usage demonstration
-│
-├── __tests__/                   # Unit tests
-│   ├── useDataTable.test.tsx
-│   └── useDataTable-pagination.test.tsx
-│
-├── index.ts                     # Public API
-├── README.md                    # Usage documentation
-└── ARCHITECTURE.md              # This file
-```
+### 1. useDataTable Hook
 
-## Data Flow
+**Purpose**: Core table logic and state management
 
-### Pattern 1: Direct Hook Usage
+**Responsibilities**:
 
-```
-Component
-    │
-    ├─> useDataTable({ columns, data })
-    │       │
-    │       └─> TanStack useReactTable()
-    │
-    └─> Render table with table instance
-```
+- TanStack Table instance creation
+- Sorting, filtering, pagination state
+- Row selection (Windows-style multi-select)
+- Row focus management
+- Page size persistence to localStorage
 
-### Pattern 2: Context Provider Usage
-
-```
-DataTableProvider
-    │
-    ├─> useDataTable({ columns, data })
-    │       │
-    │       └─> TanStack useReactTable()
-    │
-    └─> Context.Provider
-            │
-            ├─> Toolbar (useDataTableContext)
-            ├─> Table (useDataTableContext)
-            └─> Pagination (useDataTableContext)
-```
-
-## Extension Points
-
-### 1. Custom State in Context
-
-Add new state to context without breaking existing consumers:
+**Interface**:
 
 ```typescript
-interface DataTableContextValue<TData> extends UseDataTableReturn<TData> {
-  columns: ColumnDef<TData>[];
-  data: TData[];
-  // New extension point
-  customState?: any;
-}
+useDataTable({
+  columns: ColumnDef<TData>[],
+  data: TData[],
+  persistenceKey?: string,
+  getRowId?: (row: TData) => number,
+  onRowDoubleClick?: (rowId: number) => void
+})
 ```
 
-### 2. Custom Hooks
+### 2. DataTableProvider
 
-Create specialized hooks that consume context:
+**Purpose**: Context provider for composition
+
+**Responsibilities**:
+
+- Wraps useDataTable hook
+- Provides table state to child components
+- Enables composition without prop drilling
+
+**Interface**:
 
 ```typescript
-function useDataTableSelection<TData>() {
-  const { table, selectedRowIds } = useDataTableContext<TData>();
-  return {
-    selectedRows: Array.from(selectedRowIds),
-    selectAll: () => {
-      /* ... */
-    },
-    clearSelection: () => {
-      /* ... */
-    },
-  };
-}
+<DataTableProvider
+  columns={columns}
+  data={data}
+  persistenceKey="storage-key"
+  getRowId={(row) => row.id}
+  onRowDoubleClick={(id) => handleOpen(id)}
+>
+  {children}
+</DataTableProvider>
 ```
 
-### 3. Subcomponent Composition
+### 3. DataTable Component
 
-Build complex tables from simple components:
+**Purpose**: Generic table renderer
+
+**Responsibilities**:
+
+- Renders table structure (table, thead, tbody)
+- Delegates row rendering to parent via renderRow prop
+- Delegates header rendering to parent via renderHeaderCell prop
+- Minimal interface for maximum flexibility
+
+**Interface**:
+
+```typescript
+<DataTable<TData>
+  renderRow={(row, index) => <CustomRow row={row} />}
+  renderHeaderCell={(header) => <CustomHeader header={header} />}
+  className="custom-table"
+  style={{ boxShadow: "..." }}
+  containerClassName="overflow-auto"
+/>
+```
+
+**Design Decision**:
+
+- Accepts render props instead of trying to handle all styling internally
+- Features control their own row/header rendering
+- Avoids premature abstraction
+
+### 4. DataTablePagination Component
+
+**Purpose**: Reusable pagination controls
+
+**Responsibilities**:
+
+- Page size selector
+- Previous/Next navigation
+- Page number buttons
+- Go to page input
+- Items count display
+
+**Interface**:
+
+```typescript
+<DataTablePagination
+  showPageSize={true}
+  showGoToPage={true}
+  showItemsCount={true}
+  pageSizeOptions={[...]}
+/>
+```
+
+## Usage Patterns
+
+### Pattern 1: Simple Table (Default Rendering)
 
 ```typescript
 <DataTableProvider columns={columns} data={data}>
-  <DataTableToolbar />
-  <DataTableFilters />
   <DataTable />
-  <DataTableBulkActions />
   <DataTablePagination />
 </DataTableProvider>
 ```
 
-## Coupling Points
+### Pattern 2: Feature-Specific Table (Custom Rendering)
 
-### Internal Dependencies
+```typescript
+<DataTableProvider columns={columns} data={data}>
+  <DataTable<ProductStockSummary>
+    renderHeaderCell={(header) => (
+      <th
+        className="custom-header"
+        onClick={header.column.getToggleSortingHandler()}
+      >
+        {/* Custom header rendering */}
+      </th>
+    )}
+    renderRow={(row, idx) => (
+      <TableRowContextMenu row={row.original}>
+        <tr
+          className="custom-row"
+          onClick={() => handleClick(row.original.id)}
+        >
+          {/* Custom row rendering */}
+        </tr>
+      </TableRowContextMenu>
+    )}
+  />
+  <DataTablePagination />
+</DataTableProvider>
+```
 
-1. **useDataTable → TanStack Table**: Direct dependency on `@tanstack/react-table`
-   - Risk: Breaking changes in TanStack Table
-   - Mitigation: Pin major version, test upgrades thoroughly
+## Architectural Decisions
 
-2. **DataTableContext → useDataTable**: Tight coupling by design
-   - Risk: Changes to hook signature require context updates
-   - Mitigation: Both are in same module, changes are coordinated
+### Decision 1: Minimal DataTable Component
 
-### External Dependencies
+**Approach**: Extract only table rendering logic, delegate row/header rendering to parent
 
-1. **Consumer Features → DataTableProvider**: Loose coupling via props
-   - Risk: Breaking changes to provider props
-   - Mitigation: Semantic versioning, deprecation warnings
+**Rationale**:
 
-2. **Consumer Features → useDataTableContext**: Loose coupling via hook
-   - Risk: Changes to context value shape
-   - Mitigation: TypeScript ensures compile-time safety
+- Features have unique styling needs (selection, focus, hover states)
+- Column definitions are inherently feature-specific
+- Avoids creating a shallow module (large interface, little implementation)
+- Maximum flexibility for unique feature needs
 
-## Performance Considerations
+**Alternatives Considered**:
 
-### Context Re-renders
+1. Full-featured DataTable with render props for everything → Too complex, large interface
+2. Compound component pattern (DataTable.Root, DataTable.Row, etc.) → Overkill for current needs
 
-**Current Approach**: Single context with memoized value
+**Confidence**: 85%
 
-**Optimization Opportunities** (if needed):
+**Would change if**: Multiple features need identical row rendering (then consider extracting common patterns)
 
-1. Split into multiple contexts (table, selection, pagination)
-2. Use context selectors (via library like `use-context-selector`)
-3. Memoize expensive child components
+### Decision 2: Render Props Over Configuration
 
-**Monitoring**: Watch for unnecessary re-renders in React DevTools
+**Approach**: Accept renderRow and renderHeaderCell props instead of configuration objects
 
-### State Updates
+**Rationale**:
 
-**Current Approach**: TanStack Table handles internal optimizations
+- More flexible than configuration
+- Features can use any React patterns (hooks, context, etc.)
+- Type-safe with TypeScript generics
+- Easier to understand (just JSX, not config objects)
 
-**Best Practices**:
+**Trade-offs**:
 
-- Use `React.memo` for expensive table cells
-- Virtualize large datasets (TanStack Table Virtual)
-- Debounce filter inputs
+- Slightly more code in features
+- But much more flexible and maintainable
+
+### Decision 3: Context Provider Pattern
+
+**Approach**: Wrap useDataTable hook in context provider
+
+**Rationale**:
+
+- Enables composition of table subcomponents
+- Avoids prop drilling
+- Maintains type safety with generics
+- Minimal abstraction over existing hook
+
+**Trade-offs**:
+
+- Adds one level of nesting
+- But enables clean composition
+
+## Extension Points
+
+### Adding New Table Features
+
+1. **New subcomponent** (e.g., DataTableToolbar):
+   - Create component that consumes DataTableContext
+   - Export from index.ts
+   - Use alongside DataTable and DataTablePagination
+
+2. **New render prop** (e.g., renderFooter):
+   - Add prop to DataTable component
+   - Render in appropriate location
+   - Document in ARCHITECTURE.md
+
+3. **New table state** (e.g., column visibility):
+   - Add to useDataTable hook
+   - Expose through DataTableContext
+   - Update type definitions
 
 ## Testing Strategy
 
-### Unit Tests
+### Component Tests
 
-- Hook behavior (sorting, pagination, selection)
-- Context provider/consumer integration
-- Type safety verification
+- **DataTable**: Test basic rendering, custom renderRow, custom renderHeaderCell, props
+- **DataTablePagination**: Test page size, navigation, go to page, items count, accessibility
+- **DataTableContext**: Test provider/consumer pattern, state management
 
 ### Integration Tests
 
-- Full table rendering with context
-- User interactions (click, keyboard)
-- State persistence
+- **InventoryWorkspace**: Test table with feature-specific rendering, selection, focus, pagination
 
-### Consumer Tests
+### Test Philosophy
 
-- Features using DataTable work correctly
-- Migration from direct hook to context
+- Test behavior through public interfaces, not implementation
+- Use real implementations, not mocks (except system boundaries)
+- Tests should survive refactoring
 
-## Migration Path
+## Performance Considerations
 
-### From Direct Hook to Context
+### Memoization
 
-1. **Wrap with Provider**:
+- Column definitions should be memoized with useMemo
+- Render props should be stable (useCallback if needed)
+- TanStack Table handles internal memoization
 
-   ```typescript
-   // Before
-   function MyTable() {
-     const table = useDataTable({ columns, data });
-     return <div>{/* table UI */}</div>;
-   }
+### Virtualization
 
-   // After
-   function MyTable() {
-     return (
-       <DataTableProvider columns={columns} data={data}>
-         <MyTableContent />
-       </DataTableProvider>
-     );
-   }
-   ```
-
-2. **Update Consumers**:
-
-   ```typescript
-   function MyTableContent() {
-     const { table } = useDataTableContext();
-     return <div>{/* table UI */}</div>;
-   }
-   ```
-
-3. **Extract Subcomponents** (optional):
-   - Move toolbar to separate component
-   - Move pagination to separate component
-   - Share state via context
+- Not implemented yet
+- Consider react-virtual if tables exceed 1000 rows
+- Would be added as optional prop to DataTable
 
 ## Future Enhancements
 
-### Potential Additions (without breaking changes)
+### Potential Additions
 
-1. **Selection State Management**:
-   - Cross-page selection
-   - Bulk action support
-   - Selection persistence
+1. **Column visibility toggle**: Add to DataTablePagination or new DataTableToolbar
+2. **Export to CSV**: Add to DataTablePagination or new DataTableToolbar
+3. **Virtualization**: Add optional prop to DataTable for large datasets
+4. **Column resizing**: Add to DataTable with renderHeaderCell support
+5. **Inline editing**: Add through custom cell renderers in column definitions
 
-2. **Filter Presets**:
-   - Save/load filter configurations
-   - Share filters between users
+### When to Add Features
 
-3. **Column Visibility**:
-   - Persist column visibility
-   - Column reordering
+- Only add when multiple features need the same functionality
+- Prefer feature-specific implementations first
+- Extract common patterns only after seeing duplication
+- Maintain small interface principle
 
-4. **Export Functionality**:
-   - CSV export
-   - Excel export
-   - PDF export
+## Migration Guide
 
-5. **Advanced Sorting**:
-   - Multi-column sort
-   - Custom sort functions
-   - Sort persistence
+### From Inline Table to DataTable
 
-### Breaking Changes (if needed)
+1. Wrap existing code in DataTableProvider
+2. Replace `<table>` with `<DataTable>`
+3. Move header rendering to renderHeaderCell prop
+4. Move row rendering to renderRow prop
+5. Keep feature-specific logic (selection, focus, etc.) in feature layer
 
-Would require major version bump:
+### Example
 
-- Changing context value shape
-- Removing exposed state
-- Changing hook signature
+**Before**:
 
-## Verification Checklist
+```typescript
+<table>
+  <thead>
+    {table.getHeaderGroups().map(headerGroup => (
+      <tr>{/* headers */}</tr>
+    ))}
+  </thead>
+  <tbody>
+    {table.getRowModel().rows.map(row => (
+      <tr>{/* cells */}</tr>
+    ))}
+  </tbody>
+</table>
+```
 
-✅ **Separation of Concerns**:
+**After**:
 
-- Hook handles logic
-- Context handles state distribution
-- Components handle rendering
-
-✅ **Open/Closed Principle**:
-
-- Can add new state without modifying existing code
-- Can create custom hooks without changing context
-
-✅ **No Hidden Coupling**:
-
-- All dependencies explicit via imports
-- Type system enforces contracts
-
-✅ **Scalability**:
-
-- Context memoization prevents unnecessary re-renders
-- Can split contexts if performance issues arise
-
-✅ **SOLID Principles**:
-
-- Single Responsibility: Each module has one job
-- Dependency Inversion: Consumers depend on abstractions (context)
-- Interface Segregation: Consumers use only what they need
-
-## Lessons Learned
-
-1. **Start Simple**: Thin wrapper over existing hook was sufficient
-2. **Type Safety Matters**: Generic types caught issues early
-3. **Memoization is Key**: Prevents context re-render issues
-4. **Documentation is Critical**: Clear examples reduce confusion
-5. **Test Early**: Unit tests caught type mismatches before integration
+```typescript
+<DataTable<TData>
+  renderHeaderCell={(header) => <th>{/* custom header */}</th>}
+  renderRow={(row, idx) => <tr>{/* custom row */}</tr>}
+/>
+```
 
 ## References
 
 - [TanStack Table Documentation](https://tanstack.com/table/latest)
-- [React Context Best Practices](https://react.dev/learn/passing-data-deeply-with-context)
-- [TypeScript Generics Guide](https://www.typescriptlang.org/docs/handbook/2/generics.html)
+- [Deep Modules (A Philosophy of Software Design)](https://web.stanford.edu/~ouster/cgi-bin/book.php)
+- [Composition vs Configuration](https://kentcdodds.com/blog/composition-vs-configuration)

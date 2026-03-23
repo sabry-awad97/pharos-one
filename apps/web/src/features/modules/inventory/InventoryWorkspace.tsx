@@ -28,6 +28,7 @@ import {
   DataTableProvider,
   useDataTableContext,
   DataTablePagination,
+  DataTable,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
 
@@ -329,7 +330,6 @@ function InventoryWorkspaceContent({
   products: ProductStockSummary[];
 }) {
   const {
-    table,
     selectedRowIds,
     focusedRowId,
     setFocusedRowId,
@@ -357,124 +357,107 @@ function InventoryWorkspaceContent({
         {/* Table content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Scrollable table area */}
-          <div className="flex-1 overflow-auto custom-scrollbar bg-card">
-            <table
-              className="w-full border-collapse"
-              style={{
-                boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-              }}
-            >
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
+          <DataTable<ProductStockSummary>
+            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
+            className="w-full border-collapse"
+            style={{
+              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+            }}
+            renderHeaderCell={(header) => (
+              <th
+                key={header.id}
+                className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors group bg-muted/30 sticky top-0 z-10 border-b"
+                style={{
+                  width:
+                    header.column.getSize() !== 150
+                      ? header.column.getSize()
+                      : undefined,
+                  borderBottomColor: "#e0e0e0",
+                }}
+                onClick={header.column.getToggleSortingHandler()}
+              >
+                <div className="flex items-center gap-1.5">
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                  {header.column.getIsSorted() && (
+                    <span className="text-primary font-bold">
+                      {{
+                        asc: "↑",
+                        desc: "↓",
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </span>
+                  )}
+                </div>
+              </th>
+            )}
+            renderRow={(row, idx) => {
+              const selected = selectedRowIds.has(row.original.id);
+              const focused = focusedRowId === row.original.id;
+              return (
+                <TableRowContextMenu
+                  key={row.id}
+                  row={row.original}
+                  actions={customActions}
+                  actionGroups={actionGroups}
+                >
                   <tr
-                    key={headerGroup.id}
-                    className="bg-muted/30 sticky top-0 z-10 border-b"
-                    style={{ borderBottomColor: "#e0e0e0" }}
+                    data-selected={selected ? "true" : undefined}
+                    data-focused={focused ? "true" : undefined}
+                    className="border-b transition-[background]"
+                    style={{
+                      borderBottomColor: focused ? "transparent" : "#ebebeb",
+                      background: focused
+                        ? "oklch(from var(--primary) l c h / 0.07)"
+                        : selected
+                          ? "oklch(from var(--primary) l c h / 0.05)"
+                          : idx % 2 === 1
+                            ? "#f9f9f9"
+                            : "#ffffff",
+                      boxShadow: focused
+                        ? "inset 0 0 0 1.5px var(--primary)"
+                        : "none",
+                    }}
+                    onClick={(e) => handleRowClick(row.original.id, e)}
+                    onDoubleClick={() => handleRowDoubleClick(row.original.id)}
+                    onMouseEnter={(e) => {
+                      if (!focused) {
+                        (
+                          e.currentTarget as HTMLTableRowElement
+                        ).style.background = "#f0f6ff";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      (
+                        e.currentTarget as HTMLTableRowElement
+                      ).style.background = focused
+                        ? "oklch(from var(--primary) l c h / 0.07)"
+                        : selected
+                          ? "oklch(from var(--primary) l c h / 0.05)"
+                          : idx % 2 === 1
+                            ? "#f9f9f9"
+                            : "#ffffff";
+                    }}
                   >
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors group"
-                        style={{
-                          width:
-                            header.column.getSize() !== 150
-                              ? header.column.getSize()
-                              : undefined,
-                        }}
-                        onClick={header.column.getToggleSortingHandler()}
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="py-1.5 px-3 whitespace-nowrap"
                       >
-                        <div className="flex items-center gap-1.5">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                          {header.column.getIsSorted() && (
-                            <span className="text-primary font-bold">
-                              {{
-                                asc: "↑",
-                                desc: "↓",
-                              }[header.column.getIsSorted() as string] ?? null}
-                            </span>
-                          )}
-                        </div>
-                      </th>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
                     ))}
                   </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row, idx) => {
-                  const selected = selectedRowIds.has(row.original.id);
-                  const focused = focusedRowId === row.original.id;
-                  return (
-                    <TableRowContextMenu
-                      key={row.id}
-                      row={row.original}
-                      actions={customActions}
-                      actionGroups={actionGroups}
-                    >
-                      <tr
-                        data-selected={selected ? "true" : undefined}
-                        data-focused={focused ? "true" : undefined}
-                        className="border-b transition-[background]"
-                        style={{
-                          borderBottomColor: focused
-                            ? "transparent"
-                            : "#ebebeb",
-                          background: focused
-                            ? "oklch(from var(--primary) l c h / 0.07)"
-                            : selected
-                              ? "oklch(from var(--primary) l c h / 0.05)"
-                              : idx % 2 === 1
-                                ? "#f9f9f9"
-                                : "#ffffff",
-                          boxShadow: focused
-                            ? "inset 0 0 0 1.5px var(--primary)"
-                            : "none",
-                        }}
-                        onClick={(e) => handleRowClick(row.original.id, e)}
-                        onDoubleClick={() =>
-                          handleRowDoubleClick(row.original.id)
-                        }
-                        onMouseEnter={(e) => {
-                          if (!focused) {
-                            (
-                              e.currentTarget as HTMLTableRowElement
-                            ).style.background = "#f0f6ff";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          (
-                            e.currentTarget as HTMLTableRowElement
-                          ).style.background = focused
-                            ? "oklch(from var(--primary) l c h / 0.07)"
-                            : selected
-                              ? "oklch(from var(--primary) l c h / 0.05)"
-                              : idx % 2 === 1
-                                ? "#f9f9f9"
-                                : "#ffffff";
-                        }}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <td
-                            key={cell.id}
-                            className="py-1.5 px-3 whitespace-nowrap"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    </TableRowContextMenu>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                </TableRowContextMenu>
+              );
+            }}
+          />
 
           {/* Pagination controls */}
           <DataTablePagination />

@@ -36,3 +36,4 @@ export {
   DataTablePagination,
   type DataTablePaginationProps,
 } from "./components/DataTablePagination";
+export { DataTable, type DataTableProps } from "./components/DataTable";
