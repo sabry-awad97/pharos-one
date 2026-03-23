@@ -1,39 +1,80 @@
 /**
- * Batch data hooks using TanStack Query
+ * Batch data hooks using TanStack DB with ON-DEMAND mode
+ * Migrated from TanStack Query to support 100K+ records
  */
 
-import { useQuery } from "@tanstack/react-query";
-import {
-  fetchBatchesByProductId,
-  fetchBatchById,
-} from "../services/batch.service";
+import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLiveQuery, eq } from "@tanstack/react-db";
+import { createBatchCollection } from "../collections/batch.collection";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
+import type { QueryResult } from "./utils/hook-wrapper";
+import type { BatchWithRelations } from "../schema";
 
 /**
- * Hook to fetch batches for a specific product
+ * Hook to fetch batches for a specific product with live updates
+ *
+ * Uses TanStack DB on-demand mode for 100K+ record scalability.
+ * The hook API remains backward-compatible with TanStack Query.
+ *
+ * Performance targets:
+ * - <100ms initial load for filtered subset
+ * - <1ms for subsequent queries
+ * - <5MB memory for subset
  *
  * @example
  * const { data: batches, isLoading } = useBatches(5);
  */
-export function useBatches(productId: number) {
-  return useQuery({
-    queryKey: ["inventory", "batches", productId],
-    queryFn: () => fetchBatchesByProductId(productId),
-    enabled: !!productId,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
+export function useBatches(
+  productId: number,
+): QueryResult<BatchWithRelations[]> {
+  const queryClient = useQueryClient();
+
+  // Create collection with QueryClient (memoized)
+  const batchCollection = useMemo(
+    () => createBatchCollection(queryClient),
+    [queryClient],
+  );
+
+  const liveResult = useLiveQuery(
+    (q) =>
+      q
+        .from({ batch: batchCollection })
+        .where(({ batch }) => eq(batch.productId, productId)),
+    [productId, batchCollection],
+  );
+
+  return wrapLiveQuery(liveResult);
 }
 
 /**
- * Hook to fetch a single batch by ID
+ * Hook to fetch a single batch by ID with live updates
  *
  * @example
  * const { data: batch, isLoading } = useBatch(10);
  */
-export function useBatch(id: number) {
-  return useQuery({
-    queryKey: ["inventory", "batch", id],
-    queryFn: () => fetchBatchById(id),
-    enabled: !!id,
-    staleTime: 1000 * 60 * 2,
-  });
+export function useBatch(
+  id: number,
+): QueryResult<BatchWithRelations | undefined> {
+  const queryClient = useQueryClient();
+
+  // Create collection with QueryClient (memoized)
+  const batchCollection = useMemo(
+    () => createBatchCollection(queryClient),
+    [queryClient],
+  );
+
+  const liveResult = useLiveQuery(
+    (q) => {
+      if (!id) return undefined;
+
+      return q
+        .from({ batch: batchCollection })
+        .where(({ batch }) => eq(batch.id, id))
+        .findOne();
+    },
+    [id, batchCollection],
+  );
+
+  return wrapLiveQuery(liveResult);
 }
