@@ -5,7 +5,14 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Hash, Download, ChevronRight, Edit2, Trash2 } from "lucide-react";
+import {
+  Hash,
+  Download,
+  ChevronRight,
+  Edit2,
+  Trash2,
+  Filter,
+} from "lucide-react";
 import { CopyWrapper } from "@/components/copy-wrapper";
 import { flexRender, type ColumnDef } from "@tanstack/react-table";
 import { TableRowContextMenu } from "./components/TableRowContextMenu";
@@ -551,7 +558,12 @@ function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
       <div className="flex-1" />
 
       {/* Unified Filters */}
-      {filters.length > 0 && <DataTableFilters filters={filters} />}
+      <button
+        title="Filter"
+        className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
+      >
+        <Filter className="w-3.5 h-3.5" />
+      </button>
 
       <span className="w-px h-4 bg-border mx-0.5" />
       <button
@@ -559,7 +571,6 @@ function InventoryToolbar({ products }: { products: ProductStockSummary[] }) {
         className="flex items-center gap-1 h-[26px] px-2 rounded border border-transparent text-muted-foreground hover:bg-muted hover:border-border transition-colors text-[11px]"
       >
         <Download className="w-3.5 h-3.5" />
-        <span>Export</span>
       </button>
       <span className="w-px h-4 bg-border mx-0.5" />
       <button className="flex items-center gap-1.5 h-[26px] px-2.5 bg-primary text-primary-foreground rounded border-none text-xs cursor-pointer font-medium hover:opacity-90 transition-opacity">

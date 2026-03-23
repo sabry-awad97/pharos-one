@@ -3,6 +3,7 @@ import { Clock } from "lucide-react";
 import type { MenuType } from "../types";
 import { cn } from "@pharos-one/ui/lib/utils";
 import { FileMenu } from "./FileMenu";
+import { EditMenu } from "./EditMenu";
 
 interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   activeMenu: MenuType | null;
@@ -15,6 +16,13 @@ interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   onDuplicateTab?: () => void;
   onSplitView?: () => void;
   onCloseTab?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  onCut?: () => void;
+  onCopy?: () => void;
+  onPaste?: () => void;
+  onFind?: () => void;
+  onReplace?: () => void;
 }
 
 const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
@@ -31,6 +39,13 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       onDuplicateTab,
       onSplitView,
       onCloseTab,
+      onUndo,
+      onRedo,
+      onCut,
+      onCopy,
+      onPaste,
+      onFind,
+      onReplace,
       ...props
     },
     ref,
@@ -102,6 +117,20 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
             onDuplicateTab={onDuplicateTab}
             onSplitView={onSplitView}
             onCloseTab={onCloseTab}
+          />
+        )}
+
+        {/* Edit Menu Dropdown */}
+        {activeMenu === "edit" && (
+          <EditMenu
+            onClose={() => onMenuClick("edit")}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            onCut={onCut}
+            onCopy={onCopy}
+            onPaste={onPaste}
+            onFind={onFind}
+            onReplace={onReplace}
           />
         )}
       </div>
