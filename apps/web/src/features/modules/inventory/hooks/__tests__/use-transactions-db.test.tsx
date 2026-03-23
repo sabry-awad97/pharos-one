@@ -81,8 +81,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
 
   /**
    * Test 2: Transactions filtered by productId
-   * Note: This uses in-memory filtering since joins aren't implemented yet
-   * In mock data, batchId maps to productId for testing purposes
+   * Uses join-based filtering via batch.productId
    */
   it("useTransactions loads transactions for product", async () => {
     const productId = 1;
@@ -99,10 +98,10 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
       { timeout: 3000 },
     );
 
-    // CRITICAL: Verify all transactions belong to the requested productId
-    // In mock data, batchId maps to productId
+    // CRITICAL: Verify all transactions belong to the requested productId via batch join
     result.current.data!.forEach((transaction) => {
-      expect(transaction.batchId).toBe(productId);
+      expect(transaction.batch).not.toBeNull();
+      expect(transaction.batch?.productId).toBe(productId);
     });
   });
 
@@ -167,5 +166,58 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
 
     // CRITICAL: Verify load time is under 200ms
     expect(loadTime).toBeLessThan(200);
+  });
+
+  /**
+   * Test 5 (Tracer Bullet): Transactions include populated batch data
+   * Verifies that transactions returned include full batch objects with batch number and quantity
+   */
+  it("transactions include populated batch data", async () => {
+    const { result } = renderHook(() => useTransactions(), {
+      wrapper: createWrapper(),
+    });
+
+    // Wait for data to load
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
+
+    // CRITICAL: Verify batch data is populated (not null)
+    const firstTransaction = result.current.data![0];
+    expect(firstTransaction.batch).not.toBeNull();
+    expect(firstTransaction.batch).toHaveProperty("batchNumber");
+    expect(firstTransaction.batch).toHaveProperty("quantityRemaining");
+    expect(firstTransaction.batch?.batchNumber).toBeTruthy();
+  });
+
+  /**
+   * Test 6: ProductId filtering uses joins (not in-memory filter)
+   * Verifies that filtering by productId works through batch joins
+   */
+  it("productId filter returns transactions for correct product via joins", async () => {
+    const productId = 1;
+    const { result } = renderHook(() => useTransactions({ productId }), {
+      wrapper: createWrapper(),
+    });
+
+    // Wait for data to load
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
+
+    // CRITICAL: Verify all transactions belong to the product via batch.productId
+    // This proves filtering happens via joins, not in-memory
+    result.current.data!.forEach((transaction) => {
+      expect(transaction.batch).not.toBeNull();
+      expect(transaction.batch?.productId).toBe(productId);
+    });
   });
 });

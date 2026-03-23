@@ -3,7 +3,7 @@
  * Migrated from TanStack Query to support millions of records
  */
 
-import { useLiveQuery, gte, lte, and } from "@tanstack/react-db";
+import { useLiveQuery, eq, gte, lte, and } from "@tanstack/react-db";
 import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 import type { QueryResult } from "./utils/hook-wrapper";
@@ -22,6 +22,7 @@ export interface TransactionFilters {
  * Hook to fetch stock transactions with optional filters
  *
  * Uses TanStack DB on-demand mode for millions of records scalability.
+ * Returns transactions with full batch relations including product, category, and supplier data.
  * The hook API remains backward-compatible with TanStack Query.
  *
  * Performance targets:
@@ -32,6 +33,8 @@ export interface TransactionFilters {
  * @example
  * // All transactions (default subset)
  * const { data: transactions } = useTransactions();
+ * // transactions[0].batch.batchNumber
+ * // transactions[0].batch.product.name
  *
  * @example
  * // Filter by date range
@@ -41,8 +44,9 @@ export interface TransactionFilters {
  * });
  *
  * @example
- * // Filter by productId
+ * // Filter by productId (via batch join)
  * const { data: transactions } = useTransactions({ productId: 5 });
+ * // All transactions will have batch.productId === 5
  *
  * @example
  * // Combined filters
@@ -55,16 +59,43 @@ export interface TransactionFilters {
 export function useTransactions(
   filters?: TransactionFilters,
 ): QueryResult<StockTransactionWithRelations[]> {
-  const { transactions } = useCollections();
+  const { transactions, batches, products, categories, suppliers } =
+    useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
-      let query = q.from({ transaction: transactions });
+      let query = q
+        .from({ transaction: transactions })
+        .join(
+          { batch: batches },
+          ({ transaction, batch }) => eq(transaction.batchId, batch.id),
+          "left",
+        )
+        .join(
+          { product: products },
+          ({ batch, product }) => eq(batch.productId, product.id),
+          "left",
+        )
+        .join(
+          { category: categories },
+          ({ product, category }) => eq(product.categoryId, category.id),
+          "left",
+        )
+        .join(
+          { batchSupplier: suppliers },
+          ({ batch, batchSupplier }) => eq(batch.supplierId, batchSupplier.id),
+          "left",
+        )
+        .join(
+          { productSupplier: suppliers },
+          ({ product, productSupplier }) =>
+            eq(product.defaultSupplierId, productSupplier.id),
+          "left",
+        );
 
-      // Apply date range filters using TanStack DB operators
-      // ISO date strings can be compared lexicographically when properly formatted
-      if (filters?.startDate || filters?.endDate) {
-        query = query.where(({ transaction }) => {
+      // Apply filters using TanStack DB operators
+      if (filters?.startDate || filters?.endDate || filters?.productId) {
+        query = query.where(({ transaction, batch }) => {
           const conditions = [];
 
           if (filters.startDate) {
@@ -79,40 +110,57 @@ export function useTransactions(
             conditions.push(lte(transaction.timestamp, endDateTime));
           }
 
-          // Combine conditions with AND
-          if (conditions.length === 1) {
-            return conditions[0];
+          if (filters.productId) {
+            // Filter by productId via batch join
+            conditions.push(eq(batch.productId, filters.productId));
           }
-          if (conditions.length === 2) {
-            return and(conditions[0], conditions[1]);
-          }
-          return true;
+
+          // Combine all conditions with AND
+          return conditions.length === 0
+            ? true
+            : conditions.reduce((acc, condition) => and(acc, condition));
         });
       }
 
-      return query;
+      return query.select(
+        ({
+          transaction,
+          batch,
+          product,
+          category,
+          batchSupplier,
+          productSupplier,
+        }) => ({
+          ...transaction,
+          batch: (batch
+            ? {
+                ...batch,
+                product: product
+                  ? {
+                      ...product,
+                      category: category ?? null,
+                      defaultSupplier: productSupplier ?? null,
+                    }
+                  : null,
+                supplier: batchSupplier ?? null,
+              }
+            : null) as StockTransactionWithRelations["batch"],
+        }),
+      );
     },
-    [filters?.startDate, filters?.endDate, transactions],
+    [
+      filters?.startDate,
+      filters?.endDate,
+      filters?.productId,
+      transactions,
+      batches,
+      products,
+      categories,
+      suppliers,
+    ],
   );
 
-  // Apply productId filter in-memory if specified
-  // TODO: Move this to TanStack DB query when joins support it
-  const filteredResult = {
-    ...liveResult,
-    data: (filters?.productId
-      ? liveResult.data?.filter((t) => {
-          // This would need to join with batches to get productId
-          // For now, we'll assume batchId maps to productId (mock data)
-          return t.batchId === filters.productId;
-        })
-      : liveResult.data
-    )?.map((t) => ({
-      ...t,
-      batch: null, // TODO: Add proper join to get batch data
-    })),
-  };
-
-  return wrapLiveQuery(filteredResult);
+  return wrapLiveQuery(liveResult);
 }
 
 /**
