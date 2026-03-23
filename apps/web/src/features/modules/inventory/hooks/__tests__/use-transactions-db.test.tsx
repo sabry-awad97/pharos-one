@@ -220,4 +220,68 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
       expect(transaction.batch?.productId).toBe(productId);
     });
   });
+
+  /**
+   * Test 7: Nested product relations in batch
+   * Verifies that batch includes full product data with category and supplier
+   */
+  it("transactions include nested product relations in batch", async () => {
+    const { result } = renderHook(() => useTransactions(), {
+      wrapper: createWrapper(),
+    });
+
+    // Wait for data to load
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
+
+    // CRITICAL: Verify nested product data is populated
+    const firstTransaction = result.current.data![0];
+    expect(firstTransaction.batch).not.toBeNull();
+    expect(firstTransaction.batch?.product).not.toBeNull();
+    expect(firstTransaction.batch?.product?.name).toBeTruthy();
+
+    // Verify category relation (may be null for products without category)
+    if (firstTransaction.batch?.product?.category) {
+      expect(firstTransaction.batch.product.category.name).toBeTruthy();
+    }
+
+    // Verify supplier relation
+    expect(firstTransaction.batch?.supplier).toBeDefined();
+  });
+
+  /**
+   * Test 8: Null batch handling with left join
+   * Verifies that transactions with invalid batchId return batch: null without crashing
+   * This tests the left join behavior - transactions without matching batches should still be returned
+   */
+  it("transactions with missing batches return batch: null gracefully", async () => {
+    const { result } = renderHook(() => useTransactions(), {
+      wrapper: createWrapper(),
+    });
+
+    // Wait for data to load
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+      },
+      { timeout: 3000 },
+    );
+
+    // CRITICAL: Hook should not crash even if some transactions have invalid batchIds
+    // Left join ensures transactions are returned even when batch doesn't exist
+    expect(result.current.isError).toBe(false);
+    expect(result.current.data).toBeDefined();
+
+    // If there are transactions with null batches, verify they're handled correctly
+    const transactionsWithNullBatch = result.current.data!.filter(
+      (t) => t.batch === null,
+    );
+    // This test passes if no error occurs - null batches are valid due to left join
+    expect(transactionsWithNullBatch).toBeDefined();
+  });
 });

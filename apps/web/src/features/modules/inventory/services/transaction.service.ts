@@ -1220,7 +1220,7 @@ export async function fetchTransactionsByProductId(
 
   // Filter transactions by product ID through batch relation
   const transactions = MOCK_TRANSACTIONS.filter(
-    (t) => t.batch.productId === productId,
+    (t) => t.batch?.productId === productId,
   );
 
   // Validate data with Zod schema

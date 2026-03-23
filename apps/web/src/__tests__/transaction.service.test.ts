@@ -32,6 +32,6 @@ describe("Transaction Service", () => {
     expect(transactions[0].userId).toBeTypeOf("number");
     expect(transactions[0].timestamp).toBeTypeOf("string");
     expect(transactions[0].batch).toBeTypeOf("object");
-    expect(transactions[0].batch.product).toBeTypeOf("object");
+    expect(transactions[0].batch?.product).toBeTypeOf("object");
   });
 });
