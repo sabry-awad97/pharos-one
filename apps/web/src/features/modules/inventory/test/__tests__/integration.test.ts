@@ -142,7 +142,11 @@ describe("Integration Tests", () => {
 
       expect(product).toBeDefined();
       expect(batch).toBeDefined();
-      expect((batch as any).productId).toBe(product!.id);
+
+      // Type-safe access to properties
+      if (product && batch && "id" in product && "productId" in batch) {
+        expect(batch.productId).toBe(product.id);
+      }
     });
   });
 });

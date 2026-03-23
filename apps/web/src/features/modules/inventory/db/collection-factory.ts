@@ -142,14 +142,20 @@ export function createCollection<TData extends { id: number }>(
  */
 export function createCollectionsFromDataset<
   TDataset extends Record<string, Array<{ id: number }>>,
->(dataset: TDataset, mode: CollectionMode): Map<string, Collection<unknown>> {
-  const collections = new Map<string, Collection<unknown>>();
+>(
+  dataset: TDataset,
+  mode: CollectionMode,
+): Map<string, Collection<TDataset[keyof TDataset][number]>> {
+  const collections = new Map<
+    string,
+    Collection<TDataset[keyof TDataset][number]>
+  >();
 
   for (const [name, data] of Object.entries(dataset)) {
     const collection = createCollection({
       name,
       mode,
-      initialData: data,
+      initialData: data as TDataset[keyof TDataset],
     });
     collections.set(name, collection);
   }

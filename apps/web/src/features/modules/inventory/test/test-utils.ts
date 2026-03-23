@@ -28,6 +28,7 @@ export interface TestDataset {
   suppliers: Supplier[];
   products: Product[];
   batches: Batch[];
+  [key: string]: Array<{ id: number }>;
 }
 
 /**
