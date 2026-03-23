@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Clock } from "lucide-react";
-import type { MenuType } from "../types";
+import type { MenuType, DensityMode } from "../types";
 import { cn } from "@pharos-one/ui/lib/utils";
 import { FileMenu } from "./FileMenu";
 import { EditMenu } from "./EditMenu";
@@ -30,6 +30,8 @@ interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
+  density?: DensityMode;
+  onSetDensity?: (mode: DensityMode) => void;
 }
 
 const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
@@ -59,6 +61,8 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       onZoomIn,
       onZoomOut,
       onResetZoom,
+      density,
+      onSetDensity,
       ...props
     },
     ref,
@@ -197,6 +201,8 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
               onZoomIn={onZoomIn}
               onZoomOut={onZoomOut}
               onResetZoom={onResetZoom}
+              density={density}
+              onSetDensity={onSetDensity}
             />
           </div>
         )}

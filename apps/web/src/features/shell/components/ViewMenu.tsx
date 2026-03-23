@@ -14,8 +14,10 @@ import {
   Palette,
   ChevronRight,
   Check,
+  Rows3,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import type { DensityMode } from "../types";
 
 interface ViewMenuProps {
   onClose: () => void;
@@ -25,6 +27,8 @@ interface ViewMenuProps {
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
+  density?: DensityMode;
+  onSetDensity?: (mode: DensityMode) => void;
 }
 
 interface MenuItemProps {
@@ -98,8 +102,11 @@ export function ViewMenu({
   onZoomIn,
   onZoomOut,
   onResetZoom,
+  density = "comfortable",
+  onSetDensity,
 }: ViewMenuProps) {
   const [themeSubmenuOpen, setThemeSubmenuOpen] = useState(false);
+  const [densitySubmenuOpen, setDensitySubmenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   return (
@@ -143,6 +150,56 @@ export function ViewMenu({
             onClose();
           }}
         />
+        <MenuDivider />
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setDensitySubmenuOpen(true)}
+          onMouseLeave={() => setDensitySubmenuOpen(false)}
+        >
+          <MenuItem icon={Rows3} label="Density" arrow />
+          {densitySubmenuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                left: "100%",
+                top: 0,
+                width: 200,
+                background: "#ffffff",
+                border: "1px solid #d1d1d1",
+                boxShadow:
+                  "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
+                borderRadius: 6,
+                padding: "4px 0",
+                zIndex: 30,
+              }}
+            >
+              <MenuItem
+                icon={density === "compact" ? Check : Rows3}
+                label="Compact"
+                onClick={() => {
+                  onSetDensity?.("compact");
+                  onClose();
+                }}
+              />
+              <MenuItem
+                icon={density === "comfortable" ? Check : Rows3}
+                label="Comfortable"
+                onClick={() => {
+                  onSetDensity?.("comfortable");
+                  onClose();
+                }}
+              />
+              <MenuItem
+                icon={density === "spacious" ? Check : Rows3}
+                label="Spacious"
+                onClick={() => {
+                  onSetDensity?.("spacious");
+                  onClose();
+                }}
+              />
+            </div>
+          )}
+        </div>
         <MenuDivider />
         <div
           style={{ position: "relative" }}

@@ -54,6 +54,8 @@ export function AppLayout({
     zoomIn,
     zoomOut,
     resetZoom,
+    density,
+    setDensity,
   } = useViewState();
 
   // Close menu when clicking outside
@@ -129,6 +131,8 @@ export function AppLayout({
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetZoom={resetZoom}
+          density={density}
+          onSetDensity={setDensity}
         />
 
         {/* Main content area - flex-1 with min-h-0 for proper scrolling */}

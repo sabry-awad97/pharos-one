@@ -85,10 +85,11 @@ export function DataTable<TData>({
                 return (
                   <th
                     key={header.id}
-                    className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap bg-muted/30 sticky top-0 z-10 border-b"
+                    className="text-left text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap bg-muted/30 sticky top-0 z-10 border-b"
                     style={{
                       width,
                       borderBottomColor: "#e0e0e0",
+                      padding: "var(--density-padding)",
                     }}
                   >
                     {header.isPlaceholder

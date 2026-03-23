@@ -33,6 +33,7 @@ import {
   type ColumnFilter,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
+import { useViewState } from "@/features/shell";
 
 const STORAGE_KEY = "inventory-page-size";
 
@@ -97,6 +98,7 @@ const statusDotClass: Record<string, string> = {
  */
 export function InventoryWorkspace() {
   const { data: products = [], isLoading, error } = useProducts();
+  const { density } = useViewState();
 
   const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
     number | null
@@ -348,6 +350,7 @@ export function InventoryWorkspace() {
         setStockMovementsPanelProductId={setStockMovementsPanelProductId}
         customActions={customActions}
         products={products}
+        density={density}
       />
     </DataTableProvider>
   );
@@ -364,6 +367,7 @@ function InventoryWorkspaceContent({
   setStockMovementsPanelProductId,
   customActions,
   products,
+  density,
 }: {
   isPanelOpen: boolean;
   batchDetailsPanelProductId: number | null;
@@ -372,6 +376,7 @@ function InventoryWorkspaceContent({
   setStockMovementsPanelProductId: (id: number | null) => void;
   customActions: ReturnType<typeof useInventoryActions>;
   products: ProductStockSummary[];
+  density: string;
 }) {
   const {
     selectedRowIds,
@@ -399,7 +404,10 @@ function InventoryWorkspaceContent({
         <InventoryToolbar products={products} />
 
         {/* Table content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div
+          className="flex-1 flex flex-col overflow-hidden"
+          data-density={density}
+        >
           {/* Scrollable table area */}
           <DataTable<ProductStockSummary>
             containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
@@ -458,7 +466,10 @@ function InventoryWorkspaceContent({
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
-                        className="py-1.5 px-3 whitespace-nowrap"
+                        className="whitespace-nowrap"
+                        style={{
+                          padding: "var(--density-padding)",
+                        }}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

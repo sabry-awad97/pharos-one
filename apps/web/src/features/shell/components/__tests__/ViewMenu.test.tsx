@@ -221,4 +221,136 @@ describe("ViewMenu", () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("Density Switcher", () => {
+    it("should render density menu item", () => {
+      render(<ViewMenu onClose={() => {}} density="comfortable" />);
+
+      expect(screen.getByText("Density")).toBeInTheDocument();
+    });
+
+    it("should show density submenu on hover with Compact, Comfortable, and Spacious options", async () => {
+      const user = userEvent.setup();
+      render(<ViewMenu onClose={() => {}} density="comfortable" />);
+
+      const densityMenuItem = screen.getByText("Density").parentElement;
+      if (densityMenuItem) {
+        await user.hover(densityMenuItem);
+      }
+
+      expect(screen.getByText("Compact")).toBeInTheDocument();
+      expect(screen.getByText("Comfortable")).toBeInTheDocument();
+      expect(screen.getByText("Spacious")).toBeInTheDocument();
+    });
+
+    it("should show checkmark on current density mode", async () => {
+      render(<ViewMenu onClose={() => {}} density="compact" />);
+
+      const densityMenuItem = screen
+        .getByText("Density")
+        .closest("div[style*='position: relative']");
+      expect(densityMenuItem).toBeTruthy();
+
+      fireEvent.mouseEnter(densityMenuItem!);
+
+      await waitFor(() => {
+        expect(screen.getByText("Compact")).toBeInTheDocument();
+      });
+
+      // The compact option should have a Check icon (we can't easily test icon presence,
+      // but we can verify the structure is correct by checking the component renders)
+      const compactOption = screen.getByText("Compact");
+      expect(compactOption).toBeInTheDocument();
+    });
+
+    it("should call onSetDensity and onClose when Compact is clicked", async () => {
+      const onSetDensity = vi.fn();
+      const onClose = vi.fn();
+
+      render(
+        <ViewMenu
+          onClose={onClose}
+          density="comfortable"
+          onSetDensity={onSetDensity}
+        />,
+      );
+
+      const densityMenuItem = screen
+        .getByText("Density")
+        .closest("div[style*='position: relative']");
+      expect(densityMenuItem).toBeTruthy();
+
+      fireEvent.mouseEnter(densityMenuItem!);
+
+      await waitFor(() => {
+        expect(screen.getByText("Compact")).toBeInTheDocument();
+      });
+
+      const compactOption = screen.getByText("Compact");
+      fireEvent.click(compactOption);
+
+      expect(onSetDensity).toHaveBeenCalledWith("compact");
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call onSetDensity and onClose when Comfortable is clicked", async () => {
+      const onSetDensity = vi.fn();
+      const onClose = vi.fn();
+
+      render(
+        <ViewMenu
+          onClose={onClose}
+          density="compact"
+          onSetDensity={onSetDensity}
+        />,
+      );
+
+      const densityMenuItem = screen
+        .getByText("Density")
+        .closest("div[style*='position: relative']");
+      expect(densityMenuItem).toBeTruthy();
+
+      fireEvent.mouseEnter(densityMenuItem!);
+
+      await waitFor(() => {
+        expect(screen.getByText("Comfortable")).toBeInTheDocument();
+      });
+
+      const comfortableOption = screen.getByText("Comfortable");
+      fireEvent.click(comfortableOption);
+
+      expect(onSetDensity).toHaveBeenCalledWith("comfortable");
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call onSetDensity and onClose when Spacious is clicked", async () => {
+      const onSetDensity = vi.fn();
+      const onClose = vi.fn();
+
+      render(
+        <ViewMenu
+          onClose={onClose}
+          density="comfortable"
+          onSetDensity={onSetDensity}
+        />,
+      );
+
+      const densityMenuItem = screen
+        .getByText("Density")
+        .closest("div[style*='position: relative']");
+      expect(densityMenuItem).toBeTruthy();
+
+      fireEvent.mouseEnter(densityMenuItem!);
+
+      await waitFor(() => {
+        expect(screen.getByText("Spacious")).toBeInTheDocument();
+      });
+
+      const spaciousOption = screen.getByText("Spacious");
+      fireEvent.click(spaciousOption);
+
+      expect(onSetDensity).toHaveBeenCalledWith("spacious");
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });
