@@ -2,7 +2,7 @@
  * DataTableEmptyState Component
  * Shows a friendly message when the table has no data
  *
- * ARCHITECTURE: Standalone component for empty states
+ * ARCHITECTURE: Standalone component for empty states using shadcn/ui Empty
  * - Displays icon and message
  * - Supports filtered vs. no data states
  * - Provides action to clear filters
@@ -15,7 +15,16 @@
  * ```
  */
 
-import { Package } from "lucide-react";
+import { Package, Search } from "lucide-react";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@pharos-one/ui/components/empty";
+import { Button } from "@pharos-one/ui/components/button";
 
 /**
  * Props for DataTableEmptyState
@@ -70,25 +79,31 @@ export function DataTableEmptyState({
     ? "Try adjusting your filters to see more results"
     : "Add items to get started";
 
+  const defaultIcon = hasFilters ? (
+    <Search className="w-8 h-8 text-muted-foreground" />
+  ) : (
+    <Package className="w-8 h-8 text-muted-foreground" />
+  );
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 bg-card">
-      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-        {icon || <Package className="w-8 h-8 text-muted-foreground" />}
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        {message || defaultMessage}
-      </h3>
-      <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
-        {defaultDescription}
-      </p>
+    <Empty className="bg-card">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">{icon || defaultIcon}</EmptyMedia>
+        <EmptyTitle>{message || defaultMessage}</EmptyTitle>
+        <EmptyDescription>{defaultDescription}</EmptyDescription>
+      </EmptyHeader>
       {hasFilters && onClearFilters && (
-        <button
-          onClick={onClearFilters}
-          className="text-sm text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 py-1"
-        >
-          Clear all filters
-        </button>
+        <EmptyContent>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClearFilters}
+            className="text-xs"
+          >
+            Clear all filters
+          </Button>
+        </EmptyContent>
       )}
-    </div>
+    </Empty>
   );
 }

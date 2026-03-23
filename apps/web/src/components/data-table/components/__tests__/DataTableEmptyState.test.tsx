@@ -15,16 +15,12 @@ describe("DataTableEmptyState", () => {
     it("should render icon", () => {
       render(<DataTableEmptyState />);
 
-      // Check for icon container
+      // Check for icon container using shadcn/ui Empty structure
       const iconContainer = screen.getByText(
         "No items to display",
       ).previousElementSibling;
-      expect(iconContainer).toHaveClass(
-        "w-16",
-        "h-16",
-        "rounded-full",
-        "bg-muted",
-      );
+      expect(iconContainer).toHaveClass("mb-2", "bg-muted");
+      expect(iconContainer).toHaveAttribute("data-slot", "empty-icon");
     });
 
     it("should not show clear filters button when no filters", () => {
@@ -123,8 +119,8 @@ describe("DataTableEmptyState", () => {
         name: /clear all filters/i,
       });
       expect(clearButton).toHaveAttribute("class");
-      expect(clearButton.className).toContain("focus:outline-none");
-      expect(clearButton.className).toContain("focus:ring-2");
+      // shadcn/ui Button uses focus-visible:ring-2 instead of focus:ring-2
+      expect(clearButton.className).toContain("focus-visible:ring-2");
     });
   });
 
@@ -139,13 +135,15 @@ describe("DataTableEmptyState", () => {
         "items-center",
         "justify-center",
       );
+      expect(mainDiv).toHaveAttribute("data-slot", "empty");
     });
 
     it("should have proper spacing", () => {
       const { container } = render(<DataTableEmptyState />);
 
       const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv).toHaveClass("py-12", "px-4");
+      // shadcn/ui Empty uses p-6 instead of py-12 px-4
+      expect(mainDiv).toHaveClass("p-6");
     });
   });
 });
