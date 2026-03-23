@@ -148,6 +148,7 @@ export function TableRowContextMenu({
                     return (
                       <CommandItem
                         key={action.id}
+                        className="data-selected:bg-[#f0f6ff]"
                         onSelect={() => {
                           if (!isDisabled) {
                             action.handler(row);

@@ -13,7 +13,7 @@
  */
 
 import { useMemo } from "react";
-import { Edit, Package, Clock, TrendingUp } from "lucide-react";
+import { Edit, Package, Clock, TrendingUp, Copy } from "lucide-react";
 import type { InventoryAction, ActionGroup } from "../types/actions";
 
 export interface UseInventoryActionsProps {
@@ -92,6 +92,21 @@ export function useInventoryActions({
         },
       },
 
+      {
+        id: "duplicate-product",
+        label: "Duplicate Product",
+        group: "edit",
+        shortcut: "⌘D",
+        icon: Copy,
+        isVisible: () => true,
+        handler: (row) => {
+          setTimeout(() => {
+            console.log("Duplicate Product:", row);
+            // TODO: Create a copy of the product with new SKU
+          }, 100);
+        },
+      },
+
       // ========================================================================
       // VIEW GROUP
       // ========================================================================
@@ -100,7 +115,7 @@ export function useInventoryActions({
         id: "batch-details",
         label: "Batch Details",
         group: "view",
-        shortcut: "⌘D",
+        shortcut: "⌘B",
         icon: Package,
         isVisible: (row) => row.batchCount > 0,
         handler: (row) => {

@@ -5,7 +5,15 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Hash, Filter, Download, RefreshCw, ChevronRight } from "lucide-react";
+import {
+  Hash,
+  Filter,
+  Download,
+  RefreshCw,
+  ChevronRight,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -357,6 +365,35 @@ export function InventoryWorkspace({
         cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
         size: 100,
       },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+          <div className="flex gap-0.5">
+            <button
+              title="Edit"
+              className="w-6 h-6 flex items-center justify-center rounded border border-transparent transition-colors text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("Edit product:", row.original.id);
+              }}
+            >
+              <Edit2 className="w-3 h-3" />
+            </button>
+            <button
+              title="Delete"
+              className="w-6 h-6 flex items-center justify-center rounded border border-transparent transition-colors text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("Delete product:", row.original.id);
+              }}
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ),
+        size: 56,
+      },
     ],
     [],
   );
@@ -488,6 +525,7 @@ export function InventoryWorkspace({
                       "Category",
                       "Supplier",
                       "Status",
+                      "",
                     ].map((header) => (
                       <th
                         key={header}
@@ -554,6 +592,13 @@ export function InventoryWorkspace({
                       {/* Status */}
                       <td className="py-1.5 px-3">
                         <div className="h-4 bg-muted rounded animate-pulse w-20" />
+                      </td>
+                      {/* Actions */}
+                      <td className="py-1.5 px-2">
+                        <div className="flex gap-0.5">
+                          <div className="w-6 h-6 bg-muted rounded animate-pulse" />
+                          <div className="w-6 h-6 bg-muted rounded animate-pulse" />
+                        </div>
                       </td>
                     </tr>
                   ))}
