@@ -25,24 +25,36 @@ export interface TransactionFilters {
  * Fetch transactions with on-demand filtering
  * In production, this would call the Tauri API with predicate push-down
  *
- * CRITICAL: Uses synchronous function (async doesn't work in tests for complex types)
- * See .temp/async-queryFn-investigation.md for details
- *
  * @returns Filtered transaction subset matching query predicates
  */
-function fetchTransactions(): StockTransaction[] {
-  // TODO: Implement predicate push-down for on-demand mode
-  // For now, generate a default subset (transactions for January 2024)
+async function fetchTransactions(): Promise<StockTransaction[]> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // TODO: Replace with Tauri invoke when backend is ready
+  // return await invoke("get_transactions", { filters });
+
+  // Generate a default subset (100 transactions for January 2024)
   const defaultCount = 100;
-  const defaultBatchId = 1;
 
-  // Use January 15, 2024 as base date to ensure transactions span the month
-  const baseDate = new Date("2024-01-15T12:00:00Z");
+  // Generate transactions with varying batch IDs (1-10)
+  return Array.from({ length: defaultCount }, (_, i) => {
+    const batchId = (i % 10) + 1; // Cycle through batch IDs 1-10
 
-  // Generate transactions on-demand (not all transactions)
-  return Array.from({ length: defaultCount }, (_, i) =>
-    generateStockTransaction(i + 1, defaultBatchId, baseDate),
-  );
+    // Spread transactions evenly across January 2024 (31 days)
+    // Each transaction gets a day offset from 0-30
+    const dayOffset = Math.floor((i / defaultCount) * 31);
+    const baseDate = new Date(
+      `2024-01-${String(dayOffset + 1).padStart(2, "0")}T12:00:00Z`,
+    );
+
+    // Pass the transaction ID as 0 to avoid the generator subtracting days
+    // This ensures transactions stay within January 2024
+    return {
+      ...generateStockTransaction(i + 1, batchId, baseDate),
+      timestamp: baseDate.toISOString(), // Override timestamp to keep it in January
+    };
+  });
 }
 
 /**

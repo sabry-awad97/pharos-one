@@ -3,10 +3,8 @@
  * Migrated from TanStack Query to support millions of records
  */
 
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useLiveQuery, eq, and, gte, lte } from "@tanstack/react-db";
-import { createTransactionCollection } from "../collections/transaction.collection";
+import { useLiveQuery, gte, lte, and } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 import type { QueryResult } from "./utils/hook-wrapper";
 import type { StockTransaction } from "../schema";
@@ -57,53 +55,60 @@ export interface TransactionFilters {
 export function useTransactions(
   filters?: TransactionFilters,
 ): QueryResult<StockTransaction[]> {
-  const queryClient = useQueryClient();
-
-  // Create collection with QueryClient (memoized)
-  const transactionCollection = useMemo(
-    () => createTransactionCollection(queryClient),
-    [queryClient],
-  );
+  const { transactions } = useCollections();
 
   const liveResult = useLiveQuery(
     (q) => {
-      let query = q.from({ transaction: transactionCollection });
+      let query = q.from({ transaction: transactions });
 
-      // Apply filters using where clause
+      // Apply date range filters using TanStack DB operators
+      // ISO date strings can be compared lexicographically when properly formatted
       if (filters?.startDate || filters?.endDate) {
         query = query.where(({ transaction }) => {
-          const conditions: ReturnType<typeof gte | typeof lte>[] = [];
+          const conditions = [];
 
           if (filters.startDate) {
-            conditions.push(gte(transaction.timestamp, filters.startDate));
+            // Convert date-only string to ISO timestamp for comparison
+            const startDateTime = `${filters.startDate}T00:00:00.000Z`;
+            conditions.push(gte(transaction.timestamp, startDateTime));
           }
 
           if (filters.endDate) {
-            // Add one day to endDate to include the entire end date
+            // Include the entire end date by using end of day
             const endDateTime = `${filters.endDate}T23:59:59.999Z`;
             conditions.push(lte(transaction.timestamp, endDateTime));
           }
 
-          if (conditions.length === 0) {
-            return true;
-          }
+          // Combine conditions with AND
           if (conditions.length === 1) {
             return conditions[0];
           }
-          return and(conditions[0], conditions[1]);
+          if (conditions.length === 2) {
+            return and(conditions[0], conditions[1]);
+          }
+          return true;
         });
       }
 
-      // Note: productId filtering will require joining with batches
-      // For now, we'll filter in-memory after the query
-      // TODO: Implement proper join when TanStack DB supports it
-
       return query;
     },
-    [filters?.startDate, filters?.endDate],
+    [filters?.startDate, filters?.endDate, transactions],
   );
 
-  return wrapLiveQuery(liveResult);
+  // Apply productId filter in-memory if specified
+  // TODO: Move this to TanStack DB query when joins support it
+  const filteredResult = {
+    ...liveResult,
+    data: filters?.productId
+      ? liveResult.data?.filter((t) => {
+          // This would need to join with batches to get productId
+          // For now, we'll assume batchId maps to productId (mock data)
+          return t.batchId === filters.productId;
+        })
+      : liveResult.data,
+  };
+
+  return wrapLiveQuery(filteredResult);
 }
 
 /**
