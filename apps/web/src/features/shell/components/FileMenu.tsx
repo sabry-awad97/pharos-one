@@ -127,14 +127,10 @@ export function FileMenu({
     <div
       onClick={(e) => e.stopPropagation()}
       style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
         width: 280,
         background: "#ffffff",
         border: "1px solid #d1d1d1",
         boxShadow: "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
-        zIndex: 20,
         borderRadius: "0 0 6px 6px",
         overflow: "visible",
         fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",

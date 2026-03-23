@@ -66,6 +66,16 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       "help",
     ];
 
+    const menuRefs = React.useRef<Record<MenuType, HTMLButtonElement | null>>(
+      {} as Record<MenuType, HTMLButtonElement | null>,
+    );
+
+    const getMenuOffset = (menu: MenuType): number => {
+      const menuElement = menuRefs.current[menu];
+      if (!menuElement) return 0;
+      return menuElement.offsetLeft;
+    };
+
     return (
       <div
         ref={ref}
@@ -86,6 +96,9 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
         {menuItems.map((menu) => (
           <MenuBarItem
             key={menu}
+            ref={(el) => {
+              menuRefs.current[menu] = el;
+            }}
             label={menu.charAt(0).toUpperCase() + menu.slice(1)}
             active={activeMenu === menu}
             isFileMenu={menu === "file"}
@@ -118,38 +131,65 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
 
         {/* File Menu Dropdown */}
         {activeMenu === "file" && (
-          <FileMenu
-            onClose={() => onMenuClick("file")}
-            onNewWorkspace={onNewWorkspace}
-            onPinActiveTab={onPinActiveTab}
-            onDuplicateTab={onDuplicateTab}
-            onSplitView={onSplitView}
-            onCloseTab={onCloseTab}
-          />
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: getMenuOffset("file"),
+              zIndex: 20,
+            }}
+          >
+            <FileMenu
+              onClose={() => onMenuClick("file")}
+              onNewWorkspace={onNewWorkspace}
+              onPinActiveTab={onPinActiveTab}
+              onDuplicateTab={onDuplicateTab}
+              onSplitView={onSplitView}
+              onCloseTab={onCloseTab}
+            />
+          </div>
         )}
 
         {/* Edit Menu Dropdown */}
         {activeMenu === "edit" && (
-          <EditMenu
-            onClose={() => onMenuClick("edit")}
-            onUndo={onUndo}
-            onRedo={onRedo}
-            onCut={onCut}
-            onCopy={onCopy}
-            onPaste={onPaste}
-            onFind={onFind}
-            onReplace={onReplace}
-          />
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: getMenuOffset("edit"),
+              zIndex: 20,
+            }}
+          >
+            <EditMenu
+              onClose={() => onMenuClick("edit")}
+              onUndo={onUndo}
+              onRedo={onRedo}
+              onCut={onCut}
+              onCopy={onCopy}
+              onPaste={onPaste}
+              onFind={onFind}
+              onReplace={onReplace}
+            />
+          </div>
         )}
 
         {/* View Menu Dropdown */}
         {activeMenu === "view" && (
-          <ViewMenu
-            onClose={() => onMenuClick("view")}
-            onToggleSidebar={onToggleSidebar}
-            onToggleStatusBar={onToggleStatusBar}
-            onToggleToolbar={onToggleToolbar}
-          />
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: getMenuOffset("view"),
+              zIndex: 20,
+            }}
+          >
+            <ViewMenu
+              onClose={() => onMenuClick("view")}
+              onToggleSidebar={onToggleSidebar}
+              onToggleStatusBar={onToggleStatusBar}
+              onToggleToolbar={onToggleToolbar}
+            />
+          </div>
         )}
       </div>
     );
