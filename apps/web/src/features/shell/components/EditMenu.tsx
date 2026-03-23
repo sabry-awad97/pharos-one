@@ -114,6 +114,7 @@ export function EditMenu({
         borderRadius: "0 0 6px 6px",
         overflow: "visible",
         fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+        zIndex: 30,
       }}
     >
       {/* Menu items */}
