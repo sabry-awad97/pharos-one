@@ -26,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@pharos-one/ui/components/select";
+import { usePaginationKeyboard } from "../hooks/usePaginationKeyboard";
+import { useState, useEffect } from "react";
 
 /**
  * Page size options
@@ -120,6 +122,18 @@ export function DataTablePagination({
   const pageCount = table.getPageCount();
   const totalItems = table.getFilteredRowModel().rows.length;
 
+  // Keyboard navigation
+  const { handleKeyDown } = usePaginationKeyboard({ table });
+
+  // Screen reader announcement state
+  const [announcement, setAnnouncement] = useState<string>("");
+
+  // Update announcement when page changes
+  useEffect(() => {
+    const currentPage = pageIndex + 1;
+    setAnnouncement(`Navigated to page ${currentPage} of ${pageCount}`);
+  }, [pageIndex, pageCount]);
+
   return (
     <div className="flex-none flex items-center justify-between px-3 py-3 border-t border-border bg-card">
       {/* Left side: Page size selector and go to page */}
@@ -174,12 +188,16 @@ export function DataTablePagination({
       </div>
 
       {/* Center: Pagination controls */}
-      <nav aria-label="pagination" className="flex justify-center">
+      <nav
+        aria-label="pagination"
+        className="flex justify-center"
+        onKeyDown={handleKeyDown}
+      >
         <div className="flex items-center gap-2">
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Go to previous page"
           >
             Previous
@@ -194,7 +212,7 @@ export function DataTablePagination({
                 onClick={() => table.setPageIndex(pageIdx)}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={`Go to page ${pageIdx + 1}`}
-                className={`w-8 h-8 text-xs border rounded transition-colors ${
+                className={`w-8 h-8 text-xs border rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                   isActive
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-card text-foreground hover:bg-muted"
@@ -208,7 +226,7 @@ export function DataTablePagination({
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-3 h-8 text-xs border border-border rounded bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Go to next page"
           >
             Next
@@ -216,12 +234,24 @@ export function DataTablePagination({
         </div>
       </nav>
 
-      {/* Right side: Items display */}
-      {showItemsCount && (
-        <div className="text-xs text-muted-foreground" aria-live="polite">
-          {getItemsDisplayText(pageIndex, pageSize, totalItems)}
+      {/* Right side: Items display and screen reader announcements */}
+      <div className="flex items-center gap-2">
+        {showItemsCount && (
+          <div className="text-xs text-muted-foreground" aria-live="polite">
+            {getItemsDisplayText(pageIndex, pageSize, totalItems)}
+          </div>
+        )}
+
+        {/* Screen reader announcement region */}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {announcement}
         </div>
-      )}
+      </div>
     </div>
   );
 }
