@@ -46,7 +46,15 @@ export function AppLayout({
   className,
 }: AppLayoutProps) {
   const { activeMenu, toggleMenu, closeMenu } = useMenuState();
-  const { statusBarVisible, toggleStatusBar, toggleSidebar } = useViewState();
+  const {
+    statusBarVisible,
+    toggleStatusBar,
+    toggleSidebar,
+    zoomLevel,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+  } = useViewState();
 
   // Close menu when clicking outside
   const handleLayoutClick = React.useCallback(() => {
@@ -55,17 +63,33 @@ export function AppLayout({
     }
   }, [activeMenu, closeMenu]);
 
-  // Keyboard shortcut: Ctrl+B to toggle sidebar
+  // Keyboard shortcuts
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+B to toggle sidebar
       if (e.ctrlKey && e.key === "b") {
         e.preventDefault();
         toggleSidebar();
       }
+      // Ctrl++ or Ctrl+= to zoom in
+      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        zoomIn();
+      }
+      // Ctrl+- to zoom out
+      if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        zoomOut();
+      }
+      // Ctrl+0 to reset zoom
+      if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        resetZoom();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleSidebar]);
+  }, [toggleSidebar, zoomIn, zoomOut, resetZoom]);
 
   return (
     <div
@@ -75,36 +99,49 @@ export function AppLayout({
       )}
       onClick={handleLayoutClick}
     >
-      {/* Title bar with branding and window controls */}
-      <TitleBar
-        appName={appName}
-        quickActions={quickActions}
-        onMinimize={onMinimize}
-        onMaximize={onMaximize}
-        onClose={onClose}
-      />
-
-      {/* Menu bar with navigation */}
-      <MenuBar
-        activeMenu={activeMenu}
-        onMenuClick={toggleMenu}
-        branchInfo={branchInfo}
-        userInfo={userInfo}
-        shiftInfo={shiftInfo}
-        onToggleSidebar={toggleSidebar}
-        onToggleStatusBar={toggleStatusBar}
-      />
-
-      {/* Main content area - flex-1 with min-h-0 for proper scrolling */}
-      <main className="flex-1 min-h-0 overflow-auto">{children}</main>
-
-      {/* Status bar with statistics - conditionally rendered */}
-      {statusBarVisible && (
-        <StatusBar
-          statistics={statistics}
-          keyboardShortcuts={keyboardShortcuts}
+      {/* Zoom container - applies CSS transform to scale entire UI */}
+      <div
+        style={{
+          transform: `scale(${zoomLevel / 100})`,
+          transformOrigin: "top left",
+          width: `${(100 / zoomLevel) * 100}%`,
+          height: `${(100 / zoomLevel) * 100}%`,
+        }}
+      >
+        {/* Title bar with branding and window controls */}
+        <TitleBar
+          appName={appName}
+          quickActions={quickActions}
+          onMinimize={onMinimize}
+          onMaximize={onMaximize}
+          onClose={onClose}
         />
-      )}
+
+        {/* Menu bar with navigation */}
+        <MenuBar
+          activeMenu={activeMenu}
+          onMenuClick={toggleMenu}
+          branchInfo={branchInfo}
+          userInfo={userInfo}
+          shiftInfo={shiftInfo}
+          onToggleSidebar={toggleSidebar}
+          onToggleStatusBar={toggleStatusBar}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onResetZoom={resetZoom}
+        />
+
+        {/* Main content area - flex-1 with min-h-0 for proper scrolling */}
+        <main className="flex-1 min-h-0 overflow-auto">{children}</main>
+
+        {/* Status bar with statistics - conditionally rendered */}
+        {statusBarVisible && (
+          <StatusBar
+            statistics={statistics}
+            keyboardShortcuts={keyboardShortcuts}
+          />
+        )}
+      </div>
     </div>
   );
 }

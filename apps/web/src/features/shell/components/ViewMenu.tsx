@@ -1,16 +1,26 @@
 /**
  * ViewMenu component
- * Dropdown menu for View operations (panel visibility toggles)
+ * Dropdown menu for View operations (panel visibility toggles, zoom controls)
  */
 
 import { useState } from "react";
-import { Sidebar, BarChart3, Wrench } from "lucide-react";
+import {
+  Sidebar,
+  BarChart3,
+  Wrench,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+} from "lucide-react";
 
 interface ViewMenuProps {
   onClose: () => void;
   onToggleSidebar?: () => void;
   onToggleStatusBar?: () => void;
   onToggleToolbar?: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onResetZoom?: () => void;
 }
 
 interface MenuItemProps {
@@ -74,6 +84,9 @@ export function ViewMenu({
   onToggleSidebar,
   onToggleStatusBar,
   onToggleToolbar,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
 }: ViewMenuProps) {
   return (
     <div
@@ -115,7 +128,39 @@ export function ViewMenu({
             onClose();
           }}
         />
+        <MenuDivider />
+        <MenuItem
+          icon={ZoomIn}
+          label="Zoom In"
+          kbd="Ctrl++"
+          onClick={() => {
+            onZoomIn?.();
+            onClose();
+          }}
+        />
+        <MenuItem
+          icon={ZoomOut}
+          label="Zoom Out"
+          kbd="Ctrl+-"
+          onClick={() => {
+            onZoomOut?.();
+            onClose();
+          }}
+        />
+        <MenuItem
+          icon={Maximize2}
+          label="Reset Zoom"
+          kbd="Ctrl+0"
+          onClick={() => {
+            onResetZoom?.();
+            onClose();
+          }}
+        />
       </div>
     </div>
   );
+}
+
+function MenuDivider() {
+  return <div style={{ height: 1, background: "#ebebeb", margin: "3px 0" }} />;
 }

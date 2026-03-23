@@ -10,12 +10,18 @@ describe("ViewMenu", () => {
     expect(screen.getByText("Toggle Sidebar")).toBeInTheDocument();
     expect(screen.getByText("Toggle Status Bar")).toBeInTheDocument();
     expect(screen.getByText("Toggle Toolbar")).toBeInTheDocument();
+    expect(screen.getByText("Zoom In")).toBeInTheDocument();
+    expect(screen.getByText("Zoom Out")).toBeInTheDocument();
+    expect(screen.getByText("Reset Zoom")).toBeInTheDocument();
   });
 
-  it("should display keyboard shortcut for Toggle Sidebar", () => {
+  it("should display keyboard shortcuts for all menu items", () => {
     render(<ViewMenu onClose={() => {}} />);
 
     expect(screen.getByText("Ctrl+B")).toBeInTheDocument();
+    expect(screen.getByText("Ctrl++")).toBeInTheDocument();
+    expect(screen.getByText("Ctrl+-")).toBeInTheDocument();
+    expect(screen.getByText("Ctrl+0")).toBeInTheDocument();
   });
 
   it("should call onToggleSidebar and onClose when Toggle Sidebar is clicked", async () => {
@@ -56,6 +62,45 @@ describe("ViewMenu", () => {
     await user.click(screen.getByText("Toggle Toolbar"));
 
     expect(onToggleToolbar).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onZoomIn and onClose when Zoom In is clicked", async () => {
+    const user = userEvent.setup();
+    const onZoomIn = vi.fn();
+    const onClose = vi.fn();
+
+    render(<ViewMenu onClose={onClose} onZoomIn={onZoomIn} />);
+
+    await user.click(screen.getByText("Zoom In"));
+
+    expect(onZoomIn).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onZoomOut and onClose when Zoom Out is clicked", async () => {
+    const user = userEvent.setup();
+    const onZoomOut = vi.fn();
+    const onClose = vi.fn();
+
+    render(<ViewMenu onClose={onClose} onZoomOut={onZoomOut} />);
+
+    await user.click(screen.getByText("Zoom Out"));
+
+    expect(onZoomOut).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onResetZoom and onClose when Reset Zoom is clicked", async () => {
+    const user = userEvent.setup();
+    const onResetZoom = vi.fn();
+    const onClose = vi.fn();
+
+    render(<ViewMenu onClose={onClose} onResetZoom={onResetZoom} />);
+
+    await user.click(screen.getByText("Reset Zoom"));
+
+    expect(onResetZoom).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
