@@ -214,15 +214,15 @@
     pointer-events: none;
   }
 
-  /* Professional scrollbar styling - Windows 11 inspired */
+  /* Compact scrollbar styling using theme colors */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    scrollbar-color: oklch(from var(--muted-foreground) l c h / 0.3) transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -230,38 +230,21 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
-    border: 3px solid transparent;
+    background: oklch(from var(--muted-foreground) l c h / 0.3);
+    border-radius: 5px;
+    border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.35);
-    border: 3px solid transparent;
+    background: oklch(from var(--muted-foreground) l c h / 0.5);
+    border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: rgba(0, 0, 0, 0.5);
-    border: 3px solid transparent;
+    background: oklch(from var(--muted-foreground) l c h / 0.7);
+    border: 2px solid transparent;
     background-clip: padding-box;
-  }
-
-  /* Dark mode scrollbar */
-  .dark .custom-scrollbar {
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-  }
-
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.35);
-  }
-
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb:active {
-    background: rgba(255, 255, 255, 0.5);
   }
 }
