@@ -29,6 +29,7 @@ import {
   useDataTableContext,
   DataTablePagination,
   DataTable,
+  DataTableColumnHeader,
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
 
@@ -124,7 +125,9 @@ export function InventoryWorkspace() {
     () => [
       {
         accessorKey: "name",
-        header: "Product Name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Product Name" />
+        ),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <span
@@ -141,7 +144,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "sku",
-        header: "SKU",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="SKU" />
+        ),
         cell: ({ getValue }) => (
           <CopyWrapper value={getValue() as string} size="xs">
             <span className="text-[11px] font-mono text-muted-foreground">
@@ -153,7 +158,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "availableQuantity",
-        header: "Stock",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Stock" />
+        ),
         cell: ({ row }) => {
           const qty = row.original.availableQuantity;
           const reorder = row.original.reorderLevel;
@@ -175,7 +182,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "nearestExpiry",
-        header: "Expiry",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Expiry" />
+        ),
         cell: ({ row }) => (
           <span
             className={`text-[11px] whitespace-nowrap ${
@@ -191,7 +200,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "basePrice",
-        header: "Price",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Price" />
+        ),
         cell: ({ getValue }) => (
           <span className="text-xs font-medium text-foreground">
             ₹{(getValue() as number).toFixed(2)}
@@ -201,7 +212,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "category.name",
-        header: "Category",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Category" />
+        ),
         cell: ({ row }) => (
           <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
             {row.original.category.name}
@@ -211,7 +224,9 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "defaultSupplier.name",
-        header: "Supplier",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Supplier" />
+        ),
         cell: ({ row }) => {
           const supplierName = row.original.defaultSupplier?.name || "N/A";
           return (
@@ -230,13 +245,14 @@ export function InventoryWorkspace() {
       },
       {
         accessorKey: "stockStatus",
-        header: "Status",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
         cell: ({ row }) => <StatusBadge status={row.original.stockStatus} />,
         size: 100,
       },
       {
         id: "actions",
-        header: "",
         cell: ({ row }) => (
           <div className="flex gap-0.5">
             <button
@@ -363,37 +379,6 @@ function InventoryWorkspaceContent({
             style={{
               boxShadow: "0 1px 3px rgba(0,0,0,.06)",
             }}
-            renderHeaderCell={(header) => (
-              <th
-                key={header.id}
-                className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors group bg-muted/30 sticky top-0 z-10 border-b"
-                style={{
-                  width:
-                    header.column.getSize() !== 150
-                      ? header.column.getSize()
-                      : undefined,
-                  borderBottomColor: "#e0e0e0",
-                }}
-                onClick={header.column.getToggleSortingHandler()}
-              >
-                <div className="flex items-center gap-1.5">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                  {header.column.getIsSorted() && (
-                    <span className="text-primary font-bold">
-                      {{
-                        asc: "↑",
-                        desc: "↓",
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </span>
-                  )}
-                </div>
-              </th>
-            )}
             renderRow={(row, idx) => {
               const selected = selectedRowIds.has(row.original.id);
               const focused = focusedRowId === row.original.id;

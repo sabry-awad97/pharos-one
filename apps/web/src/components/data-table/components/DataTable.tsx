@@ -30,12 +30,6 @@ export interface DataTableProps<TData> {
   renderRow?: (row: Row<TData>, index: number) => React.ReactNode;
 
   /**
-   * Optional custom header cell renderer
-   * If not provided, uses default header rendering
-   */
-  renderHeaderCell?: (header: any) => React.ReactNode;
-
-  /**
    * Optional className for the table element
    */
   className?: string;
@@ -69,7 +63,6 @@ export interface DataTableProps<TData> {
  */
 export function DataTable<TData>({
   renderRow,
-  renderHeaderCell,
   className = "w-full border-collapse",
   style,
   containerClassName,
@@ -83,13 +76,21 @@ export function DataTable<TData>({
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                if (renderHeaderCell) {
-                  return renderHeaderCell(header);
-                }
+                // Get width from column size (150 is TanStack Table's default)
+                const width =
+                  header.column.getSize() !== 150
+                    ? header.column.getSize()
+                    : undefined;
 
-                // Default header rendering
                 return (
-                  <th key={header.id}>
+                  <th
+                    key={header.id}
+                    className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap bg-muted/30 sticky top-0 z-10 border-b"
+                    style={{
+                      width,
+                      borderBottomColor: "#e0e0e0",
+                    }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(

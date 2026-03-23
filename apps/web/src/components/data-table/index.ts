@@ -37,3 +37,7 @@ export {
   type DataTablePaginationProps,
 } from "./components/DataTablePagination";
 export { DataTable, type DataTableProps } from "./components/DataTable";
+export {
+  DataTableColumnHeader,
+  type DataTableColumnHeaderProps,
+} from "./components/DataTableColumnHeader";
