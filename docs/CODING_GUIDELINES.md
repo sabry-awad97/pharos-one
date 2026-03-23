@@ -7,6 +7,7 @@ This document outlines the coding standards and best practices for the PharOS pr
 - [TypeScript Conventions](#typescript-conventions)
 - [Theme and Styling](#theme-and-styling)
 - [Schema and Data Modeling](#schema-and-data-modeling)
+- [TanStack DB Patterns](#tanstack-db-patterns)
 - [Component Patterns](#component-patterns)
 - [State Management](#state-management)
 - [Testing Standards](#testing-standards)
@@ -251,6 +252,559 @@ function getPageSize(config: Config): number {
   return config.pageSize ?? 10; // Default at usage site
 }
 ```
+
+---
+
+## TanStack DB Patterns
+
+### Overview
+
+TanStack DB is used for client-side data management with reactive queries. All patterns here are verified from the successful inventory module migration.
+
+**Status**: ✅ All inventory hooks migrated (24 tests passing, zero type errors)
+
+### Collection Setup
+
+**Rule**: Create collections with `queryCollectionOptions` and centralize access via `useCollections` hook.
+
+```typescript
+// File: collections/category.collection.ts
+import { createCollection } from "@tanstack/react-db";
+import { queryCollectionOptions } from "@tanstack/query-db-collection";
+import type { QueryClient } from "@tanstack/react-query";
+import type { Category } from "../schema";
+
+async function fetchCategories(): Promise<Category[]> {
+  // Simulate network delay (ready for Tauri invoke)
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // TODO: Replace with Tauri invoke
+  // return await invoke("get_categories");
+
+  return Array.from({ length: 20 }, (_, i) => generateCategory(i + 1));
+}
+
+export function createCategoryCollection(queryClient: QueryClient) {
+  return createCollection(
+    queryCollectionOptions({
+      queryClient,
+      queryKey: ["inventory", "categories"],
+      queryFn: fetchCategories,
+      getKey: (item: Category) => item.id, // Required!
+      staleTime: 1000 * 60 * 10, // 10 minutes
+    }),
+  );
+}
+```
+
+**Key Points**:
+
+- ✅ Async `queryFn` (ready for Tauri)
+- ✅ Explicit `getKey` function (required!)
+- ✅ Appropriate `staleTime` (10min for static, 5min for dynamic)
+- ✅ Type-safe with explicit types
+
+### Centralized Collection Access
+
+**Rule**: Use `useCollections` hook to avoid creating collection instances in every hook.
+
+```typescript
+// File: hooks/use-collections.ts
+import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createCategoryCollection } from "../collections/category.collection";
+import { createSupplierCollection } from "../collections/supplier.collection";
+import { createProductCollection } from "../collections/product.collection";
+
+export function useCollections() {
+  const queryClient = useQueryClient();
+
+  return useMemo(
+    () => ({
+      categories: createCategoryCollection(queryClient),
+      suppliers: createSupplierCollection(queryClient),
+      products: createProductCollection(queryClient),
+    }),
+    [queryClient],
+  );
+}
+
+// ❌ WRONG: Creating collection in hook
+export function useProducts() {
+  const queryClient = useQueryClient();
+  const products = createProductCollection(queryClient); // Creates new instance!
+  return useLiveQuery((q) => q.from({ product: products }), [products]);
+}
+
+// ✅ CORRECT: Use centralized collections
+export function useProducts() {
+  const { products } = useCollections(); // Reuses same instance
+  return useLiveQuery((q) => q.from({ product: products }), [products]);
+}
+```
+
+### Hook Patterns
+
+#### Pattern 1: Simple List Hook
+
+```typescript
+// File: hooks/use-categories.ts
+import { useLiveQuery } from "@tanstack/react-db";
+import { useCollections } from "./use-collections";
+import { wrapLiveQuery } from "./utils/hook-wrapper";
+import type { QueryResult } from "./utils/hook-wrapper";
+import type { Category } from "../schema";
+
+/**
+ * Hook to fetch all categories
+ *
+ * @example
+ * const { data: categories, isLoading } = useCategories();
+ */
+export function useCategories(): QueryResult<Category[]> {
+  const { categories } = useCollections();
+
+  const result = useLiveQuery(
+    (q) => q.from({ category: categories }),
+    [categories],
+  );
+
+  return wrapLiveQuery(result);
+}
+```
+
+#### Pattern 2: Single Item Hook
+
+```typescript
+import { eq } from "@tanstack/react-db";
+
+/**
+ * Hook to fetch a single category by ID
+ *
+ * @example
+ * const { data: category } = useCategory(1);
+ */
+export function useCategory(
+  id: number | undefined,
+): QueryResult<Category | undefined> {
+  const { categories } = useCollections();
+
+  const result = useLiveQuery(
+    (q) => {
+      if (!id) return undefined; // Disable query when ID is missing
+
+      return q
+        .from({ category: categories })
+        .where(({ category }) => eq(category.id, id))
+        .findOne();
+    },
+    [id, categories], // Include all dependencies!
+  );
+
+  return wrapLiveQuery(result);
+}
+```
+
+#### Pattern 3: Filtered List Hook
+
+```typescript
+/**
+ * Hook to fetch batches for a specific product
+ *
+ * @example
+ * const { data: batches } = useBatches(productId);
+ */
+export function useBatches(
+  productId: number | undefined,
+): QueryResult<Batch[]> {
+  const { batches } = useCollections();
+
+  const result = useLiveQuery(
+    (q) => {
+      if (!productId) return undefined;
+
+      return q
+        .from({ batch: batches })
+        .where(({ batch }) => eq(batch.productId, productId));
+    },
+    [productId, batches],
+  );
+
+  return wrapLiveQuery(result);
+}
+```
+
+#### Pattern 4: Date Range Filtering
+
+**CRITICAL**: Convert date-only strings to full ISO timestamps for comparison.
+
+```typescript
+import { useLiveQuery, gte, lte, and } from "@tanstack/react-db";
+
+export interface TransactionFilters {
+  startDate?: string; // YYYY-MM-DD format
+  endDate?: string; // YYYY-MM-DD format
+}
+
+export function useTransactions(
+  filters?: TransactionFilters,
+): QueryResult<StockTransaction[]> {
+  const { transactions } = useCollections();
+
+  const result = useLiveQuery(
+    (q) => {
+      let query = q.from({ transaction: transactions });
+
+      if (filters?.startDate || filters?.endDate) {
+        query = query.where(({ transaction }) => {
+          const conditions = [];
+
+          if (filters.startDate) {
+            // ✅ CRITICAL: Convert to full ISO timestamp
+            const startDateTime = `${filters.startDate}T00:00:00.000Z`;
+            conditions.push(gte(transaction.timestamp, startDateTime));
+          }
+
+          if (filters.endDate) {
+            // Include entire end date
+            const endDateTime = `${filters.endDate}T23:59:59.999Z`;
+            conditions.push(lte(transaction.timestamp, endDateTime));
+          }
+
+          // Combine with AND
+          if (conditions.length === 1) return conditions[0];
+          if (conditions.length === 2) return and(conditions[0], conditions[1]);
+          return true;
+        });
+      }
+
+      return query;
+    },
+    [filters?.startDate, filters?.endDate, transactions],
+  );
+
+  return wrapLiveQuery(result);
+}
+```
+
+**Why full ISO timestamps?**
+
+- ISO strings can be compared lexicographically
+- `"2024-01-15T12:00:00Z"` > `"2024-01-01T00:00:00Z"` ✅
+- `"2024-01-15T12:00:00Z"` > `"2024-01-01"` ❌ (incorrect comparison)
+
+#### Pattern 5: Joins (Left Join)
+
+```typescript
+import { useLiveQuery, eq } from "@tanstack/react-db";
+
+export function useProducts(): QueryResult<ProductWithRelations[]> {
+  const { products, categories, suppliers } = useCollections();
+
+  const result = useLiveQuery(
+    (q) =>
+      q
+        .from({ product: products })
+        .leftJoin({ category: categories }, ({ product, category }) =>
+          eq(product.categoryId, category.id),
+        )
+        .leftJoin({ supplier: suppliers }, ({ product, supplier }) =>
+          eq(product.defaultSupplierId, supplier.id),
+        )
+        .select(({ product, category, supplier }) => ({
+          ...product,
+          // ✅ Handle nullable joined data
+          category: category
+            ? {
+                id: category.id,
+                name: category.name,
+                description: category.description,
+                parentCategoryId: category.parentCategoryId,
+              }
+            : undefined,
+          defaultSupplier: supplier
+            ? {
+                id: supplier.id,
+                name: supplier.name,
+                contactPerson: supplier.contactPerson,
+                email: supplier.email,
+                phone: supplier.phone,
+                address: supplier.address,
+                isActive: supplier.isActive,
+              }
+            : undefined,
+        })),
+    [products, categories, suppliers], // Include all collections!
+  );
+
+  return wrapLiveQuery(result);
+}
+```
+
+### Hook Wrapper Pattern
+
+**Rule**: Wrap `useLiveQuery` results for consistent API across all hooks.
+
+```typescript
+// File: hooks/utils/hook-wrapper.ts
+import type { LiveQueryResult } from "@tanstack/react-db";
+
+export interface QueryResult<T> {
+  data: T | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+}
+
+export function wrapLiveQuery<T>(result: LiveQueryResult<T>): QueryResult<T> {
+  return {
+    data: result.data,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    error: result.error,
+  };
+}
+```
+
+**Benefits**:
+
+- ✅ TanStack Query-like API (easier migration)
+- ✅ Consistent error handling
+- ✅ Type-safe
+
+### TanStack DB Operators
+
+#### Comparison Operators
+
+```typescript
+import { eq, gt, gte, lt, lte, inArray } from "@tanstack/react-db";
+
+// Equality
+eq(product.id, 1);
+eq(product.isActive, true);
+
+// Comparisons
+gt(product.quantity, 0); // greater than
+gte(product.quantity, 10); // greater than or equal
+lt(product.price, 100); // less than
+lte(product.price, 50); // less than or equal
+
+// Array membership
+inArray(product.categoryId, [1, 2, 3]);
+```
+
+#### Logical Operators
+
+```typescript
+import { and, or, not } from "@tanstack/react-db";
+
+// AND: All conditions must be true
+and(eq(product.isActive, true), gt(product.quantity, 0));
+
+// OR: At least one condition must be true
+or(eq(product.status, "low"), eq(product.status, "out"));
+
+// NOT: Negate a condition
+not(eq(product.isActive, false));
+```
+
+### Common Mistakes
+
+#### Mistake 1: Forgetting Dependencies
+
+```typescript
+// ❌ WRONG: Missing dependencies
+export function useProduct(id: number) {
+  const { products } = useCollections();
+
+  return useLiveQuery(
+    (q) =>
+      q.from({ product: products }).where(({ product }) => eq(product.id, id)),
+    [], // WRONG: Missing id and products!
+  );
+}
+
+// ✅ CORRECT: Include all dependencies
+export function useProduct(id: number) {
+  const { products } = useCollections();
+
+  return useLiveQuery(
+    (q) =>
+      q.from({ product: products }).where(({ product }) => eq(product.id, id)),
+    [id, products], // CORRECT!
+  );
+}
+```
+
+#### Mistake 2: Using JavaScript Filter
+
+```typescript
+// ❌ WRONG: JavaScript filtering
+export function useActiveProducts() {
+  const { products } = useCollections();
+
+  const result = useLiveQuery((q) => q.from({ product: products }), [products]);
+
+  // WRONG: Filtering after query
+  return {
+    ...result,
+    data: result.data?.filter((p) => p.isActive),
+  };
+}
+
+// ✅ CORRECT: Use TanStack DB operators
+export function useActiveProducts() {
+  const { products } = useCollections();
+
+  return useLiveQuery(
+    (q) =>
+      q
+        .from({ product: products })
+        .where(({ product }) => eq(product.isActive, true)),
+    [products],
+  );
+}
+```
+
+#### Mistake 3: Incorrect Date Comparison
+
+```typescript
+// ❌ WRONG: Comparing ISO timestamp with date-only string
+const result = useLiveQuery(
+  (q) =>
+    q.from({ transaction: transactions }).where(
+      ({ transaction }) => gte(transaction.timestamp, "2024-01-01"), // WRONG!
+    ),
+  [transactions],
+);
+
+// ✅ CORRECT: Convert to full ISO timestamp
+const result = useLiveQuery(
+  (q) =>
+    q.from({ transaction: transactions }).where(
+      ({ transaction }) =>
+        gte(transaction.timestamp, "2024-01-01T00:00:00.000Z"), // CORRECT!
+    ),
+  [transactions],
+);
+```
+
+#### Mistake 4: Not Handling Nullable Joins
+
+```typescript
+// ❌ WRONG: Assuming joined data exists
+const result = useLiveQuery((q) =>
+  q
+    .from({ product: products })
+    .leftJoin({ category: categories }, ...)
+    .select(({ product, category }) => ({
+      name: product.name,
+      categoryName: category.name, // ERROR: category might be undefined
+    })),
+  [products, categories],
+);
+
+// ✅ CORRECT: Handle nullable data
+const result = useLiveQuery((q) =>
+  q
+    .from({ product: products })
+    .leftJoin({ category: categories }, ...)
+    .select(({ product, category }) => ({
+      name: product.name,
+      categoryName: category?.name, // CORRECT: optional chaining
+    })),
+  [products, categories],
+);
+```
+
+### Schema Patterns for TanStack DB
+
+**Rule**: Use `.nullable()` for relations that may not exist after joins.
+
+```typescript
+// Base transaction schema
+export const stockTransactionSchema = z.object({
+  id: z.number(),
+  batchId: z.number(),
+  type: z.enum(["purchase", "sale", "adjustment"]),
+  quantity: z.number(),
+  timestamp: z.string().datetime(),
+});
+
+// Transaction with optional batch relation
+export const stockTransactionWithRelationsSchema =
+  stockTransactionSchema.extend({
+    batch: batchWithRelationsSchema.nullable(), // Can be null when not joined
+  });
+
+export type StockTransaction = z.infer<typeof stockTransactionSchema>;
+export type StockTransactionWithRelations = z.infer<
+  typeof stockTransactionWithRelationsSchema
+>;
+```
+
+### Testing TanStack DB Hooks
+
+```typescript
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useCategories } from "../use-categories";
+
+describe("useCategories", () => {
+  const createWrapper = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+  };
+
+  it("loads categories", async () => {
+    const { result } = renderHook(() => useCategories(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data!.length).toBeGreaterThan(0);
+    });
+
+    expect(result.current.data![0]).toHaveProperty("id");
+    expect(result.current.data![0]).toHaveProperty("name");
+  });
+});
+```
+
+### TanStack DB Checklist
+
+Before considering a hook complete:
+
+- [ ] Collection created with `queryCollectionOptions`
+- [ ] Collection has explicit `getKey` function
+- [ ] Hook uses `useCollections` (not creating collection directly)
+- [ ] Hook wrapped with `wrapLiveQuery`
+- [ ] Hook has JSDoc with `@example`
+- [ ] Filters use TanStack DB operators (not JavaScript)
+- [ ] Date comparisons use full ISO timestamps
+- [ ] Joins handle nullable data with `?.`
+- [ ] All dependencies included in `useLiveQuery` array
+- [ ] Tests passing
+- [ ] Zero type errors
+
+### Real-World Examples
+
+See these files for complete, working examples:
+
+- **Simple list**: `apps/web/src/features/modules/inventory/hooks/use-categories.ts`
+- **Filtered list**: `apps/web/src/features/modules/inventory/hooks/use-batches.ts`
+- **With joins**: `apps/web/src/features/modules/inventory/hooks/use-products.ts`
+- **Date filtering**: `apps/web/src/features/modules/inventory/hooks/use-transactions.ts`
+- **Centralized access**: `apps/web/src/features/modules/inventory/hooks/use-collections.ts`
+
+For more detailed patterns, see `.kiro/steering/tanstack-db-verified-patterns.md`.
 
 ---
 
