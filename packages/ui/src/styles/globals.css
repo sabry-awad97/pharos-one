@@ -247,4 +247,79 @@
     border: 2px solid transparent;
     background-clip: padding-box;
   }
+
+  /* Density mode custom properties */
+  [data-density="compact"] {
+    --density-row-height: 32px;
+    --density-padding: 8px;
+    --density-gap: 4px;
+  }
+
+  [data-density="comfortable"] {
+    --density-row-height: 40px;
+    --density-padding: 12px;
+    --density-gap: 8px;
+  }
+
+  [data-density="spacious"] {
+    --density-row-height: 48px;
+    --density-padding: 16px;
+    --density-gap: 12px;
+  }
+
+  /* Zoom level utilities */
+  [data-zoom="50"] {
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+
+  [data-zoom="67"] {
+    transform: scale(0.67);
+    transform-origin: top left;
+  }
+
+  [data-zoom="75"] {
+    transform: scale(0.75);
+    transform-origin: top left;
+  }
+
+  [data-zoom="80"] {
+    transform: scale(0.8);
+    transform-origin: top left;
+  }
+
+  [data-zoom="90"] {
+    transform: scale(0.9);
+    transform-origin: top left;
+  }
+
+  [data-zoom="100"] {
+    transform: scale(1);
+    transform-origin: top left;
+  }
+
+  [data-zoom="110"] {
+    transform: scale(1.1);
+    transform-origin: top left;
+  }
+
+  [data-zoom="125"] {
+    transform: scale(1.25);
+    transform-origin: top left;
+  }
+
+  [data-zoom="150"] {
+    transform: scale(1.5);
+    transform-origin: top left;
+  }
+
+  [data-zoom="175"] {
+    transform: scale(1.75);
+    transform-origin: top left;
+  }
+
+  [data-zoom="200"] {
+    transform: scale(2);
+    transform-origin: top left;
+  }
 }

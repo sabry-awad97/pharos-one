@@ -42,3 +42,28 @@ export interface TabStatistics {
   /** Number of tabs with unsaved changes */
   unsavedTabs: number;
 }
+
+/**
+ * Density mode type
+ * Controls spacing and sizing of UI elements
+ */
+export type DensityMode = "compact" | "comfortable" | "spacious";
+
+/**
+ * View state interface
+ * Represents all UI view preferences
+ */
+export interface ViewState {
+  /** Whether the sidebar is visible */
+  sidebarVisible: boolean;
+  /** Whether the status bar is visible */
+  statusBarVisible: boolean;
+  /** Whether the toolbar is visible */
+  toolbarVisible: boolean;
+  /** Current zoom level (50-200) */
+  zoomLevel: number;
+  /** Current density mode */
+  density: DensityMode;
+  /** Whether focus mode is active */
+  focusMode: boolean;
+}
