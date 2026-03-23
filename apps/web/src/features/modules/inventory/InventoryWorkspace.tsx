@@ -15,19 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { CopyWrapper } from "@/components/CopyWrapper";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type RowSelectionState,
-  type PaginationState,
-  type Table,
-} from "@tanstack/react-table";
+import { flexRender, type ColumnDef } from "@tanstack/react-table";
 import {
   Select,
   SelectContent,
@@ -43,6 +31,7 @@ import {
   actionGroups,
 } from "./hooks/use-inventory-actions";
 import { useProducts } from "./hooks/use-products";
+import { useDataTable } from "@/hooks/useDataTable";
 import type { ProductStockSummary } from "./schema";
 
 // Page size options
@@ -52,36 +41,14 @@ const PAGE_SIZE_OPTIONS = [
   { value: "100", label: "100 / page" },
 ] as const;
 
-const DEFAULT_PAGE_SIZE = 25;
 const STORAGE_KEY = "inventory-page-size";
 
-// Hook for persisted page size
-function usePersistedPageSize() {
-  const [pageSize, setPageSize] = useState<number>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? parseInt(stored, 10) : DEFAULT_PAGE_SIZE;
-    } catch {
-      return DEFAULT_PAGE_SIZE;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, pageSize.toString());
-    } catch {
-      // Silently fail if localStorage is unavailable
-    }
-  }, [pageSize]);
-
-  return [pageSize, setPageSize] as const;
-}
-
 // Helper function to calculate items display text
-function getItemsDisplayText(table: Table<ProductStockSummary>): string {
-  const { pageIndex, pageSize } = table.getState().pagination;
-  const totalItems = table.getFilteredRowModel().rows.length;
-
+function getItemsDisplayText(
+  pageIndex: number,
+  pageSize: number,
+  totalItems: number,
+): string {
   if (totalItems === 0) {
     return "No items";
   }
@@ -151,100 +118,23 @@ export function InventoryWorkspace({
   label?: string;
 }) {
   const { data: products = [], isLoading, error } = useProducts();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [pageSize, setPageSize] = usePersistedPageSize();
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize,
-  });
-  const [goToPageValue, setGoToPageValue] = useState<string>("");
 
-  // Sync pageSize changes with pagination state
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageSize, pageIndex: 0 }));
-  }, [pageSize]);
-
-  const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
-  const [lastSelectedRowId, setLastSelectedRowId] = useState<number | null>(
-    null,
-  );
   const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
     number | null
   >(null);
   const [stockMovementsPanelProductId, setStockMovementsPanelProductId] =
     useState<number | null>(null);
-  const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
 
   // Callbacks for opening panels
   const handleBatchDetailsOpen = useCallback((productId: number) => {
     console.log("Opening batch details for product:", productId);
     setBatchDetailsPanelProductId(productId);
-    setFocusedRowId(productId);
   }, []);
 
   const handleStockMovementsOpen = useCallback((productId: number) => {
     console.log("Opening stock movements for product:", productId);
     setStockMovementsPanelProductId(productId);
   }, []);
-
-  // Handle row click with modifier keys for Windows-style selection
-  const handleRowClick = useCallback(
-    (productId: number, event: React.MouseEvent) => {
-      if (event.ctrlKey || event.metaKey) {
-        // Ctrl+Click: Toggle selection (don't change focus)
-        setSelectedRowIds((prev) => {
-          const newSelection = new Set(prev);
-          if (newSelection.has(productId)) {
-            newSelection.delete(productId);
-          } else {
-            newSelection.add(productId);
-          }
-          return newSelection;
-        });
-        setLastSelectedRowId(productId);
-      } else if (event.shiftKey) {
-        // Shift+Click: Range selection AND move focus to clicked row
-        if (lastSelectedRowId !== null) {
-          // Find indices of lastSelectedRowId and productId in products array
-          const startIdx = products.findIndex(
-            (p) => p.id === lastSelectedRowId,
-          );
-          const endIdx = products.findIndex((p) => p.id === productId);
-          if (startIdx !== -1 && endIdx !== -1) {
-            const [minIdx, maxIdx] = [
-              Math.min(startIdx, endIdx),
-              Math.max(startIdx, endIdx),
-            ];
-            const rangeIds = products
-              .slice(minIdx, maxIdx + 1)
-              .map((p) => p.id);
-            setSelectedRowIds(new Set(rangeIds));
-          }
-        } else {
-          // No anchor, just select single row
-          setSelectedRowIds(new Set([productId]));
-          setLastSelectedRowId(productId);
-        }
-        // Move focus to the clicked row
-        setFocusedRowId(productId);
-      } else {
-        // Normal click: Single selection AND set focus
-        setSelectedRowIds(new Set([productId]));
-        setLastSelectedRowId(productId);
-        setFocusedRowId(productId);
-      }
-    },
-    [lastSelectedRowId, products],
-  );
-
-  // Handle row double-click to open panel
-  const handleRowDoubleClick = useCallback(
-    (productId: number) => {
-      handleBatchDetailsOpen(productId);
-    },
-    [handleBatchDetailsOpen],
-  );
 
   // Get inventory actions with custom handlers
   const customActions = useInventoryActions({
@@ -259,10 +149,6 @@ export function InventoryWorkspace({
       stockMovementsPanelProductId,
     );
   }, [stockMovementsPanelProductId]);
-
-  useEffect(() => {
-    console.log("focusedRowId changed to:", focusedRowId);
-  }, [focusedRowId]);
 
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
@@ -412,49 +298,33 @@ export function InventoryWorkspace({
     [],
   );
 
-  // Create table instance
-  const table = useReactTable({
+  // Use the generic data table hook
+  const {
+    table,
+    pageSize,
+    setPageSize,
+    selectedRowIds,
+    focusedRowId,
+    setFocusedRowId,
+    handleRowClick,
+    handleRowDoubleClick,
+    goToPageValue,
+    setGoToPageValue,
+    handleGoToPage,
+  } = useDataTable({
     data: products,
     columns,
-    state: {
-      sorting,
-      rowSelection,
-      pagination,
-    },
-    onSortingChange: setSorting,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    enableRowSelection: true,
+    persistenceKey: STORAGE_KEY,
+    getRowId: (product) => product.id,
+    onRowDoubleClick: handleBatchDetailsOpen,
   });
 
-  // Handle go to page navigation
-  const handleGoToPage = useCallback(() => {
-    const pageNumber = parseInt(goToPageValue, 10);
-
-    // Validate page number
-    if (isNaN(pageNumber) || pageNumber < 1) {
-      // Invalid or less than 1: stay on current page
-      setGoToPageValue("");
-      return;
+  // Sync focusedRowId when batch details panel opens
+  useEffect(() => {
+    if (batchDetailsPanelProductId !== null) {
+      setFocusedRowId(batchDetailsPanelProductId);
     }
-
-    const totalPages = table.getPageCount();
-
-    if (pageNumber > totalPages) {
-      // Beyond total pages: go to last page
-      table.setPageIndex(totalPages - 1);
-    } else {
-      // Valid page: navigate (pageIndex is 0-based)
-      table.setPageIndex(pageNumber - 1);
-    }
-
-    // Clear input after navigation
-    setGoToPageValue("");
-  }, [goToPageValue, table]);
+  }, [batchDetailsPanelProductId, setFocusedRowId]);
 
   // Check if any panel is open
   const isPanelOpen =
@@ -837,13 +707,15 @@ export function InventoryWorkspace({
 
                 {/* Right side: Items display */}
                 <div className="text-xs text-muted-foreground">
-                  {getItemsDisplayText(table)}
+                  {getItemsDisplayText(
+                    table.getState().pagination.pageIndex,
+                    table.getState().pagination.pageSize,
+                    table.getFilteredRowModel().rows.length,
+                  )}
                 </div>
               </div>
             </>
           )}
-
-          {/* Annotation callouts - only shown when not in split view */}
         </div>
       </div>
 
