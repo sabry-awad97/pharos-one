@@ -239,24 +239,7 @@ export function ProductDetailsTab({ productId }: ProductDetailsTabProps) {
             Status
           </h3>
           <div className="p-2.5 rounded-[4px] border border-border bg-card">
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-              {product.nearestExpiry && (
-                <>
-                  <span className="text-[10px] text-muted-foreground">
-                    Nearest Expiry
-                  </span>
-                  <p
-                    className={`text-[11px] ${
-                      product.stockStatus === "expiring"
-                        ? "text-orange-700"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {product.nearestExpiry}
-                  </p>
-                </>
-              )}
-
+            <div className="grid grid-cols-[auto_1fr] gap-x-4">
               <span className="text-[10px] text-muted-foreground">
                 Batch Count
               </span>
