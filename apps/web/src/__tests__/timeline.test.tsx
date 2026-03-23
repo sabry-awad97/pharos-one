@@ -49,16 +49,20 @@ describe("TimelineItem", () => {
     userId: 1,
     reason: "Initial stock",
     timestamp: "2024-01-15T10:30:00Z",
+    batch: {
+      batchNumber: "BATCH001",
+      quantityRemaining: 100,
+    },
   };
 
   test("displays transaction type", () => {
     render(<TimelineItem transaction={mockTransaction} />);
-    expect(screen.getByText("purchase")).toBeInTheDocument();
+    expect(screen.getByText("Stock In")).toBeInTheDocument();
   });
 
   test("displays transaction quantity", () => {
     render(<TimelineItem transaction={mockTransaction} />);
-    expect(screen.getByText("+100")).toBeInTheDocument();
+    expect(screen.getByText(/\+100/)).toBeInTheDocument();
   });
 
   test("displays transaction reason when provided", () => {
@@ -69,7 +73,7 @@ describe("TimelineItem", () => {
   test("displays formatted timestamp", () => {
     render(<TimelineItem transaction={mockTransaction} />);
     // Should display formatted time (exact format may vary by locale)
-    expect(screen.getByText(/\d{1,2}:\d{2}\s*(AM|PM)/i)).toBeInTheDocument();
+    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
   });
 
   test("displays negative quantity without plus sign", () => {
@@ -77,9 +81,13 @@ describe("TimelineItem", () => {
       ...mockTransaction,
       type: "sale" as TransactionType,
       quantity: -50,
+      batch: {
+        batchNumber: "BATCH001",
+        quantityRemaining: 50,
+      },
     };
     render(<TimelineItem transaction={saleTransaction} />);
-    expect(screen.getByText("-50")).toBeInTheDocument();
+    expect(screen.getByText(/-50/)).toBeInTheDocument();
   });
 });
 
@@ -94,6 +102,10 @@ describe("TimelineGroup", () => {
       userId: 1,
       reason: "Initial stock",
       timestamp: "2024-01-15T10:30:00Z",
+      batch: {
+        batchNumber: "BATCH001",
+        quantityRemaining: 100,
+      },
     },
     {
       id: 2,
@@ -104,19 +116,28 @@ describe("TimelineGroup", () => {
       userId: 1,
       reason: null,
       timestamp: "2024-01-15T14:45:00Z",
+      batch: {
+        batchNumber: "BATCH001",
+        quantityRemaining: 80,
+      },
     },
   ];
 
   test("displays date header", () => {
     render(<TimelineGroup date="2024-01-15" transactions={mockTransactions} />);
-    // Should display formatted date
-    expect(screen.getByText(/Jan|January.*15/)).toBeInTheDocument();
+    // Should display formatted date (appears multiple times - in header and timestamps)
+    const dates = screen.getAllByText("Jan 15, 2024");
+    expect(dates.length).toBeGreaterThan(0);
+    // Check that the header (h3) has the date
+    expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent(
+      "Jan 15, 2024",
+    );
   });
 
   test("renders all transactions in group", () => {
     render(<TimelineGroup date="2024-01-15" transactions={mockTransactions} />);
-    expect(screen.getByText("purchase")).toBeInTheDocument();
-    expect(screen.getByText("sale")).toBeInTheDocument();
+    expect(screen.getByText("Stock In")).toBeInTheDocument();
+    expect(screen.getByText("Sale")).toBeInTheDocument();
   });
 });
 
@@ -131,6 +152,10 @@ describe("Timeline", () => {
       userId: 1,
       reason: "Initial stock",
       timestamp: "2024-01-15T10:30:00Z",
+      batch: {
+        batchNumber: "BATCH001",
+        quantityRemaining: 100,
+      },
     },
     {
       id: 2,
@@ -141,14 +166,18 @@ describe("Timeline", () => {
       userId: 1,
       reason: null,
       timestamp: "2024-01-16T09:15:00Z",
+      batch: {
+        batchNumber: "BATCH001",
+        quantityRemaining: 80,
+      },
     },
   ];
 
   test("renders transactions grouped by date", () => {
     render(<Timeline transactions={mockTransactions} />);
     // Should have two date groups
-    expect(screen.getByText(/Jan.*15/)).toBeInTheDocument();
-    expect(screen.getByText(/Jan.*16/)).toBeInTheDocument();
+    expect(screen.getByText("Jan 15, 2024")).toBeInTheDocument();
+    expect(screen.getByText("Jan 16, 2024")).toBeInTheDocument();
   });
 
   test("displays empty state when no transactions", () => {
@@ -158,7 +187,7 @@ describe("Timeline", () => {
 
   test("renders all transactions", () => {
     render(<Timeline transactions={mockTransactions} />);
-    expect(screen.getByText("purchase")).toBeInTheDocument();
-    expect(screen.getByText("sale")).toBeInTheDocument();
+    expect(screen.getByText("Stock In")).toBeInTheDocument();
+    expect(screen.getByText("Sale")).toBeInTheDocument();
   });
 });

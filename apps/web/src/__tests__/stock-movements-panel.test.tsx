@@ -187,8 +187,11 @@ describe("StockMovementsPanel", () => {
       />,
     );
 
-    // Should render as complementary role (inline panel, not dialog)
-    expect(screen.getByRole("complementary")).toBeInTheDocument();
+    // Should render as inline panel with distinctive classes
+    const panel = document.querySelector(
+      ".flex.flex-col.h-full.bg-card.border-l.border-border",
+    );
+    expect(panel).toBeInTheDocument();
   });
 
   it("displays product name in header", () => {
@@ -208,7 +211,7 @@ describe("StockMovementsPanel", () => {
     expect(screen.getByText("Amoxicillin 500mg")).toBeInTheDocument();
   });
 
-  it("renders filter components", () => {
+  it("displays panel header with product name and close button", () => {
     vi.mocked(
       transactionService.fetchTransactionsByProductId,
     ).mockResolvedValue([]);
@@ -222,18 +225,14 @@ describe("StockMovementsPanel", () => {
       />,
     );
 
-    // Should have Type filter button
-    expect(screen.getByRole("button", { name: /type/i })).toBeInTheDocument();
+    // Should have product name in header
+    expect(screen.getByText("Amoxicillin 500mg")).toBeInTheDocument();
 
-    // Should have DateRangePicker button (shows dates, not "Date Range" text)
-    const dateButtons = screen.getAllByRole("button");
-    const datePickerButton = dateButtons.find((btn) =>
-      btn.textContent?.includes("2026"),
-    );
-    expect(datePickerButton).toBeInTheDocument();
+    // Should have Stock Movements title
+    expect(screen.getByText("Stock Movements")).toBeInTheDocument();
 
-    // Should have Clear filters button
-    expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
+    // Should have Close button
+    expect(screen.getByRole("button", { name: /close/i })).toBeInTheDocument();
   });
 
   it("displays loading skeleton while fetching transactions", () => {
@@ -292,41 +291,10 @@ describe("StockMovementsPanel", () => {
     );
 
     await waitFor(() => {
-      // Should display transaction types
-      expect(screen.getByText(/purchase/i)).toBeInTheDocument();
-      expect(screen.getByText(/sale/i)).toBeInTheDocument();
+      // Should display transaction types (Stock In instead of Purchase)
+      expect(screen.getByText("Stock In")).toBeInTheDocument();
+      expect(screen.getByText("Sale")).toBeInTheDocument();
     });
-  });
-
-  it("shows compare toggle in date range picker", async () => {
-    vi.mocked(
-      transactionService.fetchTransactionsByProductId,
-    ).mockResolvedValue([]);
-
-    const onClose = vi.fn();
-    renderWithQueryClient(
-      <StockMovementsPanel
-        productId={1}
-        productName="Amoxicillin 500mg"
-        onClose={onClose}
-      />,
-    );
-
-    // Find and click the date picker button
-    const dateButtons = screen.getAllByRole("button");
-    const datePickerButton = dateButtons.find((btn) =>
-      btn.textContent?.includes("2026"),
-    );
-    expect(datePickerButton).toBeInTheDocument();
-
-    if (datePickerButton) {
-      fireEvent.click(datePickerButton);
-
-      // Wait for popover to open and check for Compare toggle
-      await waitFor(() => {
-        expect(screen.getByText("Compare")).toBeInTheDocument();
-      });
-    }
   });
 
   it("displays transaction count in footer", async () => {

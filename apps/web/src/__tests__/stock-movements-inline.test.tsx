@@ -53,36 +53,35 @@ describe("StockMovementsPanel - Inline Architecture", () => {
     const portals = document.querySelectorAll("[data-radix-portal]");
     expect(portals.length).toBe(0);
 
-    // Should find inline panel container
-    const panel = screen.getByRole("complementary");
-    expect(panel).toBeInTheDocument();
-    expect(panel).toHaveClass(
-      "flex",
-      "flex-col",
-      "h-full",
-      "bg-card",
-      "border-l",
-      "border-border",
+    // Should find inline panel container by its distinctive classes
+    const panel = document.querySelector(
+      ".flex.flex-col.h-full.bg-card.border-l.border-border",
     );
+    expect(panel).toBeInTheDocument();
   });
 
   it("renders header with consistent styling", () => {
     renderPanel({ productName: "Amoxicillin 500mg" });
 
-    // Find header section - the parent div with border-b
-    const panel = screen.getByRole("complementary");
-    const header = panel.querySelector(
-      ".flex-none.px-4.py-3.border-b.border-border",
-    );
-    expect(header).toBeInTheDocument();
-
     // Check title styling
-    const title = screen.getByText("Amoxicillin 500mg");
-    expect(title).toHaveClass("text-sm", "font-semibold", "text-foreground");
+    const title = screen.getByText("Stock Movements");
+    expect(title).toHaveClass(
+      "text-[10px]",
+      "font-semibold",
+      "text-muted-foreground",
+      "uppercase",
+      "tracking-wider",
+      "mb-1",
+    );
 
-    // Check subtitle styling
-    const subtitle = screen.getByText("Stock transaction history");
-    expect(subtitle).toHaveClass("text-xs", "text-muted-foreground", "mt-0.5");
+    // Check product name styling
+    const productName = screen.getByText("Amoxicillin 500mg");
+    expect(productName).toHaveClass(
+      "text-sm",
+      "font-normal",
+      "text-foreground",
+      "truncate",
+    );
   });
 
   it("renders close button with consistent styling", () => {
@@ -91,13 +90,17 @@ describe("StockMovementsPanel - Inline Architecture", () => {
 
     const closeButton = screen.getByRole("button", { name: /close/i });
     expect(closeButton).toHaveClass(
-      "w-6",
-      "h-6",
+      "ml-3",
+      "w-8",
+      "h-8",
       "flex",
       "items-center",
       "justify-center",
-      "rounded",
-      "hover:bg-muted",
+      "rounded-md",
+      "hover:bg-muted/50",
+      "text-muted-foreground",
+      "hover:text-foreground",
+      "transition-colors",
     );
   });
 
@@ -105,7 +108,9 @@ describe("StockMovementsPanel - Inline Architecture", () => {
     renderPanel();
 
     // Content area should have proper scrolling classes
-    const contentArea = document.querySelector(".flex-1.min-h-0.overflow-auto");
+    const contentArea = document.querySelector(
+      ".flex-1.min-h-0.overflow-auto.px-4.custom-scrollbar",
+    );
     expect(contentArea).toBeInTheDocument();
   });
 });

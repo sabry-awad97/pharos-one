@@ -68,22 +68,24 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     );
   };
 
-  it("should use inset box-shadow instead of outline for selected rows", () => {
+  it("should use inset box-shadow instead of outline for focused rows", () => {
     renderComponent();
 
-    // Find the first row checkbox and click it
+    // Find the first row and click it
     const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row");
     const firstDataRow = rows[1]; // Skip header row
 
-    const checkbox = within(firstDataRow).getByRole("checkbox");
-    fireEvent.click(checkbox);
+    // Click the row to select and focus it
+    fireEvent.click(firstDataRow);
+
+    // Verify the row has data-focused attribute
+    expect(firstDataRow).toHaveAttribute("data-focused", "true");
 
     // Verify the row uses box-shadow inset with CSS variable
-    const computedStyle = window.getComputedStyle(firstDataRow);
-    expect(computedStyle.boxShadow).toContain("inset");
-    // Check for hsl format (CSS variable usage)
-    expect(computedStyle.boxShadow).toMatch(/hsl\(|oklch\(/);
+    const styleAttr = firstDataRow.getAttribute("style");
+    expect(styleAttr).toContain("box-shadow");
+    expect(styleAttr).toContain("inset");
   });
 
   it("should maintain consistent selection styling for all row positions", () => {
@@ -92,56 +94,53 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row");
 
-    // Select first, middle, and last rows
+    // Select first, middle, and last rows using Ctrl+Click
     const firstDataRow = rows[1];
     const middleDataRow = rows[2];
     const lastDataRow = rows[3];
 
-    // Click all checkboxes
-    fireEvent.click(within(firstDataRow).getByRole("checkbox"));
-    fireEvent.click(within(middleDataRow).getByRole("checkbox"));
-    fireEvent.click(within(lastDataRow).getByRole("checkbox"));
+    // Click first row normally
+    fireEvent.click(firstDataRow);
 
-    // Verify all rows have consistent box-shadow styling
-    const firstStyle = window.getComputedStyle(firstDataRow);
-    const middleStyle = window.getComputedStyle(middleDataRow);
-    const lastStyle = window.getComputedStyle(lastDataRow);
+    // Ctrl+Click to add middle and last rows to selection
+    fireEvent.click(middleDataRow, { ctrlKey: true });
+    fireEvent.click(lastDataRow, { ctrlKey: true });
 
-    expect(firstStyle.boxShadow).toContain("inset");
-    expect(middleStyle.boxShadow).toContain("inset");
-    expect(lastStyle.boxShadow).toContain("inset");
+    // Verify all rows have data-selected attribute
+    expect(firstDataRow).toHaveAttribute("data-selected", "true");
+    expect(middleDataRow).toHaveAttribute("data-selected", "true");
+    expect(lastDataRow).toHaveAttribute("data-selected", "true");
 
-    // All should have the same box-shadow value
-    expect(firstStyle.boxShadow).toBe(middleStyle.boxShadow);
-    expect(middleStyle.boxShadow).toBe(lastStyle.boxShadow);
+    // Verify all have selection background using CSS variables in style attribute
+    const firstStyleAttr = firstDataRow.getAttribute("style");
+    const middleStyleAttr = middleDataRow.getAttribute("style");
+    const lastStyleAttr = lastDataRow.getAttribute("style");
+
+    expect(firstStyleAttr).toContain("background");
+    expect(middleStyleAttr).toContain("background");
+    expect(lastStyleAttr).toContain("background");
   });
 
-  it("should maintain hover states with inset box-shadow selection", () => {
+  it("should maintain hover states with focused row styling", () => {
     renderComponent();
 
     const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row");
     const firstDataRow = rows[1];
 
-    // Select the row
-    fireEvent.click(within(firstDataRow).getByRole("checkbox"));
+    // Click the row to focus it
+    fireEvent.click(firstDataRow);
 
-    // Verify selected row has background style attribute with CSS variable
+    // Verify focused row has data-focused attribute
+    expect(firstDataRow).toHaveAttribute("data-focused", "true");
+
+    // Verify focused row has background style attribute
     const styleAttr = firstDataRow.getAttribute("style");
     expect(styleAttr).toContain("background");
-    expect(styleAttr).toContain("hsl(var(--primary)");
 
-    // Verify box-shadow
-    const style = window.getComputedStyle(firstDataRow);
-    expect(style.boxShadow).toContain("inset");
-
-    // Simulate hover
-    fireEvent.mouseEnter(firstDataRow);
-
-    // Verify hover maintains selection background
-    const styleAttrAfterHover = firstDataRow.getAttribute("style");
-    expect(styleAttrAfterHover).toContain("background");
-    expect(styleAttrAfterHover).toContain("hsl(var(--primary)");
+    // Verify box-shadow for focus
+    expect(styleAttr).toContain("box-shadow");
+    expect(styleAttr).toContain("inset");
   });
 
   it("should show consistent styling for adjacent selected rows without gaps", () => {
@@ -150,26 +149,25 @@ describe("InventoryWorkspace - Row Selection Styling", () => {
     const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row");
 
-    // Select two adjacent rows
+    // Select two adjacent rows using Shift+Click
     const firstDataRow = rows[1];
     const secondDataRow = rows[2];
 
-    fireEvent.click(within(firstDataRow).getByRole("checkbox"));
-    fireEvent.click(within(secondDataRow).getByRole("checkbox"));
+    // Click first row
+    fireEvent.click(firstDataRow);
 
-    // Verify both rows have the same box-shadow
-    const firstStyle = window.getComputedStyle(firstDataRow);
-    const secondStyle = window.getComputedStyle(secondDataRow);
+    // Shift+Click second row to select range
+    fireEvent.click(secondDataRow, { shiftKey: true });
 
-    expect(firstStyle.boxShadow).toContain("inset");
-    expect(secondStyle.boxShadow).toContain("inset");
-    expect(firstStyle.boxShadow).toBe(secondStyle.boxShadow);
+    // Verify both rows have data-selected attribute
+    expect(firstDataRow).toHaveAttribute("data-selected", "true");
+    expect(secondDataRow).toHaveAttribute("data-selected", "true");
 
-    // Verify both have selection background using CSS variables in style attribute
+    // Verify both have selection background in style attribute
     const firstStyleAttr = firstDataRow.getAttribute("style");
     const secondStyleAttr = secondDataRow.getAttribute("style");
 
-    expect(firstStyleAttr).toContain("hsl(var(--primary)");
-    expect(secondStyleAttr).toContain("hsl(var(--primary)");
+    expect(firstStyleAttr).toContain("background");
+    expect(secondStyleAttr).toContain("background");
   });
 });

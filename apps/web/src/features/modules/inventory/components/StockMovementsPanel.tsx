@@ -78,10 +78,7 @@ export function StockMovementsPanel({
   } = useStockTransactions(productId);
 
   return (
-    <div
-      className="flex flex-col h-full bg-card border-l border-border"
-      role="complementary"
-    >
+    <div className="flex flex-col h-full bg-card border-l border-border">
       {/* Header */}
       <div className="flex-none border-b border-border">
         {/* Title Bar */}

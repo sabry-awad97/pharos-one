@@ -1,4 +1,10 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  within,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
@@ -83,7 +89,7 @@ describe("Stock Movements Action", () => {
     expect(icon).toBeInTheDocument();
   });
 
-  it("should open StockMovementsPanel when action is clicked", () => {
+  it("should open StockMovementsPanel when action is clicked", async () => {
     renderComponent();
 
     const table = screen.getByRole("table");
@@ -95,15 +101,18 @@ describe("Stock Movements Action", () => {
     const action = screen.getByText("View Stock Movements");
     fireEvent.click(action);
 
-    // Panel should be visible with the description text
-    expect(screen.getByText("Stock transaction history")).toBeInTheDocument();
-    // Panel title should show product name
-    expect(
-      screen.getByRole("heading", { name: "Product A" }),
-    ).toBeInTheDocument();
+    // Wait for panel to appear after menu closes
+    await waitFor(() => {
+      const panel = screen.getByRole("complementary");
+      expect(panel).toBeInTheDocument();
+    });
+
+    // Panel should show product name in the panel (not the table)
+    const panel = screen.getByRole("complementary");
+    expect(within(panel).getByText("Product A")).toBeInTheDocument();
   });
 
-  it("should close StockMovementsPanel when close button is clicked", () => {
+  it("should close StockMovementsPanel when close button is clicked", async () => {
     renderComponent();
 
     const table = screen.getByRole("table");
@@ -115,16 +124,19 @@ describe("Stock Movements Action", () => {
     const action = screen.getByText("View Stock Movements");
     fireEvent.click(action);
 
-    // Panel should be visible
-    expect(screen.getByText("Stock transaction history")).toBeInTheDocument();
+    // Wait for panel to appear
+    await waitFor(() => {
+      const panel = screen.getByRole("complementary");
+      expect(panel).toBeInTheDocument();
+    });
 
     // Close the panel by clicking the close button (X)
     const closeButton = screen.getByRole("button", { name: /close/i });
     fireEvent.click(closeButton);
 
     // Panel should be closed
-    expect(
-      screen.queryByText("Stock transaction history"),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+    });
   });
 });

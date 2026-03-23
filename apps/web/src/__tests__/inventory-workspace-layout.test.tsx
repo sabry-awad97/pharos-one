@@ -264,10 +264,9 @@ describe("InventoryWorkspace - Horizontal Layout", () => {
     // Verify table is still visible and functional
     expect(table).toBeVisible();
 
-    // Verify we can still select rows
-    const checkbox = within(firstDataRow).getByRole("checkbox");
-    await user.click(checkbox);
-    expect(checkbox).toBeChecked();
+    // Verify we can still select rows by clicking
+    await user.click(firstDataRow);
+    expect(firstDataRow).toHaveAttribute("data-selected", "true");
   });
 
   it("should show product name in panel header", async () => {

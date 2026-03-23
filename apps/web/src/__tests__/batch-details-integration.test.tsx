@@ -17,6 +17,7 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
@@ -321,6 +322,8 @@ describe("Batch Details - Panel Layer", () => {
   });
 
   it("should display batch data correctly", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(batchHooks.useBatches).mockReturnValue({
       data: mockBatches,
       isLoading: false,
@@ -340,8 +343,8 @@ describe("Batch Details - Panel Layer", () => {
     );
 
     // Click on Lots tab to see batch data
-    const lotsTab = screen.getByText("Lots");
-    fireEvent.click(lotsTab);
+    const lotsTab = screen.getByRole("tab", { name: "Lots" });
+    await user.click(lotsTab);
 
     // Wait for batch data to appear
     await waitFor(() => {
@@ -352,7 +355,9 @@ describe("Batch Details - Panel Layer", () => {
     expect(screen.getByText("MedSupply Co")).toBeInTheDocument();
   });
 
-  it("should show loading state", () => {
+  it("should show loading state", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(batchHooks.useBatches).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -372,13 +377,17 @@ describe("Batch Details - Panel Layer", () => {
     );
 
     // Click on Lots tab
-    const lotsTab = screen.getByText("Lots");
-    fireEvent.click(lotsTab);
+    const lotsTab = screen.getByRole("tab", { name: "Lots" });
+    await user.click(lotsTab);
 
-    expect(screen.getByText(/loading batches/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/loading batches/i)).toBeInTheDocument();
+    });
   });
 
-  it("should show empty state when no batches", () => {
+  it("should show empty state when no batches", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(batchHooks.useBatches).mockReturnValue({
       data: [],
       isLoading: false,
@@ -398,13 +407,17 @@ describe("Batch Details - Panel Layer", () => {
     );
 
     // Click on Lots tab
-    const lotsTab = screen.getByText("Lots");
-    fireEvent.click(lotsTab);
+    const lotsTab = screen.getByRole("tab", { name: "Lots" });
+    await user.click(lotsTab);
 
-    expect(screen.getByText(/no batches found/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/no batches found/i)).toBeInTheDocument();
+    });
   });
 
-  it("should show error state", () => {
+  it("should show error state", async () => {
+    const user = userEvent.setup();
+
     vi.mocked(batchHooks.useBatches).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -424,10 +437,12 @@ describe("Batch Details - Panel Layer", () => {
     );
 
     // Click on Lots tab
-    const lotsTab = screen.getByText("Lots");
-    fireEvent.click(lotsTab);
+    const lotsTab = screen.getByRole("tab", { name: "Lots" });
+    await user.click(lotsTab);
 
-    expect(screen.getByText(/error loading batches/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/error loading batches/i)).toBeInTheDocument();
+    });
   });
 
   it("should close panel when close button clicked", () => {

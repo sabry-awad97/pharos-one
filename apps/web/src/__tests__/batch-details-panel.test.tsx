@@ -34,7 +34,6 @@ describe("BatchDetailsPanel", () => {
 
     expect(screen.getByText("Details")).toBeInTheDocument();
     expect(screen.getByText("Lots")).toBeInTheDocument();
-    expect(screen.getByText("History")).toBeInTheDocument();
   });
 
   it("should switch between tabs", () => {

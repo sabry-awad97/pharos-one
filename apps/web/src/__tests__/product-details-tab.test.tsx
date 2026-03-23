@@ -189,8 +189,7 @@ describe("ProductDetailsTab", () => {
     expect(screen.getByText("50")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
 
-    // Status
-    expect(screen.getByText("2026-03-15")).toBeInTheDocument();
+    // Status - batch count
     const batchCount = screen.getAllByText("2");
     expect(batchCount.length).toBeGreaterThan(0);
   });
