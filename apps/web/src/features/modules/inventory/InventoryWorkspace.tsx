@@ -482,7 +482,7 @@ export function InventoryWorkspace({
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr
                         key={headerGroup.id}
-                        className="bg-muted/50 sticky top-0 z-10 border-b border-border"
+                        className="bg-card sticky top-0 z-10 border-b border-border"
                       >
                         {headerGroup.headers.map((header) => (
                           <th
