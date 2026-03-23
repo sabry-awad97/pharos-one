@@ -45,15 +45,4 @@ describe("Home Route Layout", () => {
     expect(tabBar).toBeInTheDocument();
     expect(workspaceArea).toContainElement(tabBar);
   });
-
-  it("should have RibbonBar inside workspace area, not as full-width element", () => {
-    render(<HomeComponent />);
-
-    // RibbonBar should be inside workspace area
-    const workspaceArea = screen.getByTestId("workspace-area");
-    const ribbonBar = within(workspaceArea).getByTestId("ribbon-bar");
-
-    expect(ribbonBar).toBeInTheDocument();
-    expect(workspaceArea).toContainElement(ribbonBar);
-  });
 });

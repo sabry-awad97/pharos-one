@@ -419,36 +419,6 @@ export function InventoryWorkspace({
       <div
         className={`flex flex-col ${isPanelOpen ? "flex-1 min-h-0" : "flex-1"} overflow-hidden`}
       >
-        {/* Module header */}
-        <div className="pt-2.5 px-4 pb-2 flex items-center gap-2.5 shrink-0 border-b border-border bg-card">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center bg-green-700/10">
-            <Hash className="w-[14px] h-[14px] text-green-700" />
-          </div>
-          <div>
-            <p className="m-0 text-[13px] font-semibold text-foreground">
-              {label || "Inventory"}
-            </p>
-            <p className="m-0 text-[10px] text-muted-foreground">
-              {isLoading
-                ? "Loading..."
-                : `${products.length} items • Last updated: just now`}
-            </p>
-          </div>
-          <div className="flex-1" />
-          {!split && (
-            <div className="flex gap-1">
-              {[Filter, Download, RefreshCw].map((Icon, i) => (
-                <button
-                  key={i}
-                  className="w-[26px] h-[26px] flex items-center justify-center border border-border rounded bg-card text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
-                >
-                  <Icon className="w-3 h-3" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Breadcrumb + Toolbar */}
         <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
           <span className="text-[11px] text-muted-foreground">Pharos One</span>

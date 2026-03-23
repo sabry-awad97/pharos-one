@@ -25,7 +25,6 @@ import {
 } from "@/features/shell";
 import { useTabs } from "@/features/workspace/hooks/use-tabs";
 import { TabBar } from "@/features/workspace/components/TabBar";
-import { RibbonBar } from "@/features/workspace/components/RibbonBar";
 import { TabProvider } from "@/features/workspace/context/TabContext";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
@@ -300,7 +299,7 @@ function HomeComponent() {
             stats={mockStats}
           />
 
-          {/* Workspace area - contains TabBar, RibbonBar, and content */}
+          {/* Workspace area - contains TabBar and content */}
           <div
             data-testid="workspace-area"
             style={{
@@ -322,16 +321,6 @@ function HomeComponent() {
               onAddTab={handleAddTab}
               splitViewEnabled={state.splitView.enabled}
               onSplitViewToggle={toggleSplitView}
-            />
-
-            {/* Ribbon Bar */}
-            <RibbonBar
-              activeTabLabel={activeTab?.label}
-              activeTabIcon={activeTab?.icon}
-              activeTabColor={activeTab?.color}
-              activeTabUnsaved={activeTab?.unsaved}
-              activeTabPinned={activeTab?.pinned}
-              moduleId={activeTab?.module}
             />
 
             {/* Content area */}
