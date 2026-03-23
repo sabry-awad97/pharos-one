@@ -86,8 +86,8 @@ export function useProduct(id: number) {
         )
         .select(({ product, category, supplier }) => ({
           ...product,
-          category: category ?? null,
-          defaultSupplier: supplier ?? null,
+          category,
+          defaultSupplier: supplier,
           // Add computed fields for UI compatibility
           // TODO: Calculate these from batches when batch aggregation is implemented
           totalQuantity: 0,

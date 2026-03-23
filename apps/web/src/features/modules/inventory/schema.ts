@@ -159,7 +159,7 @@ export const stockTransactionSchema = z.object({
 // Stock transaction with relations
 export const stockTransactionWithRelationsSchema =
   stockTransactionSchema.extend({
-    batch: batchWithRelationsSchema,
+    batch: batchWithRelationsSchema.nullable(),
   });
 
 // ============================================================================

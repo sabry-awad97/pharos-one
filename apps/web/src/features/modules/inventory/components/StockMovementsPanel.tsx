@@ -23,7 +23,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Skeleton } from "@pharos-one/ui/components/skeleton";
 import { Timeline } from "./timeline/Timeline";
-import { useStockTransactions } from "../hooks/use-transactions";
+import { useTransactions } from "../hooks/use-transactions";
 
 /**
  * Props for StockMovementsPanel component
@@ -75,7 +75,7 @@ export function StockMovementsPanel({
     data: transactions = [],
     isLoading,
     isError,
-  } = useStockTransactions(productId);
+  } = useTransactions({ productId });
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">

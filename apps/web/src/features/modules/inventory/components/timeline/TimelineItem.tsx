@@ -196,7 +196,9 @@ export const TimelineItem = React.forwardRef<HTMLDivElement, TimelineItemProps>(
 
             {/* Note/Reference */}
             <p className="text-[11px] font-normal text-foreground mb-2 truncate">
-              {transaction.reason || transaction.batch.batchNumber}
+              {transaction.reason ||
+                transaction.batch?.batchNumber ||
+                `Batch #${transaction.batchId}`}
             </p>
 
             {/* Collapsible Details */}
@@ -215,7 +217,7 @@ export const TimelineItem = React.forwardRef<HTMLDivElement, TimelineItemProps>(
                       Balance
                     </span>
                     <span className="text-[11px] font-normal text-foreground">
-                      {transaction.batch.quantityRemaining}
+                      {transaction.batch?.quantityRemaining ?? "N/A"}
                     </span>
                   </div>
 
@@ -225,7 +227,8 @@ export const TimelineItem = React.forwardRef<HTMLDivElement, TimelineItemProps>(
                       Reference
                     </span>
                     <span className="text-[11px] font-normal text-foreground truncate">
-                      {transaction.batch.batchNumber}
+                      {transaction.batch?.batchNumber ||
+                        `Batch #${transaction.batchId}`}
                     </span>
                   </div>
 

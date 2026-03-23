@@ -7,7 +7,7 @@ import { useLiveQuery, gte, lte, and } from "@tanstack/react-db";
 import { useCollections } from "./use-collections";
 import { wrapLiveQuery } from "./utils/hook-wrapper";
 import type { QueryResult } from "./utils/hook-wrapper";
-import type { StockTransaction } from "../schema";
+import type { StockTransactionWithRelations } from "../schema";
 
 /**
  * Transaction filters for on-demand loading
@@ -54,7 +54,7 @@ export interface TransactionFilters {
  */
 export function useTransactions(
   filters?: TransactionFilters,
-): QueryResult<StockTransaction[]> {
+): QueryResult<StockTransactionWithRelations[]> {
   const { transactions } = useCollections();
 
   const liveResult = useLiveQuery(
@@ -99,13 +99,17 @@ export function useTransactions(
   // TODO: Move this to TanStack DB query when joins support it
   const filteredResult = {
     ...liveResult,
-    data: filters?.productId
+    data: (filters?.productId
       ? liveResult.data?.filter((t) => {
           // This would need to join with batches to get productId
           // For now, we'll assume batchId maps to productId (mock data)
           return t.batchId === filters.productId;
         })
-      : liveResult.data,
+      : liveResult.data
+    )?.map((t) => ({
+      ...t,
+      batch: null, // TODO: Add proper join to get batch data
+    })),
   };
 
   return wrapLiveQuery(filteredResult);
