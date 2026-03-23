@@ -38,13 +38,12 @@ import type { ProductStockSummary } from "./schema";
 
 // Page size options
 const PAGE_SIZE_OPTIONS = [
-  { value: "10", label: "10 / page" },
   { value: "25", label: "25 / page" },
   { value: "50", label: "50 / page" },
   { value: "100", label: "100 / page" },
 ] as const;
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 25;
 const STORAGE_KEY = "inventory-page-size";
 
 // Hook for persisted page size
