@@ -1,6 +1,6 @@
 /**
  * ViewMenu component
- * Dropdown menu for View operations (panel visibility toggles, zoom controls)
+ * Dropdown menu for View operations (panel visibility toggles, zoom controls, theme switcher)
  */
 
 import { useState } from "react";
@@ -11,7 +11,11 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Palette,
+  ChevronRight,
+  Check,
 } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 interface ViewMenuProps {
   onClose: () => void;
@@ -27,10 +31,11 @@ interface MenuItemProps {
   icon: any;
   label: string;
   kbd?: string;
+  arrow?: boolean;
   onClick?: () => void;
 }
 
-function MenuItem({ icon: Icon, label, kbd, onClick }: MenuItemProps) {
+function MenuItem({ icon: Icon, label, kbd, arrow, onClick }: MenuItemProps) {
   const [hov, setHov] = useState(false);
   return (
     <div
@@ -75,6 +80,12 @@ function MenuItem({ icon: Icon, label, kbd, onClick }: MenuItemProps) {
         {label}
       </span>
       {kbd && <span style={{ fontSize: 10, color: "#919191" }}>{kbd}</span>}
+      {arrow && (
+        <ChevronRight
+          className="w-[11px] h-[11px]"
+          style={{ color: "#919191" }}
+        />
+      )}
     </div>
   );
 }
@@ -88,6 +99,9 @@ export function ViewMenu({
   onZoomOut,
   onResetZoom,
 }: ViewMenuProps) {
+  const [themeSubmenuOpen, setThemeSubmenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -128,6 +142,56 @@ export function ViewMenu({
             onClose();
           }}
         />
+        <MenuDivider />
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setThemeSubmenuOpen(true)}
+          onMouseLeave={() => setThemeSubmenuOpen(false)}
+        >
+          <MenuItem icon={Palette} label="Theme" arrow />
+          {themeSubmenuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                left: "100%",
+                top: 0,
+                width: 200,
+                background: "#ffffff",
+                border: "1px solid #d1d1d1",
+                boxShadow:
+                  "0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.1)",
+                borderRadius: 6,
+                padding: "4px 0",
+                zIndex: 30,
+              }}
+            >
+              <MenuItem
+                icon={theme === "light" ? Check : Palette}
+                label="Light"
+                onClick={() => {
+                  setTheme("light");
+                  onClose();
+                }}
+              />
+              <MenuItem
+                icon={theme === "dark" ? Check : Palette}
+                label="Dark"
+                onClick={() => {
+                  setTheme("dark");
+                  onClose();
+                }}
+              />
+              <MenuItem
+                icon={theme === "system" ? Check : Palette}
+                label="Auto (System)"
+                onClick={() => {
+                  setTheme("system");
+                  onClose();
+                }}
+              />
+            </div>
+          )}
+        </div>
         <MenuDivider />
         <MenuItem
           icon={ZoomIn}
