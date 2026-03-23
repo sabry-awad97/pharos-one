@@ -467,8 +467,98 @@ export function InventoryWorkspace({
           )}
 
           {isLoading && (
-            <div className="p-4 text-center text-muted-foreground">
-              Loading inventory...
+            <div className="flex-1 overflow-auto custom-scrollbar bg-card">
+              <table
+                className="w-full border-collapse"
+                style={{
+                  boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+                }}
+              >
+                <thead>
+                  <tr
+                    className="bg-card sticky top-0 z-10 border-b"
+                    style={{ borderBottomColor: "#e0e0e0" }}
+                  >
+                    {[
+                      "Product Name",
+                      "SKU",
+                      "Stock",
+                      "Expiry",
+                      "Price",
+                      "Category",
+                      "Supplier",
+                      "Status",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="text-left py-[7px] px-3 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap text-muted-foreground"
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 25 }).map((_, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-b"
+                      style={{
+                        borderBottomColor: "#ebebeb",
+                        background: idx % 2 === 1 ? "#f9f9f9" : "#ffffff",
+                      }}
+                    >
+                      {/* Product Name with dot */}
+                      <td className="py-1.5 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-[7px] h-[7px] rounded-full bg-muted animate-pulse" />
+                          <div
+                            className="h-3 bg-muted rounded animate-pulse"
+                            style={{ width: `${120 + Math.random() * 80}px` }}
+                          />
+                        </div>
+                      </td>
+                      {/* SKU */}
+                      <td className="py-1.5 px-3">
+                        <div
+                          className="h-3 bg-muted rounded animate-pulse"
+                          style={{ width: `${60 + Math.random() * 20}px` }}
+                        />
+                      </td>
+                      {/* Stock */}
+                      <td className="py-1.5 px-3">
+                        <div className="h-3 bg-muted rounded animate-pulse w-8" />
+                      </td>
+                      {/* Expiry */}
+                      <td className="py-1.5 px-3">
+                        <div className="h-3 bg-muted rounded animate-pulse w-16" />
+                      </td>
+                      {/* Price */}
+                      <td className="py-1.5 px-3">
+                        <div className="h-3 bg-muted rounded animate-pulse w-12" />
+                      </td>
+                      {/* Category */}
+                      <td className="py-1.5 px-3">
+                        <div
+                          className="h-4 bg-muted rounded animate-pulse"
+                          style={{ width: `${60 + Math.random() * 30}px` }}
+                        />
+                      </td>
+                      {/* Supplier */}
+                      <td className="py-1.5 px-3">
+                        <div
+                          className="h-3 bg-muted rounded animate-pulse"
+                          style={{ width: `${70 + Math.random() * 40}px` }}
+                        />
+                      </td>
+                      {/* Status */}
+                      <td className="py-1.5 px-3">
+                        <div className="h-4 bg-muted rounded animate-pulse w-20" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
@@ -476,12 +566,18 @@ export function InventoryWorkspace({
             <>
               {/* Scrollable table area */}
               <div className="flex-1 overflow-auto custom-scrollbar bg-card">
-                <table className="w-full border-collapse">
+                <table
+                  className="w-full border-collapse"
+                  style={{
+                    boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+                  }}
+                >
                   <thead>
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr
                         key={headerGroup.id}
-                        className="bg-card sticky top-0 z-10 border-b border-border"
+                        className="bg-card sticky top-0 z-10 border-b"
+                        style={{ borderBottomColor: "#e0e0e0" }}
                       >
                         {headerGroup.headers.map((header) => (
                           <th
@@ -526,15 +622,14 @@ export function InventoryWorkspace({
                             data-focused={focused ? "true" : undefined}
                             className="border-b transition-[background]"
                             style={{
-                              borderBottomColor:
-                                "oklch(from var(--border) l c h / 0.8)",
+                              borderBottomColor: "#ebebeb",
                               background: focused
                                 ? "oklch(from var(--primary) l c h / 0.07)"
                                 : selected
                                   ? "oklch(from var(--primary) l c h / 0.05)"
                                   : idx % 2 === 1
-                                    ? "oklch(from var(--muted) l c h / 0.5)"
-                                    : "var(--card)",
+                                    ? "#f9f9f9"
+                                    : "#ffffff",
                               boxShadow: focused
                                 ? "inset 0 0 0 1.5px var(--primary)"
                                 : "none",
@@ -547,8 +642,7 @@ export function InventoryWorkspace({
                               if (!focused) {
                                 (
                                   e.currentTarget as HTMLTableRowElement
-                                ).style.background =
-                                  "oklch(from var(--primary) l c h / 0.03)";
+                                ).style.background = "#f0f6ff";
                               }
                             }}
                             onMouseLeave={(e) => {
@@ -559,8 +653,8 @@ export function InventoryWorkspace({
                                 : selected
                                   ? "oklch(from var(--primary) l c h / 0.05)"
                                   : idx % 2 === 1
-                                    ? "oklch(from var(--muted) l c h / 0.5)"
-                                    : "var(--card)";
+                                    ? "#f9f9f9"
+                                    : "#ffffff";
                             }}
                           >
                             {row.getVisibleCells().map((cell) => (

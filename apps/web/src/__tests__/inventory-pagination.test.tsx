@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
-// Mock products data - 25 items to test pagination
-const mockProducts = Array.from({ length: 25 }, (_, i) => ({
+// Mock products data - 50 items to test pagination (with default 25/page = 2 pages)
+const mockProducts = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   name: `Test Product ${i + 1}`,
   sku: `TEST-${String(i + 1).padStart(3, "0")}`,
@@ -66,14 +66,12 @@ describe("InventoryWorkspace - Pagination Navigation", () => {
   it("should display page numbers with current page highlighted", () => {
     renderComponent();
 
-    // With 25 items and page size 10, we should have 3 pages
+    // With 50 items and page size 25, we should have 2 pages
     const page1Button = screen.getByRole("button", { name: "1" });
     const page2Button = screen.getByRole("button", { name: "2" });
-    const page3Button = screen.getByRole("button", { name: "3" });
 
     expect(page1Button).toBeInTheDocument();
     expect(page2Button).toBeInTheDocument();
-    expect(page3Button).toBeInTheDocument();
 
     // Page 1 should be highlighted (active)
     expect(page1Button).toHaveAttribute("aria-current", "page");
@@ -115,17 +113,17 @@ describe("InventoryWorkspace - Pagination Navigation", () => {
     expect(page1Button).toHaveClass("text-primary-foreground");
   });
 
-  it("should have default page size of 10 items", () => {
+  it("should have default page size of 25 items", () => {
     renderComponent();
 
-    // With 25 items and page size 10, we should have 3 pages
+    // With 50 items and page size 25, we should have 2 pages
     const allButtons = screen.getAllByRole("button");
     const pageButtons = allButtons.filter((btn) =>
       /^\d+$/.test(btn.textContent || ""),
     );
 
-    // Should have exactly 3 page buttons (25 items / 10 per page = 3 pages)
-    expect(pageButtons).toHaveLength(3);
+    // Should have exactly 2 page buttons (50 items / 25 per page = 2 pages)
+    expect(pageButtons).toHaveLength(2);
   });
 });
 
@@ -205,15 +203,15 @@ describe("InventoryWorkspace - Go to Page", () => {
 
     const goToPageInput = screen.getByLabelText(/go to page/i);
 
-    // With 25 items and 10 per page, we have 3 pages
+    // With 50 items and 25 per page, we have 2 pages
     // Try to go to page 10 (beyond total)
     await user.clear(goToPageInput);
     await user.type(goToPageInput, "10");
     await user.keyboard("{Enter}");
 
-    // Should go to last page (page 3)
+    // Should go to last page (page 2)
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "3" })).toHaveAttribute(
+      expect(screen.getByRole("button", { name: "2" })).toHaveAttribute(
         "aria-current",
         "page",
       );
