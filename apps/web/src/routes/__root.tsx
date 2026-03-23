@@ -6,6 +6,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { queryClient } from "@/lib/query-client";
@@ -43,17 +44,19 @@ function RootComponent() {
     <>
       <HeadContent />
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          disableTransitionOnChange
-          storageKey="vite-ui-theme"
-        >
-          <div className="grid h-svh grid-rows-[auto_1fr]">
-            <Outlet />
-          </div>
-          <Toaster richColors />
-        </ThemeProvider>
+        <NuqsAdapter>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            disableTransitionOnChange
+            storageKey="vite-ui-theme"
+          >
+            <div className="grid h-svh grid-rows-[auto_1fr]">
+              <Outlet />
+            </div>
+            <Toaster richColors />
+          </ThemeProvider>
+        </NuqsAdapter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
       <TanStackRouterDevtools position="bottom-left" />

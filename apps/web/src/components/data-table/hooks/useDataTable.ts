@@ -14,6 +14,7 @@ import {
   type ColumnFiltersState,
   type VisibilityState,
 } from "@tanstack/react-table";
+import { usePaginationState } from "./usePaginationState";
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -35,21 +36,29 @@ export function useDataTable<TData>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnFiltersState, setColumnFilters] = useState<ColumnFiltersState>(
+    [],
+  );
 
-  const [pageSize, setPageSize] = useState<number>(() => {
-    if (!persistenceKey) return DEFAULT_PAGE_SIZE;
-    try {
-      const stored = localStorage.getItem(persistenceKey);
-      return stored ? parseInt(stored, 10) : DEFAULT_PAGE_SIZE;
-    } catch {
-      return DEFAULT_PAGE_SIZE;
-    }
-  });
+  // Always call usePaginationState (hooks must be called unconditionally)
+  const [urlPagination, setUrlPagination] = usePaginationState();
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize,
+  // Determine initial page size from URL or default
+  const initialPageSize = urlPagination.pageSize || DEFAULT_PAGE_SIZE;
+
+  const [pageSize, setPageSize] = useState<number>(initialPageSize);
+
+  // Initialize pagination state from URL
+  const [pagination, setPagination] = useState<PaginationState>(() => {
+    const pageIndex =
+      urlPagination.page && urlPagination.page >= 1
+        ? urlPagination.page - 1
+        : 0;
+
+    return {
+      pageIndex,
+      pageSize: initialPageSize,
+    };
   });
 
   // Row selection state for Windows-style multi-select
@@ -60,20 +69,32 @@ export function useDataTable<TData>({
   const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
   const [goToPageValue, setGoToPageValue] = useState<string>("");
 
-  // Persist page size to localStorage
-  useEffect(() => {
-    if (!persistenceKey) return;
-    try {
-      localStorage.setItem(persistenceKey, pageSize.toString());
-    } catch {
-      // Silently fail if localStorage is unavailable
-    }
-  }, [pageSize, persistenceKey]);
-
   // Sync pageSize changes with pagination state
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageSize, pageIndex: 0 }));
   }, [pageSize]);
+
+  // Sync FROM URL TO pagination state ONLY on mount (initial load from URL)
+  useEffect(() => {
+    // Only sync from URL if we have URL params
+    if (urlPagination.page) {
+      const pageIndex = Math.max(0, urlPagination.page - 1);
+      const newPageSize = urlPagination.pageSize || DEFAULT_PAGE_SIZE;
+
+      setPagination({ pageIndex, pageSize: newPageSize });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - this reads from URL once
+
+  // Sync FROM pagination TO URL state whenever pagination changes
+  useEffect(() => {
+    const urlPage = pagination.pageIndex + 1;
+
+    setUrlPagination({
+      page: urlPage,
+      pageSize: pagination.pageSize,
+    });
+  }, [pagination.pageIndex, pagination.pageSize, setUrlPagination]);
 
   const table = useReactTable({
     data,
@@ -82,7 +103,7 @@ export function useDataTable<TData>({
       sorting,
       rowSelection,
       columnVisibility,
-      columnFilters,
+      columnFilters: columnFiltersState,
       pagination,
     },
     onSortingChange: setSorting,
