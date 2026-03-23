@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { usePaginationState } from "../usePaginationState";
+import { AllProviders } from "@/test-utils";
 
 describe("usePaginationState", () => {
   beforeEach(() => {
@@ -11,9 +11,7 @@ describe("usePaginationState", () => {
   describe("TDD Cycle 1: Page index persists in URL on page change", () => {
     it("should initialize with default page 1 when no URL params", () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [{ page }] = result.current;
@@ -22,9 +20,7 @@ describe("usePaginationState", () => {
 
     it("should update URL when page changes", async () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [, setPagination] = result.current;
@@ -43,9 +39,7 @@ describe("usePaginationState", () => {
     it("should restore page from URL on mount", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=3">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="page=3">{children}</AllProviders>
         ),
       });
 
@@ -57,9 +51,7 @@ describe("usePaginationState", () => {
   describe("TDD Cycle 2: Page size persists in URL on size change", () => {
     it("should initialize with default pageSize 25 when no URL params", () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [{ pageSize }] = result.current;
@@ -68,9 +60,7 @@ describe("usePaginationState", () => {
 
     it("should update URL when pageSize changes", async () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [, setPagination] = result.current;
@@ -87,13 +77,11 @@ describe("usePaginationState", () => {
     });
 
     it("should restore pageSize from URL on mount", () => {
-      // Note: NuqsTestingAdapter has limitations with integer parsing from strings
+      // Note: AllProviders has limitations with integer parsing from strings
       // In real browser usage, parseAsInteger works correctly
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="pageSize=50">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="pageSize=50">{children}</AllProviders>
         ),
       });
 
@@ -111,9 +99,9 @@ describe("usePaginationState", () => {
     it("should restore both page and pageSize from URL", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=3&pageSize=50">
+          <AllProviders searchParams="page=3&pageSize=50">
             {children}
-          </NuqsTestingAdapter>
+          </AllProviders>
         ),
       });
 
@@ -132,9 +120,7 @@ describe("usePaginationState", () => {
     it("should update URL when incrementing page", async () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=2">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="page=2">{children}</AllProviders>
         ),
       });
 
@@ -154,9 +140,7 @@ describe("usePaginationState", () => {
     it("should update URL when decrementing page", async () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=2">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="page=2">{children}</AllProviders>
         ),
       });
 
@@ -178,9 +162,7 @@ describe("usePaginationState", () => {
     it("should clamp negative page numbers to 1", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=-5">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="page=-5">{children}</AllProviders>
         ),
       });
 
@@ -191,9 +173,7 @@ describe("usePaginationState", () => {
     it("should clamp zero page to 1", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="page=0">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="page=0">{children}</AllProviders>
         ),
       });
 
@@ -204,9 +184,7 @@ describe("usePaginationState", () => {
     it("should clamp invalid pageSize to default 25", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="pageSize=0">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="pageSize=0">{children}</AllProviders>
         ),
       });
 
@@ -217,9 +195,7 @@ describe("usePaginationState", () => {
     it("should clamp negative pageSize to default 25", () => {
       const { result } = renderHook(() => usePaginationState(), {
         wrapper: ({ children }) => (
-          <NuqsTestingAdapter searchParams="pageSize=-10">
-            {children}
-          </NuqsTestingAdapter>
+          <AllProviders searchParams="pageSize=-10">{children}</AllProviders>
         ),
       });
 
@@ -231,9 +207,7 @@ describe("usePaginationState", () => {
   describe("TDD Cycle 7: Default values don't clutter URL", () => {
     it("should not show page=1 in URL by default", () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [{ page }] = result.current;
@@ -243,9 +217,7 @@ describe("usePaginationState", () => {
 
     it("should not show pageSize=25 in URL by default", () => {
       const { result } = renderHook(() => usePaginationState(), {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        ),
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
       });
 
       const [{ pageSize }] = result.current;
@@ -254,3 +226,4 @@ describe("usePaginationState", () => {
     });
   });
 });
+

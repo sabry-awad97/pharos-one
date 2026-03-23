@@ -1,7 +1,8 @@
 import { render, screen, within, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AllProviders, createTestQueryClient } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
+import type { QueryClient } from "@tanstack/react-query";
 
 // Don't mock the action registry - use the real one to test actual behavior
 
@@ -56,18 +57,14 @@ describe("Batch Details Action", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
+    queryClient = createTestQueryClient();
   });
 
   const renderComponent = () => {
     return render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <InventoryWorkspace />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
   };
 

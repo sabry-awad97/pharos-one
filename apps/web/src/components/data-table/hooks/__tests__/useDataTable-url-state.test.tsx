@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { NuqsTestingAdapter } from "nuqs/adapters/testing";
+import { AllProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTablePagination } from "../../components/DataTablePagination";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -38,16 +38,15 @@ describe("useDataTable with URL state integration", () => {
   const renderComponent = (searchParams = "") => {
     const user = userEvent.setup();
     const result = render(
-      <NuqsTestingAdapter searchParams={searchParams}>
+      <AllProviders searchParams={searchParams}>
         <DataTableProvider
           columns={mockColumns}
           data={mockData}
           getRowId={(row) => row.id}
-          useUrlState={true}
         >
           <DataTablePagination />
         </DataTableProvider>
-      </NuqsTestingAdapter>,
+      </AllProviders>,
     );
     return { ...result, user };
   };
@@ -58,17 +57,16 @@ describe("useDataTable with URL state integration", () => {
       localStorage.setItem("test-page-size", "50");
 
       render(
-        <NuqsTestingAdapter>
+        <AllProviders>
           <DataTableProvider
             columns={mockColumns}
             data={mockData}
             getRowId={(row) => row.id}
             persistenceKey="test-page-size"
-            useUrlState={true}
           >
             <DataTablePagination />
           </DataTableProvider>
-        </NuqsTestingAdapter>,
+        </AllProviders>,
       );
 
       const pageSizeSelect = screen.getByRole("combobox");
@@ -81,17 +79,16 @@ describe("useDataTable with URL state integration", () => {
       localStorage.setItem("test-page-size", "50");
 
       render(
-        <NuqsTestingAdapter searchParams="pageSize=100">
+        <AllProviders searchParams="pageSize=100">
           <DataTableProvider
             columns={mockColumns}
             data={mockData}
             getRowId={(row) => row.id}
             persistenceKey="test-page-size"
-            useUrlState={true}
           >
             <DataTablePagination />
           </DataTableProvider>
-        </NuqsTestingAdapter>,
+        </AllProviders>,
       );
 
       const pageSizeSelect = screen.getByRole("combobox");
@@ -186,3 +183,4 @@ describe("useDataTable with URL state integration", () => {
     });
   });
 });
+

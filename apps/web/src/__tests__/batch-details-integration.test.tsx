@@ -19,11 +19,12 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 import { BatchDetailsPanel } from "../features/modules/inventory/components/ProductDetailsPanel";
 import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 import * as productHooks from "../features/modules/inventory/hooks/use-products";
+import { AllProviders, createTestQueryClient } from "@/test-utils";
+import type { QueryClient } from "@tanstack/react-query";
 
 // Mock the hooks
 vi.mock("../features/modules/inventory/hooks/use-batches", () => ({
@@ -80,10 +81,8 @@ describe("Batch Details - Action Layer", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
+    beforeEach(() => {
+      queryClient = createTestQueryClient();
     });
 
     // Mock products with different batchCount values
@@ -172,9 +171,9 @@ describe("Batch Details - Action Layer", () => {
 
   const renderComponent = () => {
     return render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <InventoryWorkspace />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
   };
 
@@ -230,10 +229,8 @@ describe("Batch Details - Panel Layer", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
+    beforeEach(() => {
+      queryClient = createTestQueryClient();
     });
   });
 
@@ -306,13 +303,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={() => {}}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     // Verify panel header - use more specific query since product name appears in Details tab too
@@ -333,13 +330,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={() => {}}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     // Click on Lots tab to see batch data
@@ -367,13 +364,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={() => {}}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     // Click on Lots tab
@@ -397,13 +394,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={() => {}}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     // Click on Lots tab
@@ -427,13 +424,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={() => {}}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     // Click on Lots tab
@@ -457,13 +454,13 @@ describe("Batch Details - Panel Layer", () => {
     } as any);
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <BatchDetailsPanel
           productId={1}
           productName="Amoxicillin 500mg"
           onClose={onClose}
         />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     const closeButton = screen.getByRole("button", { name: /close/i });
@@ -477,11 +474,7 @@ describe("Batch Details - Integration Layer", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
+    queryClient = createTestQueryClient();
 
     // Mock products
     vi.mocked(productHooks.useProducts).mockReturnValue({
@@ -598,9 +591,9 @@ describe("Batch Details - Integration Layer", () => {
 
   it("should open panel when Batch Details action is clicked", async () => {
     render(
-      <QueryClientProvider client={queryClient}>
+      <AllProviders queryClient={queryClient}>
         <InventoryWorkspace />
-      </QueryClientProvider>,
+      </AllProviders>,
     );
 
     const table = screen.getByRole("table");
