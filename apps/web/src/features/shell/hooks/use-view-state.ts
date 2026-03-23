@@ -12,7 +12,7 @@ const STATUS_BAR_VISIBLE_KEY = "pharmos-status-bar-visible";
 const TOOLBAR_VISIBLE_KEY = "pharmos-toolbar-visible";
 const ZOOM_LEVEL_KEY = "pharmos-zoom-level";
 const DENSITY_MODE_KEY = "pharmos-density-mode";
-const FOCUS_MODE_KEY = "pharmos-focus-mode";
+// Note: Focus mode is NOT persisted - it's temporary state only
 
 // Zoom levels supported
 const ZOOM_LEVELS = [50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200];
@@ -55,6 +55,10 @@ export interface UseViewStateReturn {
   toggleFocusMode: () => void;
   /** Exit focus mode */
   exitFocusMode: () => void;
+  /** Whether menu bar should be temporarily visible (Alt key pressed in focus mode) */
+  menuBarTemporarilyVisible: boolean;
+  /** Set menu bar temporarily visible */
+  setMenuBarTemporarilyVisible: (visible: boolean) => void;
 }
 
 /**
@@ -154,15 +158,22 @@ export function useViewState(): UseViewStateReturn {
     }
   });
 
-  // Initialize focus mode from localStorage
-  const [focusMode, setFocusMode] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem(FOCUS_MODE_KEY);
-      return stored !== null ? stored === "true" : false;
-    } catch (error) {
-      console.warn("Failed to read focus mode from localStorage:", error);
-      return false;
-    }
+  // Initialize focus mode - always starts false (not persisted)
+  const [focusMode, setFocusMode] = useState<boolean>(false);
+
+  // Track if menu bar should be temporarily visible (Alt key in focus mode)
+  const [menuBarTemporarilyVisible, setMenuBarTemporarilyVisible] =
+    useState<boolean>(false);
+
+  // Store previous visibility states for restoration when exiting focus mode
+  const [previousVisibility, setPreviousVisibility] = useState<{
+    sidebar: boolean;
+    statusBar: boolean;
+    toolbar: boolean;
+  }>({
+    sidebar: true,
+    statusBar: true,
+    toolbar: true,
   });
 
   // Persist sidebar visibility to localStorage
@@ -213,14 +224,7 @@ export function useViewState(): UseViewStateReturn {
     }
   }, [density]);
 
-  // Persist focus mode to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(FOCUS_MODE_KEY, String(focusMode));
-    } catch (error) {
-      console.warn("Failed to save focus mode to localStorage:", error);
-    }
-  }, [focusMode]);
+  // Note: Focus mode is NOT persisted - it's temporary state only
 
   const toggleSidebar = useCallback(() => {
     setSidebarVisible((current) => !current);
@@ -263,12 +267,41 @@ export function useViewState(): UseViewStateReturn {
   }, []);
 
   const toggleFocusMode = useCallback(() => {
-    setFocusMode((current) => !current);
-  }, []);
+    setFocusMode((current) => {
+      const newFocusMode = !current;
+
+      if (newFocusMode) {
+        // Entering focus mode: store current visibility states
+        setPreviousVisibility({
+          sidebar: sidebarVisible,
+          statusBar: statusBarVisible,
+          toolbar: toolbarVisible,
+        });
+
+        // Hide all panels
+        setSidebarVisible(false);
+        setStatusBarVisible(false);
+        setToolbarVisible(false);
+      } else {
+        // Exiting focus mode: restore previous visibility states
+        setSidebarVisible(previousVisibility.sidebar);
+        setStatusBarVisible(previousVisibility.statusBar);
+        setToolbarVisible(previousVisibility.toolbar);
+      }
+
+      return newFocusMode;
+    });
+  }, [sidebarVisible, statusBarVisible, toolbarVisible, previousVisibility]);
 
   const exitFocusMode = useCallback(() => {
-    setFocusMode(false);
-  }, []);
+    if (focusMode) {
+      // Restore previous visibility states
+      setSidebarVisible(previousVisibility.sidebar);
+      setStatusBarVisible(previousVisibility.statusBar);
+      setToolbarVisible(previousVisibility.toolbar);
+      setFocusMode(false);
+    }
+  }, [focusMode, previousVisibility]);
 
   return {
     sidebarVisible,
@@ -286,5 +319,7 @@ export function useViewState(): UseViewStateReturn {
     focusMode,
     toggleFocusMode,
     exitFocusMode,
+    menuBarTemporarilyVisible,
+    setMenuBarTemporarilyVisible,
   };
 }

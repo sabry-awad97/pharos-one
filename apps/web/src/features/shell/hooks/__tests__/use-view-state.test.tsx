@@ -323,34 +323,35 @@ describe("useViewState", () => {
     );
   });
 
-  // RED: Test 16 - localStorage persistence for focus mode
-  test("persists focus mode to localStorage", () => {
+  // RED: Test 16 - Focus mode does NOT persist to localStorage (temporary state)
+  test("does NOT persist focus mode to localStorage", () => {
     const { result } = renderHook(() => useViewState());
 
     act(() => {
       result.current.toggleFocusMode();
     });
 
-    expect(localStorage.setItem).toHaveBeenCalledWith(
+    // Focus mode should NOT be persisted
+    expect(localStorage.setItem).not.toHaveBeenCalledWith(
       "pharmos-focus-mode",
       "true",
     );
   });
 
-  // RED: Test 17 - Initializes from localStorage
+  // RED: Test 17 - Initializes from localStorage (focus mode always starts false)
   test("initializes state from localStorage", () => {
     // Set up localStorage with values
     localStorageMock["pharmos-sidebar-visible"] = "false";
     localStorageMock["pharmos-zoom-level"] = "150";
     localStorageMock["pharmos-density-mode"] = "compact";
-    localStorageMock["pharmos-focus-mode"] = "true";
 
     const { result } = renderHook(() => useViewState());
 
     expect(result.current.sidebarVisible).toBe(false);
     expect(result.current.zoomLevel).toBe(150);
     expect(result.current.density).toBe("compact");
-    expect(result.current.focusMode).toBe(true);
+    // Focus mode should always start false (not persisted)
+    expect(result.current.focusMode).toBe(false);
   });
 
   // RED: Test 18 - Handles localStorage errors gracefully
@@ -398,5 +399,120 @@ describe("useViewState", () => {
         result.current.toggleSidebar();
       });
     }).not.toThrow();
+  });
+
+  // RED: Test 20 - Entering focus mode hides all panels
+  test("entering focus mode hides sidebar, status bar, and toolbar", () => {
+    const { result } = renderHook(() => useViewState());
+
+    // Ensure all panels are visible initially
+    expect(result.current.sidebarVisible).toBe(true);
+    expect(result.current.statusBarVisible).toBe(true);
+    expect(result.current.toolbarVisible).toBe(true);
+
+    // Enter focus mode
+    act(() => {
+      result.current.toggleFocusMode();
+    });
+
+    // All panels should be hidden
+    expect(result.current.focusMode).toBe(true);
+    expect(result.current.sidebarVisible).toBe(false);
+    expect(result.current.statusBarVisible).toBe(false);
+    expect(result.current.toolbarVisible).toBe(false);
+  });
+
+  // RED: Test 21 - Exiting focus mode restores previous panel visibility states
+  test("exiting focus mode restores previous visibility states", () => {
+    const { result } = renderHook(() => useViewState());
+
+    // Set up initial state: sidebar hidden, others visible
+    act(() => {
+      result.current.toggleSidebar();
+    });
+
+    expect(result.current.sidebarVisible).toBe(false);
+    expect(result.current.statusBarVisible).toBe(true);
+    expect(result.current.toolbarVisible).toBe(true);
+
+    // Enter focus mode
+    act(() => {
+      result.current.toggleFocusMode();
+    });
+
+    // All panels should be hidden
+    expect(result.current.sidebarVisible).toBe(false);
+    expect(result.current.statusBarVisible).toBe(false);
+    expect(result.current.toolbarVisible).toBe(false);
+
+    // Exit focus mode
+    act(() => {
+      result.current.toggleFocusMode();
+    });
+
+    // Previous states should be restored
+    expect(result.current.focusMode).toBe(false);
+    expect(result.current.sidebarVisible).toBe(false); // Was hidden before
+    expect(result.current.statusBarVisible).toBe(true); // Was visible before
+    expect(result.current.toolbarVisible).toBe(true); // Was visible before
+  });
+
+  // RED: Test 22 - exitFocusMode also restores previous states
+  test("exitFocusMode restores previous visibility states", () => {
+    const { result } = renderHook(() => useViewState());
+
+    // Set up initial state: all visible
+    expect(result.current.sidebarVisible).toBe(true);
+    expect(result.current.statusBarVisible).toBe(true);
+    expect(result.current.toolbarVisible).toBe(true);
+
+    // Enter focus mode
+    act(() => {
+      result.current.toggleFocusMode();
+    });
+
+    // All panels should be hidden
+    expect(result.current.sidebarVisible).toBe(false);
+    expect(result.current.statusBarVisible).toBe(false);
+    expect(result.current.toolbarVisible).toBe(false);
+
+    // Exit using exitFocusMode
+    act(() => {
+      result.current.exitFocusMode();
+    });
+
+    // Previous states should be restored
+    expect(result.current.focusMode).toBe(false);
+    expect(result.current.sidebarVisible).toBe(true);
+    expect(result.current.statusBarVisible).toBe(true);
+    expect(result.current.toolbarVisible).toBe(true);
+  });
+
+  // RED: Test 23 - Toggling panels while in focus mode doesn't affect stored states
+  test("manual panel toggles during focus mode don't affect restoration", () => {
+    const { result } = renderHook(() => useViewState());
+
+    // Initial state: all visible
+    expect(result.current.sidebarVisible).toBe(true);
+
+    // Enter focus mode
+    act(() => {
+      result.current.toggleFocusMode();
+    });
+
+    expect(result.current.sidebarVisible).toBe(false);
+
+    // Try to toggle sidebar while in focus mode (should not affect restoration)
+    act(() => {
+      result.current.toggleSidebar();
+    });
+
+    // Exit focus mode
+    act(() => {
+      result.current.exitFocusMode();
+    });
+
+    // Should restore to original state (true), not the toggled state
+    expect(result.current.sidebarVisible).toBe(true);
   });
 });

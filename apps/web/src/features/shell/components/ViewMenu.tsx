@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Check,
   Rows3,
+  Maximize,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import type { DensityMode } from "../types";
@@ -24,6 +25,7 @@ interface ViewMenuProps {
   onToggleSidebar?: () => void;
   onToggleStatusBar?: () => void;
   onToggleToolbar?: () => void;
+  onToggleFocusMode?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
@@ -99,6 +101,7 @@ export function ViewMenu({
   onToggleSidebar,
   onToggleStatusBar,
   onToggleToolbar,
+  onToggleFocusMode,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -125,6 +128,16 @@ export function ViewMenu({
     >
       {/* Menu items */}
       <div style={{ padding: "4px 0" }}>
+        <MenuItem
+          icon={Maximize}
+          label="Focus Mode"
+          kbd="F11"
+          onClick={() => {
+            onToggleFocusMode?.();
+            onClose();
+          }}
+        />
+        <MenuDivider />
         <MenuItem
           icon={Sidebar}
           label="Toggle Sidebar"

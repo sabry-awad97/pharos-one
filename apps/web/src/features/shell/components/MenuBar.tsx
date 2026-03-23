@@ -27,6 +27,7 @@ interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   onToggleSidebar?: () => void;
   onToggleStatusBar?: () => void;
   onToggleToolbar?: () => void;
+  onToggleFocusMode?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
@@ -58,6 +59,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       onToggleSidebar,
       onToggleStatusBar,
       onToggleToolbar,
+      onToggleFocusMode,
       onZoomIn,
       onZoomOut,
       onResetZoom,
@@ -198,6 +200,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
               onToggleSidebar={onToggleSidebar}
               onToggleStatusBar={onToggleStatusBar}
               onToggleToolbar={onToggleToolbar}
+              onToggleFocusMode={onToggleFocusMode}
               onZoomIn={onZoomIn}
               onZoomOut={onZoomOut}
               onResetZoom={onResetZoom}
