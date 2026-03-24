@@ -1,52 +1,22 @@
-// Entities in dependency order (like migrations)
-// e001 = no dependencies, e002 = depends on e001, etc.
+// Inventory entities based on Prisma schema
 
-pub mod e001_product_type;
-pub mod e002_manufacturer;
-pub mod e003_category;
-pub mod e004_supplier;
-pub mod e005_product;
-pub mod e006_inventory_item;
-pub mod e007_stock_transaction;
-pub mod e008_barcode;
+pub mod branch_inventory;
+pub mod category;
+pub mod company;
+pub mod location;
+pub mod product;
+pub mod product_batch;
+pub mod product_unit_config;
+pub mod unit;
+pub mod unit_conversion;
 
 // Re-export for convenience
-pub use e001_product_type::{
-    dto::{CreateProductTypeDto, ProductTypeDto, ProductTypeFilters, UpdateProductTypeDto},
-    Entity as ProductTypeEntity, Model as ProductTypeModel,
-};
-
-pub use e002_manufacturer::{
-    dto::{CreateManufacturerDto, ManufacturerDto, ManufacturerFilters, UpdateManufacturerDto},
-    Entity as ManufacturerEntity, Model as ManufacturerModel,
-};
-
-pub use e003_category::{
-    dto::{CategoryDto, CreateCategoryDto, UpdateCategoryDto},
-    Entity as CategoryEntity, Model as CategoryModel,
-};
-
-pub use e004_supplier::{
-    dto::{CreateSupplierDto, SupplierDto, SupplierFilters, UpdateSupplierDto},
-    Entity as SupplierEntity, Model as SupplierModel,
-};
-
-pub use e005_product::{
-    dto::{CreateProductDto, ProductDto, ProductFilters, UpdateProductDto},
-    Entity as ProductEntity, Model as ProductModel,
-};
-
-pub use e006_inventory_item::{
-    dto::{CreateInventoryItemDto, InventoryItemDto, InventoryItemFilters, UpdateInventoryItemDto},
-    Entity as InventoryItemEntity, Model as InventoryItemModel,
-};
-
-pub use e007_stock_transaction::{
-    dto::{CreateStockTransactionDto, StockTransactionDto, StockTransactionFilters},
-    Entity as StockTransactionEntity, Model as StockTransactionModel,
-};
-
-pub use e008_barcode::{
-    dto::{BarcodeDto, CreateBarcodeDto, UpdateBarcodeDto},
-    Entity as BarcodeEntity, Model as BarcodeModel,
-};
+pub use branch_inventory::{Entity as BranchInventoryEntity, Model as BranchInventoryModel};
+pub use category::{Entity as CategoryEntity, Model as CategoryModel};
+pub use company::{Entity as CompanyEntity, Model as CompanyModel};
+pub use location::{Entity as LocationEntity, LocationType, Model as LocationModel};
+pub use product::{Entity as ProductEntity, Model as ProductModel};
+pub use product_batch::{Entity as ProductBatchEntity, Model as ProductBatchModel};
+pub use product_unit_config::{Entity as ProductUnitConfigEntity, Model as ProductUnitConfigModel};
+pub use unit::{Entity as UnitEntity, Model as UnitModel};
+pub use unit_conversion::{Entity as UnitConversionEntity, Model as UnitConversionModel};

@@ -1,6 +1,6 @@
 use pharos_core::{Id, Result};
 use pharos_infrastructure::inventory::entities::*;
-use pharos_infrastructure::inventory::repositories::Repository;
+use pharos_infrastructure::inventory::repositories::*;
 use pharos_infrastructure::ServiceContainer;
 use serde::{Deserialize, Serialize};
 use tauri::State;
@@ -9,107 +9,74 @@ use tauri::State;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
 pub enum InventoryOperation {
-    // Product Type Operations
-    GetAllProductTypes,
-    GetProductTypeById(Id),
-    GetActiveProductTypes,
-    CreateProductType(CreateProductTypeDto),
-    UpdateProductType { id: Id, dto: UpdateProductTypeDto },
-    DeleteProductType(Id),
-
-    // Manufacturer Operations
-    GetAllManufacturers,
-    GetManufacturerById(Id),
-    GetActiveManufacturers,
-    CreateManufacturer(CreateManufacturerDto),
-    UpdateManufacturer { id: Id, dto: UpdateManufacturerDto },
-    DeleteManufacturer(Id),
-
     // Category Operations
     GetAllCategories,
     GetCategoryById(Id),
-    GetRootCategories,
-    CreateCategory(CreateCategoryDto),
-    UpdateCategory { id: Id, dto: UpdateCategoryDto },
-    DeleteCategory(Id),
+    GetActiveCategories,
 
-    // Supplier Operations
-    GetAllSuppliers,
-    GetSupplierById(Id),
-    GetActiveSuppliers,
-    CreateSupplier(CreateSupplierDto),
-    UpdateSupplier { id: Id, dto: UpdateSupplierDto },
-    DeleteSupplier(Id),
+    // Company Operations
+    GetAllCompanies,
+    GetCompanyById(Id),
+    GetActiveCompanies,
 
     // Product Operations
     GetAllProducts,
     GetProductById(Id),
     GetProductBySku(String),
+    GetProductByBarcode(String),
     GetActiveProducts,
-    SearchProducts(String),
-    CreateProduct(CreateProductDto),
-    UpdateProduct { id: Id, dto: UpdateProductDto },
-    DeleteProduct(Id),
 
-    // Inventory Item Operations
-    GetAllInventoryItems,
-    GetInventoryItemById(Id),
-    GetInventoryItemsByProduct(Id),
-    GetInventoryItemsByBatch(String),
-    GetInventoryItemsByStatus(String),
-    CreateInventoryItem(CreateInventoryItemDto),
-    UpdateInventoryItem { id: Id, dto: UpdateInventoryItemDto },
-    DeleteInventoryItem(Id),
+    // Product Batch Operations
+    GetAllProductBatches,
+    GetProductBatchById(Id),
+    GetProductBatchesByProduct(Id),
 
-    // Stock Transaction Operations
-    GetAllStockTransactions,
-    GetStockTransactionById(Id),
-    GetStockTransactionsByInventoryItem(Id),
-    GetStockTransactionsByType(String),
-    CreateStockTransaction(CreateStockTransactionDto),
+    // Unit Operations
+    GetAllUnits,
+    GetUnitById(Id),
+
+    // Location Operations
+    GetAllLocations,
+    GetLocationById(Id),
+    GetLocationsByBranch(Id),
+
+    // Branch Inventory Operations
+    GetBranchInventoryByBranch(Id),
+    GetBranchInventoryByProduct(Id),
+    GetLowStockItems(Id),
 }
 
 /// Unified inventory response enum
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum InventoryResponse {
-    // Product Type Responses
-    ProductTypes(Vec<ProductTypeDto>),
-    ProductType(Option<ProductTypeDto>),
-    ProductTypeCreated(ProductTypeDto),
-
-    // Manufacturer Responses
-    Manufacturers(Vec<ManufacturerDto>),
-    Manufacturer(Option<ManufacturerDto>),
-    ManufacturerCreated(ManufacturerDto),
-
     // Category Responses
-    Categories(Vec<CategoryDto>),
-    Category(Option<CategoryDto>),
-    CategoryCreated(CategoryDto),
+    Categories(Vec<CategoryModel>),
+    Category(Option<CategoryModel>),
 
-    // Supplier Responses
-    Suppliers(Vec<SupplierDto>),
-    Supplier(Option<SupplierDto>),
-    SupplierCreated(SupplierDto),
+    // Company Responses
+    Companies(Vec<CompanyModel>),
+    Company(Option<CompanyModel>),
 
     // Product Responses
-    Products(Vec<ProductDto>),
-    Product(Option<ProductDto>),
-    ProductCreated(ProductDto),
+    Products(Vec<ProductModel>),
+    Product(Option<ProductModel>),
 
-    // Inventory Item Responses
-    InventoryItems(Vec<InventoryItemDto>),
-    InventoryItem(Option<InventoryItemDto>),
-    InventoryItemCreated(InventoryItemDto),
+    // Product Batch Responses
+    ProductBatches(Vec<ProductBatchModel>),
+    ProductBatch(Option<ProductBatchModel>),
 
-    // Stock Transaction Responses
-    StockTransactions(Vec<StockTransactionDto>),
-    StockTransaction(Option<StockTransactionDto>),
-    StockTransactionCreated(StockTransactionDto),
+    // Unit Responses
+    Units(Vec<UnitModel>),
+    Unit(Option<UnitModel>),
 
-    // Generic Responses
-    Deleted(Id),
+    // Location Responses
+    Locations(Vec<LocationModel>),
+    Location(Option<LocationModel>),
+
+    // Branch Inventory Responses
+    BranchInventory(Vec<BranchInventoryModel>),
+    BranchInventoryItem(Option<BranchInventoryModel>),
 }
 
 /// Unified inventory command - single entry point for all inventory operations
@@ -120,223 +87,131 @@ pub async fn inventory(
 ) -> Result<InventoryResponse> {
     tracing::info!("Inventory command called with operation: {:?}", operation);
 
+    let db = container.db();
+
     let response = match operation {
-        // Product Type Operations
-        InventoryOperation::GetAllProductTypes => {
-            let result = container.product_type_repository().find_all().await?;
-            InventoryResponse::ProductTypes(result)
-        }
-        InventoryOperation::GetProductTypeById(id) => {
-            let result = container.product_type_repository().find_by_id(&id).await?;
-            InventoryResponse::ProductType(result)
-        }
-        InventoryOperation::GetActiveProductTypes => {
-            let result = container.product_type_repository().find_active().await?;
-            InventoryResponse::ProductTypes(result)
-        }
-        InventoryOperation::CreateProductType(dto) => {
-            let result = container.product_type_repository().create(dto).await?;
-            InventoryResponse::ProductTypeCreated(result)
-        }
-        InventoryOperation::UpdateProductType { id, dto } => {
-            let result = container.product_type_repository().update(&id, dto).await?;
-            InventoryResponse::ProductTypeCreated(result)
-        }
-        InventoryOperation::DeleteProductType(id) => {
-            container.product_type_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
-        }
-
-        // Manufacturer Operations
-        InventoryOperation::GetAllManufacturers => {
-            let result = container.manufacturer_repository().find_all().await?;
-            InventoryResponse::Manufacturers(result)
-        }
-        InventoryOperation::GetManufacturerById(id) => {
-            let result = container.manufacturer_repository().find_by_id(&id).await?;
-            InventoryResponse::Manufacturer(result)
-        }
-        InventoryOperation::GetActiveManufacturers => {
-            let result = container.manufacturer_repository().find_active().await?;
-            InventoryResponse::Manufacturers(result)
-        }
-        InventoryOperation::CreateManufacturer(dto) => {
-            let result = container.manufacturer_repository().create(dto).await?;
-            InventoryResponse::ManufacturerCreated(result)
-        }
-        InventoryOperation::UpdateManufacturer { id, dto } => {
-            let result = container.manufacturer_repository().update(&id, dto).await?;
-            InventoryResponse::ManufacturerCreated(result)
-        }
-        InventoryOperation::DeleteManufacturer(id) => {
-            container.manufacturer_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
-        }
-
         // Category Operations
         InventoryOperation::GetAllCategories => {
-            let result = container.category_repository().find_all().await?;
+            let repo = CategoryRepository::new(db.clone());
+            let result = repo.find_all().await?;
             InventoryResponse::Categories(result)
         }
         InventoryOperation::GetCategoryById(id) => {
-            let result = container.category_repository().find_by_id(&id).await?;
+            let repo = CategoryRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
             InventoryResponse::Category(result)
         }
-        InventoryOperation::GetRootCategories => {
-            let result = container.category_repository().find_roots().await?;
+        InventoryOperation::GetActiveCategories => {
+            let repo = CategoryRepository::new(db.clone());
+            let result = repo.find_active().await?;
             InventoryResponse::Categories(result)
         }
-        InventoryOperation::CreateCategory(dto) => {
-            let result = container.category_repository().create(dto).await?;
-            InventoryResponse::CategoryCreated(result)
-        }
-        InventoryOperation::UpdateCategory { id, dto } => {
-            let result = container.category_repository().update(&id, dto).await?;
-            InventoryResponse::CategoryCreated(result)
-        }
-        InventoryOperation::DeleteCategory(id) => {
-            container.category_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
-        }
 
-        // Supplier Operations
-        InventoryOperation::GetAllSuppliers => {
-            let result = container.supplier_repository().find_all().await?;
-            InventoryResponse::Suppliers(result)
+        // Company Operations
+        InventoryOperation::GetAllCompanies => {
+            let repo = CompanyRepository::new(db.clone());
+            let result = repo.find_all().await?;
+            InventoryResponse::Companies(result)
         }
-        InventoryOperation::GetSupplierById(id) => {
-            let result = container.supplier_repository().find_by_id(&id).await?;
-            InventoryResponse::Supplier(result)
+        InventoryOperation::GetCompanyById(id) => {
+            let repo = CompanyRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
+            InventoryResponse::Company(result)
         }
-        InventoryOperation::GetActiveSuppliers => {
-            let result = container.supplier_repository().find_active().await?;
-            InventoryResponse::Suppliers(result)
-        }
-        InventoryOperation::CreateSupplier(dto) => {
-            let result = container.supplier_repository().create(dto).await?;
-            InventoryResponse::SupplierCreated(result)
-        }
-        InventoryOperation::UpdateSupplier { id, dto } => {
-            let result = container.supplier_repository().update(&id, dto).await?;
-            InventoryResponse::SupplierCreated(result)
-        }
-        InventoryOperation::DeleteSupplier(id) => {
-            container.supplier_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
+        InventoryOperation::GetActiveCompanies => {
+            let repo = CompanyRepository::new(db.clone());
+            let result = repo.find_active().await?;
+            InventoryResponse::Companies(result)
         }
 
         // Product Operations
         InventoryOperation::GetAllProducts => {
-            let result = container.product_repository().find_all().await?;
+            let repo = ProductRepository::new(db.clone());
+            let result = repo.find_all().await?;
             InventoryResponse::Products(result)
         }
         InventoryOperation::GetProductById(id) => {
-            let result = container.product_repository().find_by_id(&id).await?;
+            let repo = ProductRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
             InventoryResponse::Product(result)
         }
         InventoryOperation::GetProductBySku(sku) => {
-            let result = container.product_repository().find_by_sku(&sku).await?;
+            let repo = ProductRepository::new(db.clone());
+            let result = repo.find_by_sku(&sku).await?;
+            InventoryResponse::Product(result)
+        }
+        InventoryOperation::GetProductByBarcode(barcode) => {
+            let repo = ProductRepository::new(db.clone());
+            let result = repo.find_by_barcode(&barcode).await?;
             InventoryResponse::Product(result)
         }
         InventoryOperation::GetActiveProducts => {
-            let result = container.product_repository().find_active().await?;
+            let repo = ProductRepository::new(db.clone());
+            let result = repo.find_active().await?;
             InventoryResponse::Products(result)
         }
-        InventoryOperation::SearchProducts(query) => {
-            let result = container.product_repository().search(&query).await?;
-            InventoryResponse::Products(result)
+
+        // Product Batch Operations
+        InventoryOperation::GetAllProductBatches => {
+            let repo = ProductBatchRepository::new(db.clone());
+            let result = repo.find_all().await?;
+            InventoryResponse::ProductBatches(result)
         }
-        InventoryOperation::CreateProduct(dto) => {
-            let result = container.product_repository().create(dto).await?;
-            InventoryResponse::ProductCreated(result)
+        InventoryOperation::GetProductBatchById(id) => {
+            let repo = ProductBatchRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
+            InventoryResponse::ProductBatch(result)
         }
-        InventoryOperation::UpdateProduct { id, dto } => {
-            let result = container.product_repository().update(&id, dto).await?;
-            InventoryResponse::ProductCreated(result)
-        }
-        InventoryOperation::DeleteProduct(id) => {
-            container.product_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
+        InventoryOperation::GetProductBatchesByProduct(product_id) => {
+            let repo = ProductBatchRepository::new(db.clone());
+            let result = repo.find_by_product(&product_id).await?;
+            InventoryResponse::ProductBatches(result)
         }
 
-        // Inventory Item Operations
-        InventoryOperation::GetAllInventoryItems => {
-            let result = container.inventory_item_repository().find_all().await?;
-            InventoryResponse::InventoryItems(result)
+        // Unit Operations
+        InventoryOperation::GetAllUnits => {
+            let repo = UnitRepository::new(db.clone());
+            let result = repo.find_all().await?;
+            InventoryResponse::Units(result)
         }
-        InventoryOperation::GetInventoryItemById(id) => {
-            let result = container
-                .inventory_item_repository()
-                .find_by_id(&id)
-                .await?;
-            InventoryResponse::InventoryItem(result)
-        }
-        InventoryOperation::GetInventoryItemsByProduct(product_id) => {
-            let result = container
-                .inventory_item_repository()
-                .find_by_product(&product_id)
-                .await?;
-            InventoryResponse::InventoryItems(result)
-        }
-        InventoryOperation::GetInventoryItemsByBatch(batch_number) => {
-            let result = container
-                .inventory_item_repository()
-                .find_by_batch(&batch_number)
-                .await?;
-            InventoryResponse::InventoryItems(result)
-        }
-        InventoryOperation::GetInventoryItemsByStatus(status) => {
-            let result = container
-                .inventory_item_repository()
-                .find_by_status(&status)
-                .await?;
-            InventoryResponse::InventoryItems(result)
-        }
-        InventoryOperation::CreateInventoryItem(dto) => {
-            let result = container.inventory_item_repository().create(dto).await?;
-            InventoryResponse::InventoryItemCreated(result)
-        }
-        InventoryOperation::UpdateInventoryItem { id, dto } => {
-            let result = container
-                .inventory_item_repository()
-                .update(&id, dto)
-                .await?;
-            InventoryResponse::InventoryItemCreated(result)
-        }
-        InventoryOperation::DeleteInventoryItem(id) => {
-            container.inventory_item_repository().delete(&id).await?;
-            InventoryResponse::Deleted(id)
+        InventoryOperation::GetUnitById(id) => {
+            let repo = UnitRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
+            InventoryResponse::Unit(result)
         }
 
-        // Stock Transaction Operations
-        InventoryOperation::GetAllStockTransactions => {
-            let result = container.stock_transaction_repository().find_all().await?;
-            InventoryResponse::StockTransactions(result)
+        // Location Operations
+        InventoryOperation::GetAllLocations => {
+            let repo = LocationRepository::new(db.clone());
+            let result = repo.find_all().await?;
+            InventoryResponse::Locations(result)
         }
-        InventoryOperation::GetStockTransactionById(id) => {
-            let result = container
-                .stock_transaction_repository()
-                .find_by_id(&id)
-                .await?;
-            InventoryResponse::StockTransaction(result)
+        InventoryOperation::GetLocationById(id) => {
+            let repo = LocationRepository::new(db.clone());
+            let result = repo.find_by_id(&id).await?;
+            InventoryResponse::Location(result)
         }
-        InventoryOperation::GetStockTransactionsByInventoryItem(inventory_item_id) => {
-            let result = container
-                .stock_transaction_repository()
-                .find_by_inventory_item(&inventory_item_id)
-                .await?;
-            InventoryResponse::StockTransactions(result)
+        InventoryOperation::GetLocationsByBranch(branch_id) => {
+            let repo = LocationRepository::new(db.clone());
+            let result = repo.find_by_branch(&branch_id).await?;
+            InventoryResponse::Locations(result)
         }
-        InventoryOperation::GetStockTransactionsByType(transaction_type) => {
-            let result = container
-                .stock_transaction_repository()
-                .find_by_type(&transaction_type)
-                .await?;
-            InventoryResponse::StockTransactions(result)
+
+        // Branch Inventory Operations
+        InventoryOperation::GetBranchInventoryByBranch(branch_id) => {
+            let repo = BranchInventoryRepository::new(db.clone());
+            let result = repo.find_by_branch(&branch_id).await?;
+            InventoryResponse::BranchInventory(result)
         }
-        InventoryOperation::CreateStockTransaction(dto) => {
-            let result = container.stock_transaction_repository().create(dto).await?;
-            InventoryResponse::StockTransactionCreated(result)
+        InventoryOperation::GetBranchInventoryByProduct(product_id) => {
+            let repo = BranchInventoryRepository::new(db.clone());
+            let result = repo.find_by_product(&product_id).await?;
+            InventoryResponse::BranchInventory(result)
+        }
+        InventoryOperation::GetLowStockItems(branch_id) => {
+            let repo = BranchInventoryRepository::new(db.clone());
+            let result = repo.find_low_stock(&branch_id).await?;
+            InventoryResponse::BranchInventory(result)
         }
     };
 

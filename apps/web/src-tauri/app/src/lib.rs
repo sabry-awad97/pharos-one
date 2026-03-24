@@ -34,8 +34,14 @@ pub async fn run() {
     tauri::Builder::default()
         .manage(container)
         .invoke_handler(tauri::generate_handler![
-            // Unified inventory command (single entry point for all operations)
+            // Unified commands (single entry point per module)
             pharos_tauri_commands::inventory,
+            pharos_tauri_commands::branch,
+            pharos_tauri_commands::customer,
+            pharos_tauri_commands::user,
+            pharos_tauri_commands::sales,
+            pharos_tauri_commands::transactions,
+            pharos_tauri_commands::audit,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

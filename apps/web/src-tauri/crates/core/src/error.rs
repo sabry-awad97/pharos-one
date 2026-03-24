@@ -18,6 +18,13 @@ pub enum AppError {
     AuthenticationFailed,
 }
 
+// Convert SeaORM database errors to AppError
+impl From<sea_orm::DbErr> for AppError {
+    fn from(err: sea_orm::DbErr) -> Self {
+        AppError::Database(err.to_string())
+    }
+}
+
 // Implement Serialize for Tauri
 impl serde::Serialize for AppError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
