@@ -1,19 +1,21 @@
 /**
  * Category API
  * Type-safe wrapper for category Tauri commands
+ *
+ * IMPORTANT: Only includes operations that exist in Rust backend
+ * See: apps/web/src-tauri/crates/tauri-commands/src/inventory/operations.rs
  */
 
 import { invoke } from "@tauri-apps/api/core";
-import type {
-  Category,
-  CreateCategory,
-  UpdateCategory,
-  InventoryResponse,
-  Id,
-} from "@pharos-one/schema/inventory";
+import type { Category } from "@pharos-one/schema";
+
+// Response types matching Rust InventoryResponse enum
+type CategoryResponse =
+  | { Categories: Category[] }
+  | { Category: Category | null };
 
 function assertCategories(
-  response: InventoryResponse,
+  response: CategoryResponse,
 ): asserts response is { Categories: Category[] } {
   if (
     !(
@@ -27,7 +29,7 @@ function assertCategories(
 }
 
 function assertCategory(
-  response: InventoryResponse,
+  response: CategoryResponse,
 ): asserts response is { Category: Category | null } {
   if (
     !(
@@ -40,40 +42,13 @@ function assertCategory(
   }
 }
 
-function assertCategoryCreated(
-  response: InventoryResponse,
-): asserts response is { CategoryCreated: Category } {
-  if (
-    !(
-      typeof response === "object" &&
-      response !== null &&
-      "CategoryCreated" in response
-    )
-  ) {
-    throw new Error(`Unexpected response type: ${JSON.stringify(response)}`);
-  }
-}
-
-function assertDeleted(
-  response: InventoryResponse,
-): asserts response is { Deleted: Id } {
-  if (
-    !(
-      typeof response === "object" &&
-      response !== null &&
-      "Deleted" in response
-    )
-  ) {
-    throw new Error(`Unexpected response type: ${JSON.stringify(response)}`);
-  }
-}
-
 export const categoryApi = {
   /**
    * Get all categories
+   * Rust operation: GetAllCategories
    */
   getAll: async (): Promise<Category[]> => {
-    const response = await invoke<InventoryResponse>("inventory", {
+    const response = await invoke<CategoryResponse>("inventory", {
       operation: { type: "GetAllCategories" },
     });
 
@@ -83,9 +58,10 @@ export const categoryApi = {
 
   /**
    * Get category by ID
+   * Rust operation: GetCategoryById
    */
   getById: async (id: string): Promise<Category | null> => {
-    const response = await invoke<InventoryResponse>("inventory", {
+    const response = await invoke<CategoryResponse>("inventory", {
       operation: { type: "GetCategoryById", payload: id },
     });
 
@@ -94,50 +70,15 @@ export const categoryApi = {
   },
 
   /**
-   * Get root categories (no parent)
+   * Get active categories
+   * Rust operation: GetActiveCategories
    */
-  getRoots: async (): Promise<Category[]> => {
-    const response = await invoke<InventoryResponse>("inventory", {
-      operation: { type: "GetRootCategories" },
+  getActive: async (): Promise<Category[]> => {
+    const response = await invoke<CategoryResponse>("inventory", {
+      operation: { type: "GetActiveCategories" },
     });
 
     assertCategories(response);
     return response.Categories;
-  },
-
-  /**
-   * Create new category
-   */
-  create: async (data: CreateCategory): Promise<Category> => {
-    const response = await invoke<InventoryResponse>("inventory", {
-      operation: { type: "CreateCategory", payload: data },
-    });
-
-    assertCategoryCreated(response);
-    return response.CategoryCreated;
-  },
-
-  /**
-   * Update category
-   */
-  update: async (id: string, data: UpdateCategory): Promise<Category> => {
-    const response = await invoke<InventoryResponse>("inventory", {
-      operation: { type: "UpdateCategory", payload: { id, dto: data } },
-    });
-
-    assertCategoryCreated(response);
-    return response.CategoryCreated;
-  },
-
-  /**
-   * Delete category
-   */
-  delete: async (id: string): Promise<Id> => {
-    const response = await invoke<InventoryResponse>("inventory", {
-      operation: { type: "DeleteCategory", payload: id },
-    });
-
-    assertDeleted(response);
-    return response.Deleted;
   },
 };
