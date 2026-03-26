@@ -3,10 +3,25 @@
  * Container for all workspace tabs
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, SplitSquareHorizontal } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Tab } from "../types";
 import { TabItem } from "./TabItem";
+import { SortableTabItem } from "./SortableTabItem";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabOverflow } from "./TabOverflow";
 import { NewWorkspaceDialog } from "./NewWorkspaceDialog";
@@ -32,6 +47,8 @@ export interface TabBarProps {
   splitViewEnabled?: boolean;
   /** Handler for split view toggle */
   onSplitViewToggle?: () => void;
+  /** Handler for tab reordering */
+  onTabReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
 /**
@@ -48,6 +65,7 @@ export function TabBar({
   onAddTab,
   splitViewEnabled = false,
   onSplitViewToggle,
+  onTabReorder,
 }: TabBarProps) {
   const [contextMenu, setContextMenu] = useState<{
     tabId: string;
@@ -58,6 +76,47 @@ export function TabBar({
 
   // Calculate visible vs overflow tabs
   const { visibleTabs, overflowTabs, hasOverflow } = useTabOverflow(tabs);
+
+  // Setup drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Keyboard navigation for tab reordering
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.ctrlKey &&
+        e.shiftKey &&
+        (e.key === "ArrowLeft" || e.key === "ArrowRight")
+      ) {
+        e.preventDefault();
+        if (!activeTabId || !onTabReorder) return;
+
+        const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
+        if (activeIndex === -1) return;
+
+        const activeTab = tabs[activeIndex];
+        const direction = e.key === "ArrowLeft" ? -1 : 1;
+        const newIndex = activeIndex + direction;
+
+        // Check if we're trying to move out of bounds
+        if (newIndex < 0 || newIndex >= tabs.length) return;
+
+        // Check if we're trying to move between pinned and regular sections
+        const targetTab = tabs[newIndex];
+        if (activeTab.pinned !== targetTab.pinned) return;
+
+        onTabReorder(activeIndex, newIndex);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tabs, activeTabId, onTabReorder]);
 
   const handleContextMenu = (tabId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,6 +136,24 @@ export function TabBar({
     setIsDialogOpen(false);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !onTabReorder) return;
+
+    const oldIndex = tabs.findIndex((t) => t.id === active.id);
+    const newIndex = tabs.findIndex((t) => t.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Prevent dragging between pinned and regular sections
+    const activeTab = tabs[oldIndex];
+    const overTab = tabs[newIndex];
+    if (activeTab.pinned !== overTab.pinned) return;
+
+    onTabReorder(oldIndex, newIndex);
+  };
+
   const contextMenuTab = contextMenu
     ? tabs.find((t) => t.id === contextMenu.tabId)
     : null;
@@ -86,204 +163,225 @@ export function TabBar({
   const regularTabs = visibleTabs.filter((t) => !t.pinned);
 
   return (
-    <div
-      data-testid="tab-bar"
-      style={{
-        height: 36,
-        background: "#f0f0f0",
-        borderBottom: "1px solid #e0e0e0",
-        display: "flex",
-        alignItems: "flex-end",
-        flexShrink: 0,
-        overflow: "hidden",
-        position: "relative",
-        zIndex: 5,
-        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-      }}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
     >
-      {/* Pinned tabs group */}
-      {pinnedTabs.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            height: "100%",
-            borderRight: "1px solid #e0e0e0",
-            paddingRight: 2,
-          }}
-        >
-          {pinnedTabs.map((tab) => (
-            <TabItem
-              key={tab.id}
-              tab={tab}
-              active={tab.id === activeTabId}
-              onClick={() => onTabClick(tab.id)}
-              onClose={(e) => {
-                e.stopPropagation();
-                onTabClose(tab.id);
-              }}
-              onContextMenu={(e) => handleContextMenu(tab.id, e)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Regular tabs */}
       <div
+        data-testid="tab-bar"
         style={{
+          height: 36,
+          background: "#f0f0f0",
+          borderBottom: "1px solid #e0e0e0",
           display: "flex",
           alignItems: "flex-end",
-          height: "100%",
-          flex: 1,
+          flexShrink: 0,
           overflow: "hidden",
+          position: "relative",
+          zIndex: 5,
+          fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
         }}
       >
-        {regularTabs.map((tab) => (
-          <TabItem
-            key={tab.id}
-            tab={tab}
-            active={tab.id === activeTabId}
-            onClick={() => onTabClick(tab.id)}
-            onClose={(e) => {
-              e.stopPropagation();
-              onTabClose(tab.id);
+        {/* Pinned tabs group */}
+        {pinnedTabs.length > 0 && (
+          <SortableContext
+            items={pinnedTabs.map((t) => t.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                height: "100%",
+                borderRight: "1px solid #e0e0e0",
+                paddingRight: 2,
+              }}
+            >
+              {pinnedTabs.map((tab) => (
+                <SortableTabItem
+                  key={tab.id}
+                  id={tab.id}
+                  tab={tab}
+                  active={tab.id === activeTabId}
+                  onClick={() => onTabClick(tab.id)}
+                  onClose={(e) => {
+                    e.stopPropagation();
+                    onTabClose(tab.id);
+                  }}
+                  onContextMenu={(e) => handleContextMenu(tab.id, e)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        )}
+
+        {/* Regular tabs */}
+        <SortableContext
+          items={regularTabs.map((t) => t.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              height: "100%",
+              flex: 1,
+              overflow: "hidden",
             }}
-            onContextMenu={(e) => handleContextMenu(tab.id, e)}
+          >
+            {regularTabs.map((tab) => (
+              <SortableTabItem
+                key={tab.id}
+                id={tab.id}
+                tab={tab}
+                active={tab.id === activeTabId}
+                onClick={() => onTabClick(tab.id)}
+                onClose={(e) => {
+                  e.stopPropagation();
+                  onTabClose(tab.id);
+                }}
+                onContextMenu={(e) => handleContextMenu(tab.id, e)}
+              />
+            ))}
+          </div>
+        </SortableContext>
+
+        {/* Overflow indicator */}
+        {hasOverflow && (
+          <TabOverflow
+            overflowTabs={overflowTabs}
+            onTabClick={onTabClick}
+            onTabClose={onTabClose}
           />
-        ))}
-      </div>
+        )}
 
-      {/* Overflow indicator */}
-      {hasOverflow && (
-        <TabOverflow
-          overflowTabs={overflowTabs}
-          onTabClick={onTabClick}
-          onTabClose={onTabClose}
-        />
-      )}
-
-      {/* New Tab button */}
-      <button
-        onClick={() => setIsDialogOpen(true)}
-        title="New Workspace (Ctrl+T)"
-        style={{
-          width: 32,
-          height: 32,
-          marginBottom: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "none",
-          borderRadius: 4,
-          background: "transparent",
-          color: "#616161",
-          cursor: "pointer",
-          flexShrink: 0,
-          alignSelf: "center",
-          marginRight: 6,
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = "#e0e0e0";
-          (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background =
-            "transparent";
-          (e.currentTarget as HTMLButtonElement).style.color = "#616161";
-        }}
-      >
-        <Plus style={{ width: 14, height: 14 }} />
-      </button>
-
-      {/* Split View toggle button */}
-      <button
-        onClick={() => onSplitViewToggle?.()}
-        title="Split View (Ctrl+\)"
-        style={{
-          width: 28,
-          height: 28,
-          marginRight: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: `1px solid ${splitViewEnabled ? "#0078d4" : "#e0e0e0"}`,
-          borderRadius: 4,
-          background: splitViewEnabled ? "#cce4f7" : "transparent",
-          color: splitViewEnabled ? "#0078d4" : "#919191",
-          cursor: "pointer",
-          flexShrink: 0,
-          alignSelf: "center",
-        }}
-        onMouseEnter={(e) => {
-          if (!splitViewEnabled) {
-            (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!splitViewEnabled) {
+        {/* New Tab button */}
+        <button
+          onClick={() => setIsDialogOpen(true)}
+          title="New Workspace (Ctrl+T)"
+          style={{
+            width: 32,
+            height: 32,
+            marginBottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "none",
+            borderRadius: 4,
+            background: "transparent",
+            color: "#616161",
+            cursor: "pointer",
+            flexShrink: 0,
+            alignSelf: "center",
+            marginRight: 6,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "#e0e0e0";
+            (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a";
+          }}
+          onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background =
               "transparent";
-          }
-        }}
-      >
-        <SplitSquareHorizontal style={{ width: 13, height: 13 }} />
-      </button>
+            (e.currentTarget as HTMLButtonElement).style.color = "#616161";
+          }}
+        >
+          <Plus style={{ width: 14, height: 14 }} />
+        </button>
 
-      {/* Context menu */}
-      {contextMenu && contextMenuTab && (
-        <TabContextMenu
-          tabId={contextMenu.tabId}
-          isPinned={contextMenuTab.pinned ?? false}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          tabLabel={contextMenuTab.label}
-          tabIcon={contextMenuTab.icon}
-          tabColor={contextMenuTab.color}
-          onPin={() => {
-            onTabPin?.(contextMenu.tabId);
-            handleDismissContextMenu();
+        {/* Split View toggle button */}
+        <button
+          onClick={() => onSplitViewToggle?.()}
+          title="Split View (Ctrl+\)"
+          style={{
+            width: 28,
+            height: 28,
+            marginRight: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: `1px solid ${splitViewEnabled ? "#0078d4" : "#e0e0e0"}`,
+            borderRadius: 4,
+            background: splitViewEnabled ? "#cce4f7" : "transparent",
+            color: splitViewEnabled ? "#0078d4" : "#919191",
+            cursor: "pointer",
+            flexShrink: 0,
+            alignSelf: "center",
           }}
-          onDuplicate={() => {
-            onTabDuplicate?.(contextMenu.tabId);
-            handleDismissContextMenu();
-          }}
-          onClose={() => {
-            onTabClose(contextMenu.tabId);
-            handleDismissContextMenu();
-          }}
-          onSplitView={() => {
-            onSplitViewToggle?.();
-            handleDismissContextMenu();
-          }}
-          onCloseOthers={() => {
-            // Close all tabs except this one
-            tabs.forEach((t) => {
-              if (t.id !== contextMenu.tabId) {
-                onTabClose(t.id);
-              }
-            });
-            handleDismissContextMenu();
-          }}
-          onCloseToRight={() => {
-            // Close all tabs to the right of this one
-            const tabIndex = tabs.findIndex((t) => t.id === contextMenu.tabId);
-            if (tabIndex !== -1) {
-              tabs.slice(tabIndex + 1).forEach((t) => {
-                onTabClose(t.id);
-              });
+          onMouseEnter={(e) => {
+            if (!splitViewEnabled) {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "#f0f0f0";
             }
-            handleDismissContextMenu();
           }}
-          onDismiss={handleDismissContextMenu}
-        />
-      )}
+          onMouseLeave={(e) => {
+            if (!splitViewEnabled) {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "transparent";
+            }
+          }}
+        >
+          <SplitSquareHorizontal style={{ width: 13, height: 13 }} />
+        </button>
 
-      {/* New Workspace Dialog */}
-      <NewWorkspaceDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSelectTemplate={handleAddTab}
-      />
-    </div>
+        {/* Context menu */}
+        {contextMenu && contextMenuTab && (
+          <TabContextMenu
+            tabId={contextMenu.tabId}
+            isPinned={contextMenuTab.pinned ?? false}
+            x={contextMenu.x}
+            y={contextMenu.y}
+            tabLabel={contextMenuTab.label}
+            tabIcon={contextMenuTab.icon}
+            tabColor={contextMenuTab.color}
+            onPin={() => {
+              onTabPin?.(contextMenu.tabId);
+              handleDismissContextMenu();
+            }}
+            onDuplicate={() => {
+              onTabDuplicate?.(contextMenu.tabId);
+              handleDismissContextMenu();
+            }}
+            onClose={() => {
+              onTabClose(contextMenu.tabId);
+              handleDismissContextMenu();
+            }}
+            onSplitView={() => {
+              onSplitViewToggle?.();
+              handleDismissContextMenu();
+            }}
+            onCloseOthers={() => {
+              // Close all tabs except this one
+              tabs.forEach((t) => {
+                if (t.id !== contextMenu.tabId) {
+                  onTabClose(t.id);
+                }
+              });
+              handleDismissContextMenu();
+            }}
+            onCloseToRight={() => {
+              // Close all tabs to the right of this one
+              const tabIndex = tabs.findIndex(
+                (t) => t.id === contextMenu.tabId,
+              );
+              if (tabIndex !== -1) {
+                tabs.slice(tabIndex + 1).forEach((t) => {
+                  onTabClose(t.id);
+                });
+              }
+              handleDismissContextMenu();
+            }}
+            onDismiss={handleDismissContextMenu}
+          />
+        )}
+
+        {/* New Workspace Dialog */}
+        <NewWorkspaceDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSelectTemplate={handleAddTab}
+        />
+      </div>
+    </DndContext>
   );
 }

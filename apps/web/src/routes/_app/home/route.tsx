@@ -105,6 +105,7 @@ function HomeComponent() {
     duplicateTab,
     addTab,
     toggleSplitView,
+    reorderTabs,
   } = useTabs(INITIAL_TABS);
 
   // Use the activeTabId from state, not derived from URL
@@ -321,6 +322,7 @@ function HomeComponent() {
               onAddTab={handleAddTab}
               splitViewEnabled={state.splitView.enabled}
               onSplitViewToggle={toggleSplitView}
+              onTabReorder={reorderTabs}
             />
 
             {/* Content area */}

@@ -3,8 +3,10 @@
  * Provides tab state and operations for the workspace
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import type { Tab, TabState } from "../types";
+
+const TAB_ORDER_KEY = "pharmos-tab-order";
 
 export interface UseTabsReturn {
   /** Current tab state */
@@ -30,6 +32,8 @@ export interface UseTabsReturn {
     leftModuleId: string | null,
     rightModuleId: string | null,
   ) => void;
+  /** Reorder tabs by moving from one index to another */
+  reorderTabs: (fromIndex: number, toIndex: number) => void;
 }
 
 /**
@@ -46,6 +50,36 @@ export function useTabs(initialTabs: Tab[] = []): UseTabsReturn {
       rightModuleId: null,
     },
   });
+
+  // Load tab order from localStorage on mount
+  useEffect(() => {
+    const savedOrder = localStorage.getItem(TAB_ORDER_KEY);
+    if (savedOrder) {
+      try {
+        const orderArray: string[] = JSON.parse(savedOrder);
+        setState((prev) => {
+          // Reorder tabs based on saved order
+          const orderedTabs = [...prev.tabs].sort((a, b) => {
+            const aIndex = orderArray.indexOf(a.id);
+            const bIndex = orderArray.indexOf(b.id);
+            // If tab not in saved order, put it at the end
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+          });
+          return { ...prev, tabs: orderedTabs };
+        });
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+  }, []);
+
+  // Save tab order to localStorage whenever tabs change
+  useEffect(() => {
+    const tabIds = state.tabs.map((t) => t.id);
+    localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(tabIds));
+  }, [state.tabs]);
 
   const addTab = useCallback((tabData: Omit<Tab, "id">): string => {
     const newTab: Tab = {
@@ -164,6 +198,15 @@ export function useTabs(initialTabs: Tab[] = []): UseTabsReturn {
     [],
   );
 
+  const reorderTabs = useCallback((fromIndex: number, toIndex: number) => {
+    setState((prev) => {
+      const newTabs = [...prev.tabs];
+      const [movedTab] = newTabs.splice(fromIndex, 1);
+      newTabs.splice(toIndex, 0, movedTab);
+      return { ...prev, tabs: newTabs };
+    });
+  }, []);
+
   return {
     state,
     addTab,
@@ -175,5 +218,6 @@ export function useTabs(initialTabs: Tab[] = []): UseTabsReturn {
     markUnsaved,
     toggleSplitView,
     setSplitModules,
+    reorderTabs,
   };
 }
