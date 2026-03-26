@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useSidebarState } from "../hooks/use-sidebar-state";
+import { useSidebarStateStore } from "../stores/sidebar-state-store";
 
 /**
  * SidebarContainer - Reusable sidebar component with resize and collapse functionality
@@ -9,7 +9,7 @@ import { useSidebarState } from "../hooks/use-sidebar-state";
  * - Double-click handle to toggle collapse/expand
  * - Width tooltip during resize
  * - Smooth animations using CSS variables
- * - Per-workspace state persistence via useSidebarState hook
+ * - Per-workspace state persistence via Zustand store
  *
  * @example
  * ```tsx
@@ -111,40 +111,44 @@ const SidebarContainer = React.forwardRef<
     },
     ref,
   ) => {
-    // Use workspace-scoped sidebar state hook
-    const {
-      expanded,
-      toggle,
-      setExpanded,
-      sidebarWidth,
-      setSidebarWidth,
-      resetWidth: resetWidthHook,
-    } = useSidebarState(workspaceId);
+    // Use Zustand store directly for workspace-scoped sidebar state
+    const workspaceState = useSidebarStateStore((state) =>
+      state.getWorkspaceState(workspaceId),
+    );
+    const toggle = useSidebarStateStore((state) => state.toggle);
+    const setExpanded = useSidebarStateStore((state) => state.setExpanded);
+    const setSidebarWidth = useSidebarStateStore(
+      (state) => state.setSidebarWidth,
+    );
+    const resetWidthStore = useSidebarStateStore((state) => state.resetWidth);
 
-    // Initialize width from hook or use default
+    const expanded = workspaceState.expanded;
+    const sidebarWidth = workspaceState.width;
+
+    // Initialize width from store or use default
     const [width, setWidthState] = React.useState<number>(() => {
-      // If hook has a stored width, use it; otherwise use defaultWidth
+      // If store has a stored width, use it; otherwise use defaultWidth
       if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
         return sidebarWidth;
       }
       return defaultWidth;
     });
 
-    // Sync width with hook when it changes
+    // Sync width with store when it changes
     React.useEffect(() => {
       if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
         setWidthState(sidebarWidth);
       }
     }, [sidebarWidth, minWidth, maxWidth]);
 
-    // Persist width changes to hook
+    // Persist width changes to store
     const setWidth = React.useCallback(
       (newWidth: number) => {
         const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
         setWidthState(clampedWidth);
-        setSidebarWidth(clampedWidth);
+        setSidebarWidth(workspaceId, clampedWidth);
       },
-      [minWidth, maxWidth, setSidebarWidth],
+      [minWidth, maxWidth, setSidebarWidth, workspaceId],
     );
 
     // State: resize interaction
@@ -157,19 +161,32 @@ const SidebarContainer = React.forwardRef<
     // Reset width to default
     const resetWidth = React.useCallback(() => {
       setWidthState(defaultWidth);
-      setSidebarWidth(defaultWidth);
-    }, [defaultWidth, setSidebarWidth]);
+      setSidebarWidth(workspaceId, defaultWidth);
+    }, [defaultWidth, setSidebarWidth, workspaceId]);
+
+    // Toggle expanded/collapsed
+    const handleToggle = React.useCallback(() => {
+      toggle(workspaceId);
+    }, [toggle, workspaceId]);
+
+    // Set expanded state
+    const handleSetExpanded = React.useCallback(
+      (value: boolean) => {
+        setExpanded(workspaceId, value);
+      },
+      [setExpanded, workspaceId],
+    );
 
     // Imperative handle for parent control
     React.useImperativeHandle(
       ref,
       () => ({
-        toggle,
-        setExpanded,
+        toggle: handleToggle,
+        setExpanded: handleSetExpanded,
         isExpanded: () => expanded,
         resetWidth,
       }),
-      [toggle, setExpanded, expanded, resetWidth],
+      [handleToggle, handleSetExpanded, expanded, resetWidth],
     );
 
     // Drag handle resize logic
@@ -214,8 +231,8 @@ const SidebarContainer = React.forwardRef<
 
     // Double-click handle to toggle collapse/expand
     const handleDoubleClick = React.useCallback(() => {
-      toggle();
-    }, [toggle]);
+      handleToggle();
+    }, [handleToggle]);
 
     // Context value for child components
     const contextValue = React.useMemo(

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
-import { useSidebarState } from "@/features/workspace/hooks/use-sidebar-state";
+import { useSidebarStateStore } from "@/features/workspace/stores/sidebar-state-store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarSubItem } from "./SidebarSubItem";
 import { SidebarStats } from "./SidebarStats";
@@ -23,18 +23,24 @@ export interface SidebarProps {
  */
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   ({ activeModule, onModuleClick, stats }, ref) => {
-    const {
-      expanded,
-      toggle,
-      expandedModules,
-      toggleModule,
-      pinnedItems,
-      togglePin,
-      hiddenItems,
-      toggleHide,
-      sidebarWidth,
-      setSidebarWidth,
-    } = useSidebarState();
+    // Use Zustand store directly for global sidebar state
+    const workspaceState = useSidebarStateStore((state) =>
+      state.getWorkspaceState("global"),
+    );
+    const toggle = useSidebarStateStore((state) => state.toggle);
+    const toggleModule = useSidebarStateStore((state) => state.toggleModule);
+    const togglePin = useSidebarStateStore((state) => state.togglePin);
+    const toggleHide = useSidebarStateStore((state) => state.toggleHide);
+    const setSidebarWidth = useSidebarStateStore(
+      (state) => state.setSidebarWidth,
+    );
+
+    const expanded = workspaceState.expanded;
+    const expandedModules = workspaceState.expandedModules;
+    const pinnedItems = workspaceState.pinnedItems;
+    const hiddenItems = workspaceState.hiddenItems;
+    const sidebarWidth = workspaceState.width;
+
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
     const [resizeTooltipWidth, setResizeTooltipWidth] = React.useState<
@@ -83,7 +89,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         // Ctrl+B: Toggle collapse
         if (e.ctrlKey && e.key === "b") {
           e.preventDefault();
-          toggle();
+          toggle("global");
           return;
         }
 
@@ -177,14 +183,14 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
     const handleContextMenuPin = () => {
       if (contextMenu) {
-        togglePin(contextMenu.itemId);
+        togglePin("global", contextMenu.itemId);
         setContextMenu(null);
       }
     };
 
     const handleContextMenuHide = () => {
       if (contextMenu) {
-        toggleHide(contextMenu.itemId);
+        toggleHide("global", contextMenu.itemId);
         setContextMenu(null);
       }
     };
@@ -204,7 +210,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       const handleMouseMove = (e: MouseEvent) => {
         const delta = e.clientX - startX;
         const newWidth = Math.max(minWidth, startWidth + delta);
-        setSidebarWidth(newWidth);
+        setSidebarWidth("global", newWidth);
         setResizeTooltipWidth(newWidth);
       };
 
@@ -226,7 +232,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 
     // Double-click handle to toggle collapse/expand
     const handleDoubleClick = () => {
-      toggle();
+      toggle("global");
     };
 
     // Clean up event listeners on unmount
@@ -303,7 +309,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     onClick={(id) => {
                       // If item has sub-items, only toggle expansion (don't navigate)
                       if (hasSubItems) {
-                        toggleModule(id);
+                        toggleModule("global", id);
                       } else {
                         // Leaf items navigate normally
                         onModuleClick(id);
@@ -318,7 +324,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleModule(template.id);
+                        toggleModule("global", template.id);
                       }}
                       onMouseEnter={(e) => {
                         (
