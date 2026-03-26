@@ -1,6 +1,7 @@
 import { screen, within, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders } from "@/test-utils";
+import { useSidebarStateStore } from "@/features/workspace/stores/sidebar-state-store";
 
 // Mock the router hooks
 const mockNavigate = vi.fn();
@@ -21,6 +22,10 @@ const HomeComponent = (Route as any).component as () => React.JSX.Element;
 describe("Sidebar Rail Interaction", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    // Clear localStorage and reset store
+    localStorage.clear();
+    useSidebarStateStore.setState({ workspaces: {} });
+    useSidebarStateStore.persist.rehydrate();
   });
 
   it("should show rail when sidebar is collapsed", () => {

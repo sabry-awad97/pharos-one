@@ -124,6 +124,11 @@ function HomeComponent() {
     state.tabs.find((t) => t.pinned) ??
     state.tabs.find((t) => t.module === "inventory");
 
+  // If no tabs yet (initial render before useEffect), show loading or return early
+  if (!activeTab) {
+    return <div>Loading...</div>;
+  }
+
   // Handler for tab click - navigate to module route
   const handleTabClick = (tabId: string) => {
     const tab = state.tabs.find((t) => t.id === tabId);

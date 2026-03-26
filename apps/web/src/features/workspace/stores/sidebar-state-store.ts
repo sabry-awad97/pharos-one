@@ -16,9 +16,9 @@ export const MAX_WIDTH = 280;
  */
 interface SidebarState {
   expanded: boolean;
-  expandedModules: Set<string>;
-  pinnedItems: Set<string>;
-  hiddenItems: Set<string>;
+  expandedModules: string[];
+  pinnedItems: string[];
+  hiddenItems: string[];
   width: number;
 }
 
@@ -48,9 +48,9 @@ interface SidebarStateStore {
  */
 const getDefaultState = (): SidebarState => ({
   expanded: true,
-  expandedModules: new Set(),
-  pinnedItems: new Set(),
-  hiddenItems: new Set(),
+  expandedModules: [],
+  pinnedItems: [],
+  hiddenItems: [],
   width: DEFAULT_WIDTH,
 });
 
@@ -65,8 +65,17 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
 
       // Helper to get or create workspace state
       getWorkspaceState: (workspaceId: string) => {
-        const state = get().workspaces[workspaceId];
-        return state || getDefaultState();
+        const workspaces = get().workspaces;
+        if (!workspaces[workspaceId]) {
+          // Initialize workspace if it doesn't exist
+          set((state) => {
+            if (!state.workspaces[workspaceId]) {
+              state.workspaces[workspaceId] = getDefaultState();
+            }
+          });
+          return get().workspaces[workspaceId];
+        }
+        return workspaces[workspaceId];
       },
 
       // Helper to check if workspace exists in store
@@ -98,10 +107,11 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const modules = state.workspaces[workspaceId].expandedModules;
-          if (modules.has(moduleId)) {
-            modules.delete(moduleId);
+          const index = modules.indexOf(moduleId);
+          if (index > -1) {
+            modules.splice(index, 1);
           } else {
-            modules.add(moduleId);
+            modules.push(moduleId);
           }
         }),
 
@@ -111,10 +121,11 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const items = state.workspaces[workspaceId].pinnedItems;
-          if (items.has(itemId)) {
-            items.delete(itemId);
+          const index = items.indexOf(itemId);
+          if (index > -1) {
+            items.splice(index, 1);
           } else {
-            items.add(itemId);
+            items.push(itemId);
           }
         }),
 
@@ -124,10 +135,11 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const items = state.workspaces[workspaceId].hiddenItems;
-          if (items.has(itemId)) {
-            items.delete(itemId);
+          const index = items.indexOf(itemId);
+          if (index > -1) {
+            items.splice(index, 1);
           } else {
-            items.add(itemId);
+            items.push(itemId);
           }
         }),
 
@@ -155,53 +167,10 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-
-          try {
-            const parsed = JSON.parse(str);
-            // Convert arrays back to Sets
-            if (parsed.state && parsed.state.workspaces) {
-              const workspaces: Record<string, SidebarState> = {};
-              for (const [id, workspace] of Object.entries(
-                parsed.state.workspaces,
-              )) {
-                const ws = workspace as any;
-                workspaces[id] = {
-                  ...ws,
-                  expandedModules: new Set(ws.expandedModules || []),
-                  pinnedItems: new Set(ws.pinnedItems || []),
-                  hiddenItems: new Set(ws.hiddenItems || []),
-                };
-              }
-              parsed.state.workspaces = workspaces;
-            }
-            return str;
-          } catch {
-            return str;
-          }
+          return str;
         },
         setItem: (name, value) => {
-          try {
-            const parsed = JSON.parse(value);
-            // Convert Sets to arrays for storage
-            if (parsed.state && parsed.state.workspaces) {
-              const workspaces: Record<string, any> = {};
-              for (const [id, workspace] of Object.entries(
-                parsed.state.workspaces,
-              )) {
-                const ws = workspace as SidebarState;
-                workspaces[id] = {
-                  ...ws,
-                  expandedModules: Array.from(ws.expandedModules),
-                  pinnedItems: Array.from(ws.pinnedItems),
-                  hiddenItems: Array.from(ws.hiddenItems),
-                };
-              }
-              parsed.state.workspaces = workspaces;
-            }
-            localStorage.setItem(name, JSON.stringify(parsed));
-          } catch {
-            localStorage.setItem(name, value);
-          }
+          localStorage.setItem(name, value);
         },
         removeItem: (name) => localStorage.removeItem(name),
       })),

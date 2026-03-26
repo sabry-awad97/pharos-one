@@ -1,7 +1,10 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
-import { useSidebarStateStore } from "@/features/workspace/stores/sidebar-state-store";
+import {
+  useSidebarStateStore,
+  DEFAULT_WIDTH,
+} from "@/features/workspace/stores/sidebar-state-store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarSubItem } from "./SidebarSubItem";
 import { SidebarStats } from "./SidebarStats";
@@ -24,9 +27,26 @@ export interface SidebarProps {
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   ({ activeModule, onModuleClick, stats }, ref) => {
     // Use Zustand store directly for global sidebar state
-    const workspaceState = useSidebarStateStore((state) =>
-      state.getWorkspaceState("global"),
+    // Select the entire workspace state object to avoid calling getWorkspaceState in selector
+    const workspaceState = useSidebarStateStore(
+      (state) =>
+        state.workspaces["global"] || {
+          expanded: true,
+          expandedModules: [],
+          pinnedItems: [],
+          hiddenItems: [],
+          width: DEFAULT_WIDTH,
+        },
     );
+
+    const {
+      expanded,
+      expandedModules,
+      pinnedItems,
+      hiddenItems,
+      width: sidebarWidth,
+    } = workspaceState;
+
     const toggle = useSidebarStateStore((state) => state.toggle);
     const toggleModule = useSidebarStateStore((state) => state.toggleModule);
     const togglePin = useSidebarStateStore((state) => state.togglePin);
@@ -34,12 +54,6 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     const setSidebarWidth = useSidebarStateStore(
       (state) => state.setSidebarWidth,
     );
-
-    const expanded = workspaceState.expanded;
-    const expandedModules = workspaceState.expandedModules;
-    const pinnedItems = workspaceState.pinnedItems;
-    const hiddenItems = workspaceState.hiddenItems;
-    const sidebarWidth = workspaceState.width;
 
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
@@ -58,11 +72,11 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     // Filter and sort templates: remove hidden, sort pinned to top
     const visibleTemplates = React.useMemo(() => {
       const filtered = WORKSPACE_TEMPLATES.filter(
-        (t) => !hiddenItems.has(t.id),
+        (t) => !hiddenItems.includes(t.id),
       );
       return filtered.sort((a, b) => {
-        const aPinned = pinnedItems.has(a.id);
-        const bPinned = pinnedItems.has(b.id);
+        const aPinned = pinnedItems.includes(a.id);
+        const bPinned = pinnedItems.includes(b.id);
         if (aPinned && !bPinned) return -1;
         if (!aPinned && bPinned) return 1;
         return 0;
@@ -74,7 +88,11 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       const items: Array<{ id: string; type: "module" | "subitem" }> = [];
       visibleTemplates.forEach((template) => {
         items.push({ id: template.id, type: "module" });
-        if (template.subItems && expanded && expandedModules.has(template.id)) {
+        if (
+          template.subItems &&
+          expanded &&
+          expandedModules.includes(template.id)
+        ) {
           template.subItems.forEach((subItem) => {
             items.push({ id: subItem.id, type: "subitem" });
           });
@@ -157,7 +175,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         x: e.clientX,
         y: e.clientY,
         itemId,
-        isPinned: pinnedItems.has(itemId),
+        isPinned: pinnedItems.includes(itemId),
       });
     };
 
@@ -267,7 +285,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
           {visibleTemplates.map((template, moduleIndex) => {
             const hasSubItems =
               template.subItems && template.subItems.length > 0;
-            const isModuleExpanded = expandedModules.has(template.id);
+            const isModuleExpanded = expandedModules.includes(template.id);
 
             // Check if this module or any of its sub-items are active
             const isModuleActive = activeModule === template.id;
@@ -283,7 +301,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
               if (
                 prevTemplate.subItems &&
                 expanded &&
-                expandedModules.has(prevTemplate.id)
+                expandedModules.includes(prevTemplate.id)
               ) {
                 itemIndex += prevTemplate.subItems.length;
               }
