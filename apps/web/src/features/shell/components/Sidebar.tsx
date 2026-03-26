@@ -32,20 +32,28 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       (state) =>
         state.workspaces["global"] || {
           expanded: true,
-          expandedModules: [],
-          pinnedItems: [],
-          hiddenItems: [],
+          expandedModules: new Set<string>(),
+          pinnedItems: new Set<string>(),
+          hiddenItems: new Set<string>(),
           width: DEFAULT_WIDTH,
         },
     );
 
-    const {
-      expanded,
-      expandedModules,
-      pinnedItems,
-      hiddenItems,
-      width: sidebarWidth,
-    } = workspaceState;
+    const { expanded, width: sidebarWidth } = workspaceState;
+
+    // Convert Sets to arrays for rendering with useMemo to avoid recreating on every render
+    const expandedModules = React.useMemo(
+      () => Array.from(workspaceState.expandedModules),
+      [workspaceState.expandedModules],
+    );
+    const pinnedItems = React.useMemo(
+      () => Array.from(workspaceState.pinnedItems),
+      [workspaceState.pinnedItems],
+    );
+    const hiddenItems = React.useMemo(
+      () => Array.from(workspaceState.hiddenItems),
+      [workspaceState.hiddenItems],
+    );
 
     const toggle = useSidebarStateStore((state) => state.toggle);
     const toggleModule = useSidebarStateStore((state) => state.toggleModule);

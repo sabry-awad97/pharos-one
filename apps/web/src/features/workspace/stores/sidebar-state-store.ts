@@ -5,20 +5,43 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { enableMapSet } from "immer";
+import { z } from "zod";
+
+// Enable Immer MapSet plugin to support Set and Map
+enableMapSet();
 
 export const DEFAULT_WIDTH = 180;
 export const MIN_WIDTH = 48;
 export const MAX_WIDTH = 280;
 
 /**
+ * Zod schema for workspace state stored in localStorage (with arrays)
+ */
+const StoredWorkspaceStateSchema = z.object({
+  expanded: z.boolean(),
+  expandedModules: z.array(z.string()),
+  pinnedItems: z.array(z.string()),
+  hiddenItems: z.array(z.string()),
+  width: z.number(),
+});
+
+const StoredStateSchema = z.object({
+  state: z.object({
+    workspaces: z.record(z.string(), StoredWorkspaceStateSchema),
+  }),
+  version: z.number().optional(),
+});
+
+/**
  * Sidebar state for a single workspace
  */
 interface SidebarState {
   expanded: boolean;
-  expandedModules: string[];
-  pinnedItems: string[];
-  hiddenItems: string[];
+  expandedModules: Set<string>;
+  pinnedItems: Set<string>;
+  hiddenItems: Set<string>;
   width: number;
 }
 
@@ -48,9 +71,9 @@ interface SidebarStateStore {
  */
 const getDefaultState = (): SidebarState => ({
   expanded: true,
-  expandedModules: [],
-  pinnedItems: [],
-  hiddenItems: [],
+  expandedModules: new Set(),
+  pinnedItems: new Set(),
+  hiddenItems: new Set(),
   width: DEFAULT_WIDTH,
 });
 
@@ -107,11 +130,10 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const modules = state.workspaces[workspaceId].expandedModules;
-          const index = modules.indexOf(moduleId);
-          if (index > -1) {
-            modules.splice(index, 1);
+          if (modules.has(moduleId)) {
+            modules.delete(moduleId);
           } else {
-            modules.push(moduleId);
+            modules.add(moduleId);
           }
         }),
 
@@ -121,11 +143,10 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const items = state.workspaces[workspaceId].pinnedItems;
-          const index = items.indexOf(itemId);
-          if (index > -1) {
-            items.splice(index, 1);
+          if (items.has(itemId)) {
+            items.delete(itemId);
           } else {
-            items.push(itemId);
+            items.add(itemId);
           }
         }),
 
@@ -135,11 +156,10 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
             state.workspaces[workspaceId] = getDefaultState();
           }
           const items = state.workspaces[workspaceId].hiddenItems;
-          const index = items.indexOf(itemId);
-          if (index > -1) {
-            items.splice(index, 1);
+          if (items.has(itemId)) {
+            items.delete(itemId);
           } else {
-            items.push(itemId);
+            items.add(itemId);
           }
         }),
 
@@ -163,17 +183,69 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
     })),
     {
       name: "pharmos-sidebar-state",
-      storage: createJSONStorage(() => ({
+      storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          return str;
+
+          try {
+            const parsed = JSON.parse(str);
+            const validated = StoredStateSchema.parse(parsed);
+
+            // Convert arrays back to Sets
+            const workspaces: Record<string, SidebarState> = {};
+            Object.entries(validated.state.workspaces).forEach(
+              ([id, workspace]) => {
+                workspaces[id] = {
+                  expanded: workspace.expanded,
+                  expandedModules: new Set(workspace.expandedModules),
+                  pinnedItems: new Set(workspace.pinnedItems),
+                  hiddenItems: new Set(workspace.hiddenItems),
+                  width: workspace.width,
+                };
+              },
+            );
+
+            return {
+              state: { workspaces },
+              version: validated.version,
+            };
+          } catch (error) {
+            console.warn(
+              "Failed to parse sidebar state from localStorage:",
+              error,
+            );
+            return null;
+          }
         },
-        setItem: (name, value) => {
-          localStorage.setItem(name, value);
+        setItem: (name, newValue) => {
+          // Convert Sets to arrays for storage
+          const workspaces: Record<
+            string,
+            z.infer<typeof StoredWorkspaceStateSchema>
+          > = {};
+
+          Object.entries(newValue.state.workspaces).forEach(
+            ([id, workspace]) => {
+              workspaces[id] = {
+                expanded: workspace.expanded,
+                expandedModules: Array.from(workspace.expandedModules),
+                pinnedItems: Array.from(workspace.pinnedItems),
+                hiddenItems: Array.from(workspace.hiddenItems),
+                width: workspace.width,
+              };
+            },
+          );
+
+          const toStore = {
+            state: { workspaces },
+            version: newValue.version,
+          };
+
+          localStorage.setItem(name, JSON.stringify(toStore));
         },
         removeItem: (name) => localStorage.removeItem(name),
-      })),
+      },
     },
   ),
 );
