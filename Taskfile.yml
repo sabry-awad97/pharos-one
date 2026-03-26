@@ -12,6 +12,7 @@ version: "3"
 vars:
   BUN: bun
   TURBO: "{{.BUN}} turbo"
+  DESKTOP_APP: apps/desktop
   DATABASE_URL: "postgresql://pharos_one:pharos_one_dev_password@localhost:5432/pharos_one"
   PSQL: "docker-compose exec -T postgres psql -U pharos_one -d pharos_one"
 
@@ -92,41 +93,41 @@ tasks:
       - echo "✅ Vitest cache cleared"
 
   # ═══════════════════════════════════════════════════════════════════════════
-  #  �️ Tauri Desktop App
+  #  🖥️ Tauri Desktop App
   # ═══════════════════════════════════════════════════════════════════════════
 
   tauri:dev:
     desc: "🖥️  Start Tauri desktop app in dev mode"
-    dir: apps/web
+    dir: "{{.DESKTOP_APP}}"
     cmds:
-      - "{{.BUN}} tauri dev"
+      - "{{.BUN}} run dev"
 
   tauri:build:
     desc: "📦 Build Tauri desktop app"
-    dir: apps/web
+    dir: "{{.DESKTOP_APP}}"
     cmds:
-      - "{{.BUN}} tauri build"
+      - "{{.BUN}} run build"
 
   tauri:build:debug:
     desc: "🐛 Build Tauri app with debug symbols"
-    dir: apps/web
+    dir: "{{.DESKTOP_APP}}"
     cmds:
       - "{{.BUN}} tauri build --debug"
 
   tauri:icon:
     desc: "🎨 Generate app icons from source"
-    dir: apps/web
+    dir: "{{.DESKTOP_APP}}"
     cmds:
       - "{{.BUN}} tauri icon"
 
   tauri:info:
-    desc: "ℹ️  Show Tauri environment info"
-    dir: apps/web
+    desc: "ℹ️ Show Tauri environment info"
+    dir: "{{.DESKTOP_APP}}"
     cmds:
       - "{{.BUN}} tauri info"
 
   # ═══════════════════════════════════════════════════════════════════════════
-  #  � Docker Services
+  #  🐳 Docker Services
   # ═══════════════════════════════════════════════════════════════════════════
 
   docker:up:
@@ -285,58 +286,58 @@ tasks:
 
   db:migrate:
     desc: "🚀 Run all pending database migrations"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo run -- up
 
   db:migrate:status:
     desc: "📊 Check database migration status"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo run -- status
 
   db:migrate:rollback:
     desc: "⏪ Rollback last database migration"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo run -- down
 
   db:migrate:fresh:
     desc: "🔄 Drop all tables and rerun migrations (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cmd: cargo run -- fresh
         prompt: "⚠️  This will DROP ALL TABLES and data. Continue?"
 
   db:migrate:refresh:
     desc: "🔄 Rollback all migrations and reapply (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cmd: cargo run -- refresh
         prompt: "⚠️  This will rollback and reapply all migrations. Continue?"
 
   db:migrate:reset:
-    desc: "🗑️  Rollback all migrations (DESTRUCTIVE)"
-    dir: apps/web/src-tauri/migrations
+    desc: "🗑️ Rollback all migrations (DESTRUCTIVE)"
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cmd: cargo run -- reset
         prompt: "⚠️  This will rollback all migrations. Continue?"
 
   db:check:
     desc: "✅ Check database migration code compiles"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo check --all-targets
 
   db:build:
     desc: "🔨 Build database migration binary"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo build --bin migration
 
   db:build:release:
     desc: "📦 Build database migration binary (release)"
-    dir: apps/web/src-tauri/migrations
+    dir: "{{.DESKTOP_APP}}/migrations"
     cmds:
       - cargo build --bin migration --release
 
@@ -427,7 +428,7 @@ tasks:
   # ═══════════════════════════════════════════════════════════════════════════
 
   db:info:
-    desc: "ℹ️  Show database information"
+    desc: "ℹ️ Show database information"
     cmds:
       - echo "=== Database Information ==="
       - "{{.PSQL}} -c \"SELECT current_database(), current_user, version();\""
@@ -478,7 +479,7 @@ tasks:
   # ═══════════════════════════════════════════════════════════════════════════
 
   db:clean:soft-deleted:
-    desc: "🗑️  Permanently delete soft-deleted records (DESTRUCTIVE)"
+    desc: "🗑️ Permanently delete soft-deleted records (DESTRUCTIVE)"
     cmds:
       - cmd: |
           {{.PSQL}} -c "DELETE FROM users WHERE deleted_at IS NOT NULL;"
@@ -502,36 +503,36 @@ tasks:
 
   seed:
     desc: "🌱 Run database seeder (interactive TUI)"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo run
 
   seed:check:
     desc: "✅ Check seeder code compiles"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo check --all-targets
 
   seed:build:
     desc: "🔨 Build seeder binary"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo build --bin app_seeder
 
   seed:build:release:
     desc: "📦 Build seeder binary (release)"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo build --bin app_seeder --release
 
   seed:run:
     desc: "🚀 Run seeder in release mode"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo run --release
 
   seed:watch:
     desc: "👀 Watch and rebuild seeder on changes"
-    dir: apps/web/src-tauri/crates/seeder
+    dir: "{{.DESKTOP_APP}}/crates/seeder"
     cmds:
       - cargo watch -x run
