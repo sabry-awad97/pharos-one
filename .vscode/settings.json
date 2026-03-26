@@ -1,4 +1,4 @@
 {
   "typescript.autoClosingTags": false,
-  "rust-analyzer.linkedProjects": ["apps/web/src-tauri/Cargo.toml"]
+  "rust-analyzer.linkedProjects": ["apps/desktop/Cargo.toml"]
 }
