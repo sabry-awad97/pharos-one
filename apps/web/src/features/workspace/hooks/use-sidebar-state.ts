@@ -4,7 +4,8 @@
  * Supports workspace-scoped state for independent sidebar configurations per workspace
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const STORAGE_KEY_PREFIX = "pharmos-sidebar";
 
@@ -81,189 +82,129 @@ export function useSidebarState(workspaceId?: string): UseSidebarStateReturn {
   // Get workspace-specific storage keys
   const storageKeys = getStorageKeys(workspaceId);
 
-  // Initialize state from localStorage, defaulting to true if not found
-  const [expanded, setExpandedState] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem(storageKeys.expanded);
-      return stored !== null ? stored === "true" : true;
-    } catch (error) {
-      // Handle localStorage errors (e.g., incognito mode, storage disabled)
-      console.warn("Failed to read sidebar state from localStorage:", error);
-      return true;
-    }
+  // Use centralized localStorage hooks for all state
+  const [expanded, setExpanded] = useLocalStorage<boolean>({
+    key: storageKeys.expanded,
+    initialValue: true,
+    serialize: String,
+    deserialize: (value) => value === "true",
   });
 
-  // Initialize expanded modules from localStorage
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(storageKeys.expandedModules);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch (error) {
-      console.warn("Failed to read expanded modules from localStorage:", error);
-      return new Set();
-    }
+  const [expandedModules, setExpandedModules] = useLocalStorage<Set<string>>({
+    key: storageKeys.expandedModules,
+    initialValue: new Set(),
+    serialize: (value) => JSON.stringify(Array.from(value)),
+    deserialize: (value) => new Set(JSON.parse(value)),
   });
 
-  // Initialize pinned items from localStorage
-  const [pinnedItems, setPinnedItems] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(storageKeys.pinnedItems);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch (error) {
-      console.warn("Failed to read pinned items from localStorage:", error);
-      return new Set();
-    }
+  const [pinnedItems, setPinnedItems] = useLocalStorage<Set<string>>({
+    key: storageKeys.pinnedItems,
+    initialValue: new Set(),
+    serialize: (value) => JSON.stringify(Array.from(value)),
+    deserialize: (value) => new Set(JSON.parse(value)),
   });
 
-  // Initialize hidden items from localStorage
-  const [hiddenItems, setHiddenItems] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(storageKeys.hiddenItems);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch (error) {
-      console.warn("Failed to read hidden items from localStorage:", error);
-      return new Set();
-    }
+  const [hiddenItems, setHiddenItems] = useLocalStorage<Set<string>>({
+    key: storageKeys.hiddenItems,
+    initialValue: new Set(),
+    serialize: (value) => JSON.stringify(Array.from(value)),
+    deserialize: (value) => new Set(JSON.parse(value)),
   });
 
-  // Initialize sidebar width from localStorage
-  const [sidebarWidth, setSidebarWidthState] = useState<number>(() => {
-    try {
-      const stored = localStorage.getItem(storageKeys.width);
-      if (stored !== null) {
-        const width = parseInt(stored, 10);
-        // Validate width is within bounds
-        if (!isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
-          return width;
-        }
+  const [sidebarWidth, setSidebarWidthState] = useLocalStorage<number>({
+    key: storageKeys.width,
+    initialValue: DEFAULT_WIDTH,
+    serialize: String,
+    deserialize: (value) => {
+      const width = parseInt(value, 10);
+      // Validate width is within bounds
+      if (!isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
+        return width;
       }
       return DEFAULT_WIDTH;
-    } catch (error) {
-      console.warn("Failed to read sidebar width from localStorage:", error);
-      return DEFAULT_WIDTH;
-    }
+    },
   });
-
-  // Persist state to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKeys.expanded, String(expanded));
-    } catch (error) {
-      // Handle localStorage errors gracefully
-      console.warn("Failed to save sidebar state to localStorage:", error);
-    }
-  }, [expanded, storageKeys.expanded]);
-
-  // Persist expanded modules to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        storageKeys.expandedModules,
-        JSON.stringify(Array.from(expandedModules)),
-      );
-    } catch (error) {
-      console.warn("Failed to save expanded modules to localStorage:", error);
-    }
-  }, [expandedModules, storageKeys.expandedModules]);
-
-  // Persist pinned items to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        storageKeys.pinnedItems,
-        JSON.stringify(Array.from(pinnedItems)),
-      );
-    } catch (error) {
-      console.warn("Failed to save pinned items to localStorage:", error);
-    }
-  }, [pinnedItems, storageKeys.pinnedItems]);
-
-  // Persist hidden items to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        storageKeys.hiddenItems,
-        JSON.stringify(Array.from(hiddenItems)),
-      );
-    } catch (error) {
-      console.warn("Failed to save hidden items to localStorage:", error);
-    }
-  }, [hiddenItems, storageKeys.hiddenItems]);
-
-  // Persist sidebar width to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKeys.width, String(sidebarWidth));
-    } catch (error) {
-      console.warn("Failed to save sidebar width to localStorage:", error);
-    }
-  }, [sidebarWidth, storageKeys.width]);
 
   const toggle = useCallback(() => {
-    setExpandedState((current) => !current);
-  }, []);
+    setExpanded((current) => !current);
+  }, [setExpanded]);
 
-  const setExpanded = useCallback((value: boolean) => {
-    setExpandedState(value);
-  }, []);
+  const setExpandedValue = useCallback(
+    (value: boolean) => {
+      setExpanded(value);
+    },
+    [setExpanded],
+  );
 
-  const toggleModule = useCallback((moduleId: string) => {
-    setExpandedModules((current) => {
-      const next = new Set(current);
-      if (next.has(moduleId)) {
-        next.delete(moduleId);
-      } else {
-        next.add(moduleId);
-      }
-      return next;
-    });
-  }, []);
+  const toggleModule = useCallback(
+    (moduleId: string) => {
+      setExpandedModules((current) => {
+        const next = new Set(current);
+        if (next.has(moduleId)) {
+          next.delete(moduleId);
+        } else {
+          next.add(moduleId);
+        }
+        return next;
+      });
+    },
+    [setExpandedModules],
+  );
 
-  const togglePin = useCallback((itemId: string) => {
-    setPinnedItems((current) => {
-      const next = new Set(current);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
-      return next;
-    });
-  }, []);
+  const togglePin = useCallback(
+    (itemId: string) => {
+      setPinnedItems((current) => {
+        const next = new Set(current);
+        if (next.has(itemId)) {
+          next.delete(itemId);
+        } else {
+          next.add(itemId);
+        }
+        return next;
+      });
+    },
+    [setPinnedItems],
+  );
 
-  const toggleHide = useCallback((itemId: string) => {
-    setHiddenItems((current) => {
-      const next = new Set(current);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
-      return next;
-    });
-  }, []);
+  const toggleHide = useCallback(
+    (itemId: string) => {
+      setHiddenItems((current) => {
+        const next = new Set(current);
+        if (next.has(itemId)) {
+          next.delete(itemId);
+        } else {
+          next.add(itemId);
+        }
+        return next;
+      });
+    },
+    [setHiddenItems],
+  );
 
-  const setSidebarWidth = useCallback((width: number) => {
-    // Clamp width between MIN_WIDTH and MAX_WIDTH
-    const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
-    setSidebarWidthState(clampedWidth);
-  }, []);
+  const setSidebarWidth = useCallback(
+    (width: number) => {
+      // Clamp width between MIN_WIDTH and MAX_WIDTH
+      const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
+      setSidebarWidthState(clampedWidth);
+    },
+    [setSidebarWidthState],
+  );
 
   const resetWidth = useCallback(() => {
     setSidebarWidthState(DEFAULT_WIDTH);
-  }, []);
+  }, [setSidebarWidthState]);
 
   return {
-    expanded,
+    expanded: expanded ?? true,
     toggle,
-    setExpanded,
-    expandedModules,
+    setExpanded: setExpandedValue,
+    expandedModules: expandedModules ?? new Set(),
     toggleModule,
-    pinnedItems,
+    pinnedItems: pinnedItems ?? new Set(),
     togglePin,
-    hiddenItems,
+    hiddenItems: hiddenItems ?? new Set(),
     toggleHide,
-    sidebarWidth,
+    sidebarWidth: sidebarWidth ?? DEFAULT_WIDTH,
     setSidebarWidth,
     resetWidth,
   };

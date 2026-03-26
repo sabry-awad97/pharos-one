@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useState, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { Tab, TabState } from "../types";
 
 const TAB_ORDER_KEY = "pharmos-tab-order";
@@ -51,35 +52,36 @@ export function useTabs(initialTabs: Tab[] = []): UseTabsReturn {
     },
   });
 
+  // Use centralized localStorage hook for tab order persistence
+  const [tabOrder, setTabOrder] = useLocalStorage<string[]>({
+    key: TAB_ORDER_KEY,
+    initialValue: [],
+  });
+
   // Load tab order from localStorage on mount
   useEffect(() => {
-    const savedOrder = localStorage.getItem(TAB_ORDER_KEY);
-    if (savedOrder) {
-      try {
-        const orderArray: string[] = JSON.parse(savedOrder);
-        setState((prev) => {
-          // Reorder tabs based on saved order
-          const orderedTabs = [...prev.tabs].sort((a, b) => {
-            const aIndex = orderArray.indexOf(a.id);
-            const bIndex = orderArray.indexOf(b.id);
-            // If tab not in saved order, put it at the end
-            if (aIndex === -1) return 1;
-            if (bIndex === -1) return -1;
-            return aIndex - bIndex;
-          });
-          return { ...prev, tabs: orderedTabs };
+    if (tabOrder && tabOrder.length > 0) {
+      setState((prev) => {
+        // Reorder tabs based on saved order
+        const orderedTabs = [...prev.tabs].sort((a, b) => {
+          const aIndex = tabOrder.indexOf(a.id);
+          const bIndex = tabOrder.indexOf(b.id);
+          // If tab not in saved order, put it at the end
+          if (aIndex === -1) return 1;
+          if (bIndex === -1) return -1;
+          return aIndex - bIndex;
         });
-      } catch (e) {
-        // Invalid JSON, ignore
-      }
+        return { ...prev, tabs: orderedTabs };
+      });
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Save tab order to localStorage whenever tabs change
   useEffect(() => {
     const tabIds = state.tabs.map((t) => t.id);
-    localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(tabIds));
-  }, [state.tabs]);
+    setTabOrder(tabIds);
+  }, [state.tabs, setTabOrder]);
 
   const addTab = useCallback((tabData: Omit<Tab, "id">): string => {
     const newTab: Tab = {
