@@ -5,30 +5,17 @@
 
 import { describe, it, expect } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSuppliers } from "../use-suppliers";
+import { AllProviders } from "@/test-utils";
 
 describe("useSuppliers with TanStack DB", () => {
-  const createWrapper = () => {
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  };
-
   /**
    * Test 1 (Tracer Bullet): Suppliers load through hook
    * Verifies basic functionality - hook returns supplier list
    */
   it("useSuppliers returns supplier list", async () => {
     const { result } = renderHook(() => useSuppliers(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -50,7 +37,7 @@ describe("useSuppliers with TanStack DB", () => {
    */
   it("useSuppliers returns TanStack Query shape", async () => {
     const { result } = renderHook(() => useSuppliers(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Check all required properties exist
@@ -82,7 +69,7 @@ describe("useSuppliers with TanStack DB", () => {
    */
   it("useSuppliers returns consistent data", async () => {
     const { result, rerender } = renderHook(() => useSuppliers(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for initial data load

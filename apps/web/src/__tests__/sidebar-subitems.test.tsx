@@ -1,10 +1,5 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { screen, within, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import type { JSX } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -30,7 +25,7 @@ describe("Sidebar Sub-Items Navigation", () => {
   });
 
   it("should navigate to nested route when clicking dashboard overview sub-item", async () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     // Find the sidebar
     const sidebar = screen.getByTestId("sidebar");
@@ -64,7 +59,7 @@ describe("Sidebar Sub-Items Navigation", () => {
   });
 
   it("should show only tree line (no left border) when sub-item is active", async () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -96,7 +91,7 @@ describe("Sidebar Sub-Items Navigation", () => {
   });
 
   it("should position tree line under center of parent icon", async () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 

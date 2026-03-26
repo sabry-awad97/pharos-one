@@ -3,16 +3,10 @@
  * Tests for row focus styling and Product Details Panel opening
  */
 
-import {
-  render,
-  screen,
-  within,
-  waitFor,
-  fireEvent,
-} from "@testing-library/react";
+import { screen, within, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock the hooks
@@ -101,22 +95,8 @@ vi.mock("../features/modules/inventory/hooks/use-transactions", () => ({
 }));
 
 describe("InventoryWorkspace - Row Focus Styling", () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
-  });
-
   const renderComponent = () => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    return renderWithProviders(<InventoryWorkspace />);
   };
 
   it("should show focus border on single-click (without opening panel)", async () => {
@@ -235,22 +215,8 @@ describe("InventoryWorkspace - Row Focus Styling", () => {
 });
 
 describe("InventoryWorkspace - Windows-style Multi-Selection", () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
-  });
-
   const renderComponent = () => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    return renderWithProviders(<InventoryWorkspace />);
   };
 
   it("should select single row when clicking without modifiers and clear previous selection", async () => {

@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 
 // Mock the action registry
 vi.mock("../features/modules/inventory/config/inventory-actions", () => ({
@@ -84,25 +84,11 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 describe("Inventory Sub-Routes", () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
-  });
-
   it("should render inventory-all route", async () => {
     const { Route } = await import("../routes/_app/home/inventory/all");
     const RouteComponent = (Route as any).component as () => React.JSX.Element;
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouteComponent />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<RouteComponent />);
 
     // Verify WorkspaceContainer is rendered (it has a specific structure)
     const container = screen.getByTestId("workspace-container");
@@ -113,11 +99,7 @@ describe("Inventory Sub-Routes", () => {
     const { Route } = await import("../routes/_app/home/inventory/low-stock");
     const RouteComponent = (Route as any).component as () => React.JSX.Element;
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouteComponent />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<RouteComponent />);
 
     const container = screen.getByTestId("workspace-container");
     expect(container).toBeInTheDocument();
@@ -127,11 +109,7 @@ describe("Inventory Sub-Routes", () => {
     const { Route } = await import("../routes/_app/home/inventory/expiring");
     const RouteComponent = (Route as any).component as () => React.JSX.Element;
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouteComponent />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<RouteComponent />);
 
     const container = screen.getByTestId("workspace-container");
     expect(container).toBeInTheDocument();
@@ -141,11 +119,7 @@ describe("Inventory Sub-Routes", () => {
     const { Route } = await import("../routes/_app/home/inventory/categories");
     const RouteComponent = (Route as any).component as () => React.JSX.Element;
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouteComponent />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<RouteComponent />);
 
     const container = screen.getByTestId("workspace-container");
     expect(container).toBeInTheDocument();

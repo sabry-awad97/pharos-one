@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { StockMovementsPanel } from "../features/modules/inventory/components/StockMovementsPanel";
 
 // Mock hooks
@@ -19,29 +19,23 @@ vi.mock("../features/modules/inventory/hooks/use-transaction-filters", () => ({
 }));
 
 vi.mock("../features/modules/inventory/hooks/use-transactions", () => ({
-  useStockTransactions: () => ({
+  useTransactions: () => ({
     data: [],
     isLoading: false,
     isError: false,
   }),
 }));
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-});
-
 function renderPanel(
   props: Partial<React.ComponentProps<typeof StockMovementsPanel>> = {},
 ) {
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <StockMovementsPanel
-        productId={1}
-        productName="Test Product"
-        onClose={vi.fn()}
-        {...props}
-      />
-    </QueryClientProvider>,
+  return renderWithProviders(
+    <StockMovementsPanel
+      productId={1}
+      productName="Test Product"
+      onClose={vi.fn()}
+      {...props}
+    />,
   );
 }
 

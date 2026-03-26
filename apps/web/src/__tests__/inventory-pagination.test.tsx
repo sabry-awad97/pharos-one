@@ -1,7 +1,7 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock products data - 50 items to test pagination (with default 25/page = 2 pages)
@@ -45,25 +45,14 @@ async function waitForPaginationReady() {
 }
 
 describe("InventoryWorkspace - Pagination Navigation", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
     // Clear localStorage to prevent test pollution
     localStorage.clear();
   });
 
   const renderComponent = () => {
     const user = userEvent.setup();
-    const result = render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    const result = renderWithProviders(<InventoryWorkspace />);
     return { ...result, user };
   };
 
@@ -198,25 +187,14 @@ describe("InventoryWorkspace - Pagination Navigation", () => {
 });
 
 describe("InventoryWorkspace - Go to Page", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
     // Clear localStorage to prevent test pollution
     localStorage.clear();
   });
 
   const renderComponent = () => {
     const user = userEvent.setup();
-    const result = render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    const result = renderWithProviders(<InventoryWorkspace />);
     return { ...result, user };
   };
 

@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTable } from "../DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -31,7 +32,7 @@ const testColumns: ColumnDef<TestItem>[] = [
 describe("DataTable", () => {
   describe("Basic Rendering", () => {
     it("should render table with headers from column definitions", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -51,7 +52,7 @@ describe("DataTable", () => {
     });
 
     it("should render data rows with default rendering", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -73,7 +74,7 @@ describe("DataTable", () => {
 
   describe("Custom Row Rendering", () => {
     it("should use custom renderRow when provided", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -101,7 +102,7 @@ describe("DataTable", () => {
 
   describe("Props", () => {
     it("should apply custom className to table", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -116,7 +117,7 @@ describe("DataTable", () => {
     });
 
     it("should apply custom style to table", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -133,7 +134,7 @@ describe("DataTable", () => {
 
   describe("Edge Cases", () => {
     it("should render empty table when data is empty", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={[]}

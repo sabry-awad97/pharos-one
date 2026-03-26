@@ -1,10 +1,5 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { screen, within, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the router hooks
@@ -29,7 +24,7 @@ describe("Sidebar Parent Item Click Behavior", () => {
   });
 
   it("should not navigate when clicking parent item with sub-items", async () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -55,7 +50,7 @@ describe("Sidebar Parent Item Click Behavior", () => {
 });
 
 it("should navigate when clicking leaf item without sub-items", async () => {
-  render(<HomeComponent />);
+  renderWithProviders(<HomeComponent />);
 
   const sidebar = screen.getByTestId("sidebar");
 

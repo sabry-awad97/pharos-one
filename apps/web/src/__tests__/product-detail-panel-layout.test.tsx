@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock the hooks
@@ -29,23 +29,12 @@ vi.mock("../features/modules/inventory/hooks/use-products", () => ({
 }));
 
 describe("Product Detail Panel Layout", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
     vi.clearAllMocks();
   });
 
   it("should display vertical layout when panel is closed", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<InventoryWorkspace />);
 
     // Find the main workspace container
     const table = screen.getByRole("table");
@@ -62,11 +51,7 @@ describe("Product Detail Panel Layout", () => {
   });
 
   it("should have proper DOM structure for layout switching", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<InventoryWorkspace />);
 
     const table = screen.getByRole("table");
 

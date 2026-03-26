@@ -5,30 +5,17 @@
 
 import { describe, it, expect } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTransactions } from "../use-transactions";
+import { AllProviders } from "@/test-utils";
 
 describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
-  const createWrapper = () => {
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  };
-
   /**
    * Test 1 (Tracer Bullet): Transactions load without filters
    * Verifies basic functionality - hook returns transactions
    */
   it("useTransactions loads transactions", async () => {
     const { result } = renderHook(() => useTransactions(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -59,7 +46,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
       endDate: "2024-01-31",
     };
     const { result } = renderHook(() => useTransactions(filters), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -86,7 +73,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
   it("useTransactions loads transactions for product", async () => {
     const productId = 1;
     const { result } = renderHook(() => useTransactions({ productId }), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -115,7 +102,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
       endDate: "2024-01-31",
     };
     const { result } = renderHook(() => useTransactions(filters), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -148,7 +135,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
           endDate: "2024-01-31",
         }),
       {
-        wrapper: createWrapper(),
+        wrapper: AllProviders,
       },
     );
 
@@ -174,7 +161,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
    */
   it("transactions include populated batch data", async () => {
     const { result } = renderHook(() => useTransactions(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -201,7 +188,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
   it("productId filter returns transactions for correct product via joins", async () => {
     const productId = 1;
     const { result } = renderHook(() => useTransactions({ productId }), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -227,7 +214,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
    */
   it("transactions include nested product relations in batch", async () => {
     const { result } = renderHook(() => useTransactions(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -261,7 +248,7 @@ describe("useTransactions with TanStack DB (On-Demand Mode)", () => {
    */
   it("transactions with missing batches return batch: null gracefully", async () => {
     const { result } = renderHook(() => useTransactions(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load

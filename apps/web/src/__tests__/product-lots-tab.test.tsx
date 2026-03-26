@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { ProductLotsTab } from "../features/modules/inventory/components/ProductLotsTab";
 import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 
@@ -8,14 +8,7 @@ import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 vi.mock("../features/modules/inventory/hooks/use-batches");
 
 describe("ProductLotsTab", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
     vi.clearAllMocks();
   });
 
@@ -87,11 +80,7 @@ describe("ProductLotsTab", () => {
       error: null,
     } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ProductLotsTab productId={1} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<ProductLotsTab productId={1} />);
 
     await waitFor(() => {
       expect(screen.getByText("AMX-2024-001")).toBeInTheDocument();
@@ -111,11 +100,7 @@ describe("ProductLotsTab", () => {
       error: null,
     } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ProductLotsTab productId={1} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<ProductLotsTab productId={1} />);
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
@@ -129,11 +114,7 @@ describe("ProductLotsTab", () => {
       error: null,
     } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ProductLotsTab productId={1} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<ProductLotsTab productId={1} />);
 
     expect(screen.getByText(/no batches found/i)).toBeInTheDocument();
   });
@@ -147,11 +128,7 @@ describe("ProductLotsTab", () => {
       error: new Error("Failed to fetch batches"),
     } as any);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ProductLotsTab productId={1} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<ProductLotsTab productId={1} />);
 
     expect(screen.getByText(/error/i)).toBeInTheDocument();
   });

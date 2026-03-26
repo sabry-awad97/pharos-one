@@ -1,10 +1,5 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { screen, within, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the router hooks
@@ -29,7 +24,7 @@ describe("Sidebar Badges", () => {
   });
 
   it("should align navigation items to the left when sidebar is expanded", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -45,7 +40,7 @@ describe("Sidebar Badges", () => {
   });
 
   it("should display badge pill next to label when sidebar is expanded", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -60,7 +55,7 @@ describe("Sidebar Badges", () => {
   });
 
   it("should display badge on sub-items when parent is expanded", async () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 

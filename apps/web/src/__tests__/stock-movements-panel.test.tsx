@@ -4,33 +4,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { StockMovementsPanel } from "../features/modules/inventory/components/StockMovementsPanel";
 import * as transactionService from "../features/modules/inventory/services/transaction.service";
 
 // Mock the transaction service
 vi.mock("../features/modules/inventory/services/transaction.service");
-
-// Create a test query client
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-}
-
-// Wrapper component with QueryClientProvider
-function renderWithQueryClient(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
-}
 
 // Mock transaction data
 const mockTransactions = [
@@ -179,7 +160,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue([]);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -200,7 +181,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue([]);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -217,7 +198,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue([]);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -243,7 +224,7 @@ describe("StockMovementsPanel", () => {
     );
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -261,7 +242,7 @@ describe("StockMovementsPanel", () => {
     ).mockRejectedValue(new Error("Failed to fetch"));
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -282,7 +263,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue(mockTransactions);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -303,7 +284,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue(mockTransactions);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"
@@ -322,7 +303,7 @@ describe("StockMovementsPanel", () => {
     ).mockResolvedValue([]);
 
     const onClose = vi.fn();
-    renderWithQueryClient(
+    renderWithProviders(
       <StockMovementsPanel
         productId={1}
         productName="Amoxicillin 500mg"

@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import type { JSX } from "react";
 import { describe, it, expect, vi } from "vitest";
 
@@ -19,7 +20,7 @@ const HomeComponent = (Route as any).component as () => JSX.Element;
 
 describe("Home Route Layout", () => {
   it("should have horizontal container below MenuBar containing sidebar and workspace area", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     // Find the main content container (should be horizontal flex with sidebar and workspace)
     // Look for the container that has both sidebar and workspace area as children
@@ -36,7 +37,7 @@ describe("Home Route Layout", () => {
   });
 
   it("should have TabBar inside workspace area, not as full-width element", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     // TabBar should be inside workspace area
     const workspaceArea = screen.getByTestId("workspace-area");

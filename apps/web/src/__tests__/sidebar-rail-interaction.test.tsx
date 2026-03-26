@@ -1,5 +1,6 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { screen, within, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 
 // Mock the router hooks
 const mockNavigate = vi.fn();
@@ -23,7 +24,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should show rail when sidebar is collapsed", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -45,7 +46,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should collapse sidebar when double-clicking rail while expanded", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -76,7 +77,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should expand sidebar when double-clicking rail while collapsed", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -107,7 +108,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should resize sidebar when dragging rail while expanded", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -140,7 +141,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should not resize sidebar when dragging rail while collapsed", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -173,7 +174,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should not render collapse/expand button", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 

@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 
 // Simple example component for testing
 function ExampleComponent() {
@@ -8,7 +9,7 @@ function ExampleComponent() {
 
 describe("Vitest Setup", () => {
   it("should render component", () => {
-    render(<ExampleComponent />);
+    renderWithProviders(<ExampleComponent />);
     expect(screen.getByText("Hello Vitest")).toBeInTheDocument();
   });
 

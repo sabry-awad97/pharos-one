@@ -4,8 +4,8 @@
  * so they get blurred when overlays appear
  */
 
-import { render } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 import { MenuBar } from "../features/shell/components/MenuBar";
 import { FileMenu } from "../features/shell/components/FileMenu";
 import { TabBar } from "../features/workspace/components/TabBar";
@@ -14,7 +14,7 @@ import { LayoutDashboard, Package } from "lucide-react";
 
 describe("UI chrome z-index hierarchy", () => {
   it("should render MenuBar with z-index < 50", () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <MenuBar
         activeMenu={null}
         onMenuClick={() => {}}
@@ -35,7 +35,7 @@ describe("UI chrome z-index hierarchy", () => {
   });
 
   it("should render FileMenu with z-index < 50", () => {
-    const { container } = render(<FileMenu onClose={() => {}} />);
+    const { container } = renderWithProviders(<FileMenu onClose={() => {}} />);
 
     const fileMenu = container.firstChild as HTMLElement;
     expect(fileMenu).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("UI chrome z-index hierarchy", () => {
   });
 
   it("should render FileMenu submenu with z-index < 50", () => {
-    const { container } = render(<FileMenu onClose={() => {}} />);
+    const { container } = renderWithProviders(<FileMenu onClose={() => {}} />);
 
     // FileMenu itself should have z-index < 50
     const fileMenu = container.firstChild as HTMLElement;
@@ -63,7 +63,7 @@ describe("UI chrome z-index hierarchy", () => {
   });
 
   it("should render TabBar with z-index < 50", () => {
-    const { getByTestId } = render(
+    const { getByTestId } = renderWithProviders(
       <TabBar
         tabs={[
           {
@@ -97,7 +97,7 @@ describe("UI chrome z-index hierarchy", () => {
   });
 
   it("should render Sidebar with z-index lower than menu dropdowns", () => {
-    const { getByTestId } = render(
+    const { getByTestId } = renderWithProviders(
       <Sidebar activeModule="dashboard" onModuleClick={() => {}} />,
     );
 
@@ -114,11 +114,12 @@ describe("UI chrome z-index hierarchy", () => {
   });
 
   it("should render Sidebar drag handle with z-index between sidebar and menu dropdowns", () => {
-    const { getByTestId } = render(
+    const { getAllByTestId } = renderWithProviders(
       <Sidebar activeModule="dashboard" onModuleClick={() => {}} />,
     );
 
-    const dragHandle = getByTestId("sidebar-drag-handle");
+    const dragHandles = getAllByTestId("sidebar-drag-handle");
+    const dragHandle = dragHandles[0]; // Get the first one
     expect(dragHandle).toBeInTheDocument();
 
     const zIndex = parseInt(dragHandle.style.zIndex, 10);

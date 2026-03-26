@@ -12,6 +12,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useDataTable } from "../hooks/useDataTable";
 import type { ColumnDef } from "@tanstack/react-table";
+import { AllProviders } from "@/test-utils";
 
 // Test data type
 interface TestProduct {
@@ -47,11 +48,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should initialize with default page size of 25", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     expect(result.current.pageSize).toBe(25);
@@ -62,12 +67,16 @@ describe("useDataTable - Pagination", () => {
     localStorage.setItem(STORAGE_KEY, "50");
 
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-        persistenceKey: STORAGE_KEY,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+          persistenceKey: STORAGE_KEY,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     expect(result.current.pageSize).toBe(50);
@@ -75,12 +84,16 @@ describe("useDataTable - Pagination", () => {
 
   it("should persist page size changes to localStorage", async () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-        persistenceKey: STORAGE_KEY,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+          persistenceKey: STORAGE_KEY,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     act(() => {
@@ -94,11 +107,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should reset to page 1 when page size changes", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // Navigate to page 2
@@ -119,11 +136,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should calculate correct page count based on data and page size", () => {
     const data = createTestData(55);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // With 55 items and default 25 per page: 3 pages
@@ -139,11 +160,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should navigate to specific page using go-to-page", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // Set page number (1-based)
@@ -164,11 +189,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should handle invalid page numbers gracefully", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     const initialPage = result.current.table.getState().pagination.pageIndex;
@@ -189,11 +218,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should navigate to last page when input exceeds total pages", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // With 100 items and default 25 per page: 4 pages (0-3)
@@ -216,11 +249,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should handle page numbers less than 1", () => {
     const data = createTestData(100);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // Navigate to page 2 first
@@ -244,11 +281,15 @@ describe("useDataTable - Pagination", () => {
 
   it("should provide correct pagination state for UI rendering", () => {
     const data = createTestData(55);
-    const { result } = renderHook(() =>
-      useDataTable({
-        data,
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data,
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     // Set page size to 10
@@ -271,11 +312,15 @@ describe("useDataTable - Pagination", () => {
   });
 
   it("should handle empty data array", () => {
-    const { result } = renderHook(() =>
-      useDataTable({
-        data: [],
-        columns: testColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data: [],
+          columns: testColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     expect(result.current.table.getPageCount()).toBe(0);

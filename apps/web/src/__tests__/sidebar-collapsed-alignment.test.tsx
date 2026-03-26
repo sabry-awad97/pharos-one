@@ -1,4 +1,5 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { screen, within, fireEvent } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the router hooks
@@ -23,7 +24,7 @@ describe("Sidebar Collapsed Alignment", () => {
   });
 
   it("should have balanced spacing around icon when sidebar is collapsed", () => {
-    render(<HomeComponent />);
+    renderWithProviders(<HomeComponent />);
 
     const sidebar = screen.getByTestId("sidebar");
 

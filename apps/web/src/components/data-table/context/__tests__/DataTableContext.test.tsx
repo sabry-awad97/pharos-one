@@ -10,7 +10,8 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider, useDataTableContext } from "../DataTableContext";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -50,7 +51,7 @@ describe("DataTableContext", () => {
         );
       }
 
-      render(
+      renderWithProviders(
         <DataTableProvider columns={testColumns} data={testProducts}>
           <TestConsumer />
         </DataTableProvider>,
@@ -74,7 +75,7 @@ describe("DataTableContext", () => {
       console.error = () => {};
 
       expect(() => {
-        render(<TestConsumer />);
+        renderWithProviders(<TestConsumer />);
       }).toThrow("useDataTableContext must be used within a DataTableProvider");
 
       console.error = originalError;
@@ -112,7 +113,7 @@ describe("DataTableContext", () => {
         );
       }
 
-      render(
+      renderWithProviders(
         <DataTableProvider columns={testColumns} data={testProducts}>
           <TestConsumer />
         </DataTableProvider>,
@@ -148,7 +149,7 @@ describe("DataTableContext", () => {
         );
       }
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testProducts}

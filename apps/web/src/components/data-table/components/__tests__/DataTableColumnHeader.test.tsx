@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTableColumnHeader } from "../DataTableColumnHeader";
 import { DataTable } from "../DataTable";
@@ -30,7 +31,7 @@ describe("DataTableColumnHeader", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -57,7 +58,7 @@ describe("DataTableColumnHeader", () => {
         },
       ];
 
-      const { container } = render(
+      const { container } = renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -84,7 +85,7 @@ describe("DataTableColumnHeader", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -111,7 +112,7 @@ describe("DataTableColumnHeader", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -140,7 +141,7 @@ describe("DataTableColumnHeader", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}

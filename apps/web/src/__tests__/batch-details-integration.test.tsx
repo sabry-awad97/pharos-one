@@ -10,20 +10,14 @@
  * Total: 10 tests (+ 3 hook tests in use-batches.test.tsx = 13 total)
  */
 
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { screen, within, fireEvent, waitFor, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 import { BatchDetailsPanel } from "../features/modules/inventory/components/ProductDetailsPanel";
 import * as batchHooks from "../features/modules/inventory/hooks/use-batches";
 import * as productHooks from "../features/modules/inventory/hooks/use-products";
-import { AllProviders, createTestQueryClient } from "@/test-utils";
+import { renderWithProviders, createTestQueryClient, AllProviders } from "@/test-utils";
 import type { QueryClient } from "@tanstack/react-query";
 
 // Mock the hooks

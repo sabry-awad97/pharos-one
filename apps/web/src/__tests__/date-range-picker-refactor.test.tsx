@@ -5,12 +5,13 @@
 
 import { describe, it, expect } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import userEvent from "@testing-library/user-event";
 import { DateRangePicker } from "@/components/date-range-picker";
 
 describe("DateRangePicker - Named Export and Size Variants", () => {
   it("renders with named export and default size", () => {
-    render(<DateRangePicker />);
+    renderWithProviders(<DateRangePicker />);
 
     // Should render a button trigger
     const button = screen.getByRole("button");
@@ -21,7 +22,7 @@ describe("DateRangePicker - Named Export and Size Variants", () => {
   });
 
   it("renders with sm size variant", () => {
-    render(<DateRangePicker size="sm" />);
+    renderWithProviders(<DateRangePicker size="sm" />);
 
     const button = screen.getByRole("button");
 
@@ -30,7 +31,7 @@ describe("DateRangePicker - Named Export and Size Variants", () => {
   });
 
   it("renders with lg size variant", () => {
-    render(<DateRangePicker size="lg" />);
+    renderWithProviders(<DateRangePicker size="lg" />);
 
     const button = screen.getByRole("button");
 
@@ -45,7 +46,7 @@ describe("DateRangePicker - Apply and Cancel Behavior", () => {
     let updateCalled = false;
     let capturedValues: any = null;
 
-    render(
+    renderWithProviders(
       <DateRangePicker
         onUpdate={(values) => {
           updateCalled = true;
@@ -72,7 +73,7 @@ describe("DateRangePicker - Apply and Cancel Behavior", () => {
     const user = userEvent.setup();
     let updateCalled = false;
 
-    render(
+    renderWithProviders(
       <DateRangePicker
         onUpdate={() => {
           updateCalled = true;
@@ -98,7 +99,7 @@ describe("DateRangePicker - Apply and Cancel Behavior", () => {
 
 describe("DateRangePicker - Compare Functionality", () => {
   it("shows compare toggle when showCompare is true", () => {
-    render(<DateRangePicker showCompare={true} />);
+    renderWithProviders(<DateRangePicker showCompare={true} />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -109,7 +110,7 @@ describe("DateRangePicker - Compare Functionality", () => {
   });
 
   it("shows compare toggle by default when showCompare is undefined", () => {
-    render(<DateRangePicker />);
+    renderWithProviders(<DateRangePicker />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -120,7 +121,7 @@ describe("DateRangePicker - Compare Functionality", () => {
   });
 
   it("hides compare toggle when showCompare is false", () => {
-    render(<DateRangePicker showCompare={false} />);
+    renderWithProviders(<DateRangePicker showCompare={false} />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -132,7 +133,7 @@ describe("DateRangePicker - Compare Functionality", () => {
 
   it("expands compare section when compare switch is toggled on", async () => {
     const user = userEvent.setup();
-    render(<DateRangePicker showCompare={true} />);
+    renderWithProviders(<DateRangePicker showCompare={true} />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -250,7 +251,7 @@ describe("DateRangePicker - Compare Functionality", () => {
 
   it("shows custom compare calendar when custom mode is selected", async () => {
     const user = userEvent.setup();
-    render(<DateRangePicker />);
+    renderWithProviders(<DateRangePicker />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -273,7 +274,7 @@ describe("DateRangePicker - Compare Functionality", () => {
 
   it("collapses compare section when compare switch is toggled off", async () => {
     const user = userEvent.setup();
-    render(<DateRangePicker />);
+    renderWithProviders(<DateRangePicker />);
 
     // Open popover
     const button = screen.getByRole("button");
@@ -300,7 +301,7 @@ describe("DateRangePicker - Compare Functionality", () => {
     const user = userEvent.setup();
     let capturedValues: any = null;
 
-    render(
+    renderWithProviders(
       <DateRangePicker
         onUpdate={(values) => {
           capturedValues = values;
@@ -331,7 +332,7 @@ describe("DateRangePicker - Compare Functionality", () => {
     const compareFrom = new Date(2025, 2, 22);
     const compareTo = new Date(2025, 2, 22);
 
-    render(
+    renderWithProviders(
       <DateRangePicker
         initialCompareFrom={compareFrom}
         initialCompareTo={compareTo}
@@ -347,7 +348,7 @@ describe("DateRangePicker - Compare Functionality", () => {
 
   it("shows legend with Primary and Compare indicators when comparing", async () => {
     const user = userEvent.setup();
-    render(<DateRangePicker />);
+    renderWithProviders(<DateRangePicker />);
 
     // Open popover
     const button = screen.getByRole("button");

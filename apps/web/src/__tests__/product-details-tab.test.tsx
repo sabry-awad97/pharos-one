@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { ProductDetailsTab } from "../features/modules/inventory/components/ProductDetailsTab";
 import * as productHooks from "../features/modules/inventory/hooks/use-products";
 
@@ -8,17 +8,6 @@ import * as productHooks from "../features/modules/inventory/hooks/use-products"
 vi.mock("../features/modules/inventory/hooks/use-products");
 
 describe("ProductDetailsTab", () => {
-  const createWrapper = () => {
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -70,7 +59,7 @@ describe("ProductDetailsTab", () => {
       error: null,
     } as any);
 
-    render(<ProductDetailsTab productId={1} />, { wrapper: createWrapper() });
+    renderWithProviders(<ProductDetailsTab productId={1} />);
 
     await waitFor(() => {
       expect(screen.getByText("Amoxicillin 500mg")).toBeInTheDocument();
@@ -86,7 +75,7 @@ describe("ProductDetailsTab", () => {
       error: null,
     } as any);
 
-    render(<ProductDetailsTab productId={1} />, { wrapper: createWrapper() });
+    renderWithProviders(<ProductDetailsTab productId={1} />);
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
@@ -100,7 +89,7 @@ describe("ProductDetailsTab", () => {
       error: new Error("Failed to fetch product"),
     } as any);
 
-    render(<ProductDetailsTab productId={1} />, { wrapper: createWrapper() });
+    renderWithProviders(<ProductDetailsTab productId={1} />);
 
     expect(screen.getByText(/error/i)).toBeInTheDocument();
     expect(screen.getByText(/failed to fetch product/i)).toBeInTheDocument();
@@ -115,7 +104,7 @@ describe("ProductDetailsTab", () => {
       error: null,
     } as any);
 
-    render(<ProductDetailsTab productId={1} />, { wrapper: createWrapper() });
+    renderWithProviders(<ProductDetailsTab productId={1} />);
 
     expect(screen.getByText(/product not found/i)).toBeInTheDocument();
   });
@@ -166,7 +155,7 @@ describe("ProductDetailsTab", () => {
       error: null,
     } as any);
 
-    render(<ProductDetailsTab productId={1} />, { wrapper: createWrapper() });
+    renderWithProviders(<ProductDetailsTab productId={1} />);
 
     // Basic Info
     expect(screen.getByText("Amoxicillin 500mg")).toBeInTheDocument();

@@ -1,6 +1,7 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTablePagination } from "../DataTablePagination";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -36,7 +37,7 @@ describe("DataTablePagination - Edge Cases", () => {
 
   const renderComponent = (data = mockData, isLoading = false) => {
     const user = userEvent.setup();
-    const result = render(
+    const result = renderWithProviders(
       <DataTableProvider
         columns={mockColumns}
         data={data}
@@ -67,7 +68,7 @@ describe("DataTablePagination - Edge Cases", () => {
     });
 
     it("should show pagination controls when loading completes", () => {
-      const { rerender } = render(
+      const { rerender } = renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={mockData}

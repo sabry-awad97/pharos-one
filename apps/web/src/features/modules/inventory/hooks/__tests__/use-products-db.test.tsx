@@ -5,30 +5,17 @@
 
 import { describe, it, expect } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useProducts } from "../use-products";
+import { AllProviders } from "@/test-utils";
 
 describe("useProducts with TanStack DB (On-Demand Mode)", () => {
-  const createWrapper = () => {
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  };
-
   /**
    * Test 1 (Tracer Bullet): Products load through hook with on-demand mode
    * Verifies basic functionality - hook returns product subset, NOT all records
    */
   it("useProducts loads product subset", async () => {
     const { result } = renderHook(() => useProducts(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     // Wait for data to load
@@ -56,7 +43,7 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
    */
   it("useProducts loads products with joined relations", async () => {
     const { result } = renderHook(() => useProducts(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     await waitFor(
@@ -95,7 +82,7 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
     const start = performance.now();
 
     const { result } = renderHook(() => useProducts(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     await waitFor(
@@ -117,7 +104,7 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
    */
   it("useProducts maintains backward-compatible API shape", async () => {
     const { result } = renderHook(() => useProducts(), {
-      wrapper: createWrapper(),
+      wrapper: AllProviders,
     });
 
     await waitFor(

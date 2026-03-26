@@ -13,27 +13,15 @@
  * @see GitHub Issue #78
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AllProviders, createTestQueryClient } from "@/test-utils";
 import { useProducts } from "../use-products";
 
 describe("Products Performance Benchmarks", () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
-  });
-
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <AllProviders>{children}</AllProviders>
     );
   };
 
@@ -49,14 +37,10 @@ describe("Products Performance Benchmarks", () => {
 
     for (let i = 0; i < iterations; i++) {
       // Create fresh query client for each iteration
-      const testQueryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false } },
-      });
+      const testQueryClient = createTestQueryClient();
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={testQueryClient}>
-          {children}
-        </QueryClientProvider>
+        <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
       );
 
       const start = performance.now();
@@ -221,14 +205,10 @@ describe("Products Performance Benchmarks", () => {
     const times: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const testQueryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false } },
-      });
+      const testQueryClient = createTestQueryClient();
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={testQueryClient}>
-          {children}
-        </QueryClientProvider>
+        <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
       );
 
       const start = performance.now();
@@ -275,14 +255,10 @@ describe("Products Performance Benchmarks", () => {
     const times: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const testQueryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false } },
-      });
+      const testQueryClient = createTestQueryClient();
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={testQueryClient}>
-          {children}
-        </QueryClientProvider>
+        <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
       );
 
       const start = performance.now();
@@ -335,14 +311,10 @@ describe("Products Performance Benchmarks", () => {
     const times: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const testQueryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false } },
-      });
+      const testQueryClient = createTestQueryClient();
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={testQueryClient}>
-          {children}
-        </QueryClientProvider>
+        <AllProviders queryClient={testQueryClient}>{children}</AllProviders>
       );
 
       const start = performance.now();

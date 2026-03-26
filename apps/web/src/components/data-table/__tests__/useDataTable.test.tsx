@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useDataTable } from "../hooks/useDataTable";
 import type { ColumnDef } from "@tanstack/react-table";
+import { AllProviders } from "@/test-utils";
 
 interface TestData {
   id: number;
@@ -27,11 +28,15 @@ const mockColumns: ColumnDef<TestData>[] = [
 
 describe("useDataTable", () => {
   it("should initialize with default pagination state", () => {
-    const { result } = renderHook(() =>
-      useDataTable({
-        data: mockData,
-        columns: mockColumns,
-      }),
+    const { result } = renderHook(
+      () =>
+        useDataTable({
+          data: mockData,
+          columns: mockColumns,
+        }),
+      {
+        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+      },
     );
 
     const paginationState = result.current.table.getState().pagination;
@@ -41,11 +46,15 @@ describe("useDataTable", () => {
 });
 
 it("should initialize with empty row selection state", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   expect(result.current.selectedRowIds.size).toBe(0);
@@ -54,11 +63,15 @@ it("should initialize with empty row selection state", () => {
 });
 
 it("should handle single row click (normal click)", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // Simulate normal click on row with id 1
@@ -79,11 +92,15 @@ it("should handle single row click (normal click)", () => {
 });
 
 it("should handle Ctrl+Click to toggle selection", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // First click - select row 1
@@ -125,11 +142,15 @@ it("should handle Ctrl+Click to toggle selection", () => {
 });
 
 it("should handle Shift+Click for range selection", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // First click - select row 1
@@ -162,12 +183,16 @@ it("should handle Shift+Click for range selection", () => {
 
 it("should handle double-click with custom callback", () => {
   const onRowDoubleClick = vi.fn();
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-      onRowDoubleClick,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+        onRowDoubleClick,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   act(() => {
@@ -185,11 +210,15 @@ it("should navigate to valid page number", () => {
     name: `Item ${i + 1}`,
   }));
 
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: largeDataSet,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: largeDataSet,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // Set go to page value
@@ -209,11 +238,15 @@ it("should navigate to valid page number", () => {
 });
 
 it("should handle invalid page numbers gracefully", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // Try to go to page 0 (invalid)
@@ -227,11 +260,15 @@ it("should handle invalid page numbers gracefully", () => {
 });
 
 it("should navigate to last page when page number exceeds total", () => {
-  const { result } = renderHook(() =>
-    useDataTable({
-      data: mockData,
-      columns: mockColumns,
-    }),
+  const { result } = renderHook(
+    () =>
+      useDataTable({
+        data: mockData,
+        columns: mockColumns,
+      }),
+    {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    },
   );
 
   // Try to go to page 100 (beyond total)

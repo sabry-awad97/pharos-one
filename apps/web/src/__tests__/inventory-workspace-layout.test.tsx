@@ -3,16 +3,10 @@
  * Tests for horizontal layout when product detail panel is open
  */
 
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
+import { screen, within, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock the hooks
@@ -73,22 +67,8 @@ vi.mock("../features/modules/inventory/hooks/use-transactions", () => ({
 }));
 
 describe("InventoryWorkspace - Horizontal Layout", () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
-  });
-
   const renderComponent = () => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    return renderWithProviders(<InventoryWorkspace />);
   };
 
   it("should use vertical layout (flex-col) when panel is closed", () => {

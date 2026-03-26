@@ -1,11 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { screen, act } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import { Sidebar } from "@/features/shell/components/Sidebar";
 
 describe("Sidebar Drag State Management", () => {
   it("should stop dragging when window loses focus (blur event)", () => {
     const onModuleClick = vi.fn();
-    render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
+    renderWithProviders(
+      <Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />,
+    );
 
     const sidebar = screen.getByTestId("sidebar");
     const dragHandle = screen.getByTestId("sidebar-drag-handle");
@@ -58,7 +61,9 @@ describe("Sidebar Drag State Management", () => {
 
   it("should stop dragging when tab becomes hidden (visibilitychange)", () => {
     const onModuleClick = vi.fn();
-    render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
+    renderWithProviders(
+      <Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />,
+    );
 
     const sidebar = screen.getByTestId("sidebar");
     const dragHandle = screen.getByTestId("sidebar-drag-handle");
@@ -116,7 +121,9 @@ describe("Sidebar Drag State Management", () => {
 
   it("should stop dragging on mouseup event", () => {
     const onModuleClick = vi.fn();
-    render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
+    renderWithProviders(
+      <Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />,
+    );
 
     const sidebar = screen.getByTestId("sidebar");
     const dragHandle = screen.getByTestId("sidebar-drag-handle");
@@ -166,7 +173,9 @@ describe("Sidebar Drag State Management", () => {
 
   it("should enforce minimum width of 160px during drag", () => {
     const onModuleClick = vi.fn();
-    render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
+    renderWithProviders(
+      <Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />,
+    );
 
     const sidebar = screen.getByTestId("sidebar");
     const dragHandle = screen.getByTestId("sidebar-drag-handle");
@@ -203,7 +212,9 @@ describe("Sidebar Drag State Management", () => {
 
   it("should not resize when collapsed", () => {
     const onModuleClick = vi.fn();
-    render(<Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />);
+    renderWithProviders(
+      <Sidebar activeModule="dashboard" onModuleClick={onModuleClick} />,
+    );
 
     const sidebar = screen.getByTestId("sidebar");
     const dragHandle = screen.getByTestId("sidebar-drag-handle");

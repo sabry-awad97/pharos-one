@@ -9,7 +9,8 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils";
 import {
   TimelineMarker,
   TimelineItem,
@@ -20,20 +21,20 @@ import type { TransactionType } from "../features/modules/inventory/schema";
 
 describe("TimelineMarker", () => {
   test("renders correct icon for purchase transaction", () => {
-    render(<TimelineMarker type="purchase" />);
+    renderWithProviders(<TimelineMarker type="purchase" />);
     // Verify icon is rendered (lucide-react icons have role="img")
     const icon = screen.getByRole("img", { hidden: true });
     expect(icon).toBeInTheDocument();
   });
 
   test("renders correct icon for sale transaction", () => {
-    render(<TimelineMarker type="sale" />);
+    renderWithProviders(<TimelineMarker type="sale" />);
     const icon = screen.getByRole("img", { hidden: true });
     expect(icon).toBeInTheDocument();
   });
 
   test("renders correct icon for damage transaction", () => {
-    render(<TimelineMarker type="damage" />);
+    renderWithProviders(<TimelineMarker type="damage" />);
     const icon = screen.getByRole("img", { hidden: true });
     expect(icon).toBeInTheDocument();
   });
@@ -110,22 +111,22 @@ describe("TimelineItem", () => {
   };
 
   test("displays transaction type", () => {
-    render(<TimelineItem transaction={mockTransaction} />);
+    renderWithProviders(<TimelineItem transaction={mockTransaction} />);
     expect(screen.getByText("Stock In")).toBeInTheDocument();
   });
 
   test("displays transaction quantity", () => {
-    render(<TimelineItem transaction={mockTransaction} />);
+    renderWithProviders(<TimelineItem transaction={mockTransaction} />);
     expect(screen.getByText(/\+100/)).toBeInTheDocument();
   });
 
   test("displays transaction reason when provided", () => {
-    render(<TimelineItem transaction={mockTransaction} />);
+    renderWithProviders(<TimelineItem transaction={mockTransaction} />);
     expect(screen.getByText("Initial stock")).toBeInTheDocument();
   });
 
   test("displays formatted timestamp", () => {
-    render(<TimelineItem transaction={mockTransaction} />);
+    renderWithProviders(<TimelineItem transaction={mockTransaction} />);
     // Should display formatted time (exact format may vary by locale)
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
   });
@@ -140,7 +141,7 @@ describe("TimelineItem", () => {
         quantityRemaining: 50,
       },
     };
-    render(<TimelineItem transaction={saleTransaction} />);
+    renderWithProviders(<TimelineItem transaction={saleTransaction} />);
     expect(screen.getByText(/-50/)).toBeInTheDocument();
   });
 });
@@ -232,7 +233,9 @@ describe("TimelineGroup", () => {
   ];
 
   test("displays date header", () => {
-    render(<TimelineGroup date="2024-01-15" transactions={mockTransactions} />);
+    renderWithProviders(
+      <TimelineGroup date="2024-01-15" transactions={mockTransactions} />,
+    );
     // Should display formatted date (appears multiple times - in header and timestamps)
     const dates = screen.getAllByText("Jan 15, 2024");
     expect(dates.length).toBeGreaterThan(0);
@@ -243,7 +246,9 @@ describe("TimelineGroup", () => {
   });
 
   test("renders all transactions in group", () => {
-    render(<TimelineGroup date="2024-01-15" transactions={mockTransactions} />);
+    renderWithProviders(
+      <TimelineGroup date="2024-01-15" transactions={mockTransactions} />,
+    );
     expect(screen.getByText("Stock In")).toBeInTheDocument();
     expect(screen.getByText("Sale")).toBeInTheDocument();
   });
@@ -336,19 +341,19 @@ describe("Timeline", () => {
   ];
 
   test("renders transactions grouped by date", () => {
-    render(<Timeline transactions={mockTransactions} />);
+    renderWithProviders(<Timeline transactions={mockTransactions} />);
     // Should have two date groups
     expect(screen.getByText("Jan 15, 2024")).toBeInTheDocument();
     expect(screen.getByText("Jan 16, 2024")).toBeInTheDocument();
   });
 
   test("displays empty state when no transactions", () => {
-    render(<Timeline transactions={[]} />);
+    renderWithProviders(<Timeline transactions={[]} />);
     expect(screen.getByText(/no.*transaction/i)).toBeInTheDocument();
   });
 
   test("renders all transactions", () => {
-    render(<Timeline transactions={mockTransactions} />);
+    renderWithProviders(<Timeline transactions={mockTransactions} />);
     expect(screen.getByText("Stock In")).toBeInTheDocument();
     expect(screen.getByText("Sale")).toBeInTheDocument();
   });

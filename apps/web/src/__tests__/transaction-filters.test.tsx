@@ -3,8 +3,9 @@
  * Tests behavior through public interface
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 import { TransactionTypeFilter } from "../features/modules/inventory/components/filters/TransactionTypeFilter";
 import { DateRangeFilter } from "../features/modules/inventory/components/filters/DateRangeFilter";
 import type { TransactionType } from "../features/modules/inventory/schema";
@@ -12,7 +13,9 @@ import type { TransactionType } from "../features/modules/inventory/schema";
 describe("TransactionTypeFilter", () => {
   test("renders with default state", () => {
     const onChange = vi.fn();
-    render(<TransactionTypeFilter value={[]} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={[]} onChange={onChange} />,
+    );
 
     const button = screen.getByRole("button", { name: /type/i });
     expect(button).toBeInTheDocument();
@@ -21,14 +24,18 @@ describe("TransactionTypeFilter", () => {
   test("shows selected count badge when types are selected", () => {
     const onChange = vi.fn();
     const selectedTypes: TransactionType[] = ["purchase", "sale"];
-    render(<TransactionTypeFilter value={selectedTypes} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={selectedTypes} onChange={onChange} />,
+    );
 
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   test("opens popover when clicked", async () => {
     const onChange = vi.fn();
-    render(<TransactionTypeFilter value={[]} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={[]} onChange={onChange} />,
+    );
 
     const button = screen.getByRole("button", { name: /type/i });
     fireEvent.click(button);
@@ -42,7 +49,9 @@ describe("TransactionTypeFilter", () => {
 
   test("calls onChange when type is selected", async () => {
     const onChange = vi.fn();
-    render(<TransactionTypeFilter value={[]} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={[]} onChange={onChange} />,
+    );
 
     const button = screen.getByRole("button", { name: /type/i });
     fireEvent.click(button);
@@ -58,7 +67,9 @@ describe("TransactionTypeFilter", () => {
   test("calls onChange when type is deselected", async () => {
     const onChange = vi.fn();
     const selectedTypes: TransactionType[] = ["purchase", "sale"];
-    render(<TransactionTypeFilter value={selectedTypes} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={selectedTypes} onChange={onChange} />,
+    );
 
     const button = screen.getByRole("button", { name: /type/i });
     fireEvent.click(button);
@@ -73,7 +84,9 @@ describe("TransactionTypeFilter", () => {
 
   test("allows multiple type selection", async () => {
     const onChange = vi.fn();
-    render(<TransactionTypeFilter value={["purchase"]} onChange={onChange} />);
+    renderWithProviders(
+      <TransactionTypeFilter value={["purchase"]} onChange={onChange} />,
+    );
 
     const button = screen.getByRole("button", { name: /type/i });
     fireEvent.click(button);
@@ -90,7 +103,7 @@ describe("TransactionTypeFilter", () => {
 describe("DateRangeFilter", () => {
   test("renders with default state", () => {
     const onChange = vi.fn();
-    render(
+    renderWithProviders(
       <DateRangeFilter dateFrom={null} dateTo={null} onChange={onChange} />,
     );
 
@@ -103,7 +116,7 @@ describe("DateRangeFilter", () => {
     const dateFrom = new Date("2024-01-01");
     const dateTo = new Date("2024-01-31");
 
-    render(
+    renderWithProviders(
       <DateRangeFilter
         dateFrom={dateFrom}
         dateTo={dateTo}
@@ -118,7 +131,7 @@ describe("DateRangeFilter", () => {
     const onChange = vi.fn();
     const dateFrom = new Date("2024-01-01");
 
-    render(
+    renderWithProviders(
       <DateRangeFilter dateFrom={dateFrom} dateTo={null} onChange={onChange} />,
     );
 
@@ -129,7 +142,7 @@ describe("DateRangeFilter", () => {
     const onChange = vi.fn();
     const dateTo = new Date("2024-01-31");
 
-    render(
+    renderWithProviders(
       <DateRangeFilter dateFrom={null} dateTo={dateTo} onChange={onChange} />,
     );
 
@@ -138,7 +151,7 @@ describe("DateRangeFilter", () => {
 
   test("opens calendar popover when clicked", async () => {
     const onChange = vi.fn();
-    render(
+    renderWithProviders(
       <DateRangeFilter dateFrom={null} dateTo={null} onChange={onChange} />,
     );
 
@@ -158,7 +171,7 @@ describe("Filter Integration", () => {
     const typeOnChange = vi.fn();
     const dateOnChange = vi.fn();
 
-    render(
+    renderWithProviders(
       <div>
         <TransactionTypeFilter value={["purchase"]} onChange={typeOnChange} />
         <DateRangeFilter

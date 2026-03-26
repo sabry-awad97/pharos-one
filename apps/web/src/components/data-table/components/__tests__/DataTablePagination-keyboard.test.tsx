@@ -3,9 +3,10 @@
  * Tests keyboard navigation and accessibility features for pagination
  */
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTablePagination } from "../DataTablePagination";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -41,7 +42,7 @@ describe("DataTablePagination - Keyboard Navigation", () => {
 
   const renderComponent = (data = mockData) => {
     const user = userEvent.setup();
-    const result = render(
+    const result = renderWithProviders(
       <DataTableProvider
         columns={mockColumns}
         data={data}

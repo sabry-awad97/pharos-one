@@ -1,6 +1,6 @@
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { screen, within, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { InventoryWorkspace } from "../features/modules/inventory/InventoryWorkspace";
 
 // Mock the hooks
@@ -50,22 +50,12 @@ vi.mock("../features/modules/inventory/hooks/use-products", () => ({
 }));
 
 describe("InventoryWorkspace - Row Selection Styling", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
+    vi.clearAllMocks();
   });
 
   const renderComponent = () => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <InventoryWorkspace />
-      </QueryClientProvider>,
-    );
+    return renderWithProviders(<InventoryWorkspace />);
   };
 
   it("should use inset box-shadow instead of outline for focused rows", () => {

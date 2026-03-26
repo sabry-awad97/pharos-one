@@ -1,5 +1,5 @@
-import { render } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import { renderWithProviders } from "@/test-utils";
 
 // Mock the router hooks
 const mockNavigate = vi.fn();
@@ -20,7 +20,7 @@ describe("Inventory Parent Route Redirect", () => {
     const { Route } = await import("../routes/_app/home/inventory/index");
     const RouteComponent = (Route as any).component as () => React.JSX.Element;
 
-    render(<RouteComponent />);
+    renderWithProviders(<RouteComponent />);
 
     // Verify navigation was called with the redirect target
     expect(mockNavigate).toHaveBeenCalledWith(

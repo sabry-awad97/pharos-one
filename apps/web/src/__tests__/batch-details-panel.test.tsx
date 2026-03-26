@@ -1,47 +1,28 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderWithProviders } from "@/test-utils";
 import { BatchDetailsPanel } from "../features/modules/inventory/components/ProductDetailsPanel";
 
 describe("BatchDetailsPanel", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-      },
-    });
     vi.clearAllMocks();
   });
 
   it("should render batch panel with header", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BatchDetailsPanel productId={1} onClose={() => {}} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<BatchDetailsPanel productId={1} onClose={() => {}} />);
 
     expect(screen.getByText("Product Details")).toBeInTheDocument();
   });
 
   it("should render tabs", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BatchDetailsPanel productId={1} onClose={() => {}} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<BatchDetailsPanel productId={1} onClose={() => {}} />);
 
     expect(screen.getByText("Details")).toBeInTheDocument();
     expect(screen.getByText("Lots")).toBeInTheDocument();
   });
 
   it("should switch between tabs", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BatchDetailsPanel productId={1} onClose={() => {}} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<BatchDetailsPanel productId={1} onClose={() => {}} />);
 
     // Click on Lots tab
     const lotsTab = screen.getByText("Lots");
@@ -54,11 +35,7 @@ describe("BatchDetailsPanel", () => {
   it("should close when close button clicked", () => {
     const onClose = vi.fn();
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BatchDetailsPanel productId={1} onClose={onClose} />
-      </QueryClientProvider>,
-    );
+    renderWithProviders(<BatchDetailsPanel productId={1} onClose={onClose} />);
 
     const closeButton = screen.getByRole("button", { name: /close/i });
     fireEvent.click(closeButton);

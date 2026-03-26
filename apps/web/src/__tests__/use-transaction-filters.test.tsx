@@ -5,13 +5,16 @@
 
 import { renderHook, act } from "@testing-library/react";
 import { describe, test, expect } from "vitest";
+import { AllProviders } from "@/test-utils";
 import { useTransactionFilters } from "../features/modules/inventory/hooks/use-transaction-filters";
 import type { StockTransactionWithRelations } from "../features/modules/inventory/schema";
 
 describe("useTransactionFilters", () => {
   // RED: Test 1 - Hook returns initial state
   test("returns initial filter state", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     expect(result.current.filters).toEqual({
       types: [],
@@ -22,7 +25,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 2 - Can update transaction types filter
   test("updates transaction types filter", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     act(() => {
       result.current.setFilters({
@@ -37,7 +42,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 3 - Can update date range filter
   test("updates date range filter", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
     const dateFrom = new Date("2024-01-01");
     const dateTo = new Date("2024-01-31");
 
@@ -55,7 +62,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 4 - Clear filters resets to initial state
   test("clearFilters resets to initial state", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     act(() => {
       result.current.setFilters({
@@ -78,7 +87,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 5 - applyFilters filters by transaction type
   test("applyFilters filters transactions by type", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     const mockTransactions: StockTransactionWithRelations[] = [
       {
@@ -133,7 +144,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 6 - applyFilters filters by date range
   test("applyFilters filters transactions by date range", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     const mockTransactions: StockTransactionWithRelations[] = [
       {
@@ -187,7 +200,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 7 - applyFilters combines multiple filters
   test("applyFilters combines type and date filters", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     const mockTransactions: StockTransactionWithRelations[] = [
       {
@@ -242,7 +257,9 @@ describe("useTransactionFilters", () => {
 
   // RED: Test 8 - Empty type filter returns all transactions
   test("empty type filter returns all transactions", () => {
-    const { result } = renderHook(() => useTransactionFilters());
+    const { result } = renderHook(() => useTransactionFilters(), {
+      wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+    });
 
     const mockTransactions: StockTransactionWithRelations[] = [
       {

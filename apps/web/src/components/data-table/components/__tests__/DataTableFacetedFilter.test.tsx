@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTable } from "../DataTable";
 import { DataTableFacetedFilter } from "../DataTableFacetedFilter";
@@ -43,7 +44,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -75,7 +76,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -112,7 +113,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -158,7 +159,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -203,7 +204,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -248,7 +249,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -295,7 +296,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}
@@ -346,7 +347,7 @@ describe("DataTableFacetedFilter", () => {
         },
       ];
 
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={testColumns}
           data={testData}

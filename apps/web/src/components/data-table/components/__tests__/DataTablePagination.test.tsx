@@ -1,6 +1,7 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test-utils";
 import { DataTableProvider } from "../../context/DataTableContext";
 import { DataTablePagination } from "../DataTablePagination";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -36,7 +37,7 @@ describe("DataTablePagination", () => {
 
   const renderComponent = (data = mockData) => {
     const user = userEvent.setup();
-    const result = render(
+    const result = renderWithProviders(
       <DataTableProvider
         columns={mockColumns}
         data={data}
@@ -353,7 +354,7 @@ describe("DataTablePagination", () => {
     });
 
     it("should not display pagination when data is empty", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={[]}
@@ -428,7 +429,7 @@ describe("DataTablePagination", () => {
 
   describe("Component Props", () => {
     it("should hide page size selector when showPageSize is false", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={mockData}
@@ -443,7 +444,7 @@ describe("DataTablePagination", () => {
     });
 
     it("should hide go to page input when showGoToPage is false", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={mockData}
@@ -460,7 +461,7 @@ describe("DataTablePagination", () => {
     });
 
     it("should hide items count when showItemsCount is false", () => {
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={mockData}
@@ -480,7 +481,7 @@ describe("DataTablePagination", () => {
       ];
 
       const user = userEvent.setup();
-      render(
+      renderWithProviders(
         <DataTableProvider
           columns={mockColumns}
           data={mockData}
