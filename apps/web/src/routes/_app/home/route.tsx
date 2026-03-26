@@ -4,6 +4,7 @@ import {
   useNavigate,
   useMatches,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   Save,
   RotateCcw,
@@ -23,9 +24,8 @@ import {
   type QuickAction,
   type TabStatistics,
 } from "@/features/shell";
-import { useTabs } from "@/features/workspace/hooks/use-tabs";
+import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 import { TabBar } from "@/features/workspace/components/TabBar";
-import { TabProvider } from "@/features/workspace/context/TabContext";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 import type { Tab } from "@/features/workspace/types";
@@ -97,16 +97,22 @@ function HomeComponent() {
   const navigate = useNavigate();
   const matches = useMatches();
   const { activeMenu, toggleMenu, closeMenu } = useMenuState();
-  const {
-    state,
-    setActiveTab,
-    closeTab,
-    togglePin,
-    duplicateTab,
-    addTab,
-    toggleSplitView,
-    reorderTabs,
-  } = useTabs(INITIAL_TABS);
+
+  // Use Zustand store directly
+  const state = useTabsStore((store) => store.state);
+  const initializeTabs = useTabsStore((store) => store.initializeTabs);
+  const setActiveTab = useTabsStore((store) => store.setActiveTab);
+  const closeTab = useTabsStore((store) => store.closeTab);
+  const togglePin = useTabsStore((store) => store.togglePin);
+  const duplicateTab = useTabsStore((store) => store.duplicateTab);
+  const addTab = useTabsStore((store) => store.addTab);
+  const toggleSplitView = useTabsStore((store) => store.toggleSplitView);
+  const reorderTabs = useTabsStore((store) => store.reorderTabs);
+
+  // Initialize tabs on mount
+  useEffect(() => {
+    initializeTabs(INITIAL_TABS);
+  }, [initializeTabs]);
 
   // Use the activeTabId from state, not derived from URL
   // This allows multiple tabs with the same module (e.g., POS Terminal 1 & 2)
@@ -288,66 +294,64 @@ function HomeComponent() {
       />
 
       {/* Main Content Area - Horizontal container with Sidebar and Workspace */}
-      <TabProvider value={{ activeTabLabel: activeTab?.label }}>
+      <div
+        data-testid="main-horizontal-container"
+        style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
+      >
+        {/* Sidebar */}
+        <Sidebar
+          activeModule={activeTab?.module ?? null}
+          onModuleClick={handleSidebarModuleClick}
+          stats={mockStats}
+        />
+
+        {/* Workspace area - contains TabBar and content */}
         <div
-          data-testid="main-horizontal-container"
-          style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
+          data-testid="workspace-area"
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            overflow: "hidden",
+          }}
         >
-          {/* Sidebar */}
-          <Sidebar
-            activeModule={activeTab?.module ?? null}
-            onModuleClick={handleSidebarModuleClick}
-            stats={mockStats}
+          {/* Tab Bar */}
+          <TabBar
+            tabs={state.tabs}
+            activeTabId={activeTab.id}
+            onTabClick={handleTabClick}
+            onTabClose={closeTab}
+            onTabPin={togglePin}
+            onTabDuplicate={duplicateTab}
+            onAddTab={handleAddTab}
+            splitViewEnabled={state.splitView.enabled}
+            onSplitViewToggle={toggleSplitView}
+            onTabReorder={reorderTabs}
           />
 
-          {/* Workspace area - contains TabBar and content */}
-          <div
-            data-testid="workspace-area"
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-              overflow: "hidden",
-            }}
-          >
-            {/* Tab Bar */}
-            <TabBar
-              tabs={state.tabs}
-              activeTabId={activeTab.id}
-              onTabClick={handleTabClick}
-              onTabClose={closeTab}
-              onTabPin={togglePin}
-              onTabDuplicate={duplicateTab}
-              onAddTab={handleAddTab}
-              splitViewEnabled={state.splitView.enabled}
-              onSplitViewToggle={toggleSplitView}
-              onTabReorder={reorderTabs}
-            />
-
-            {/* Content area */}
-            <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-              <Outlet />
-              {state.splitView.enabled && pinnedTab && (
-                <>
-                  <div
-                    style={{
-                      width: 1,
-                      background: "#e0e0e0",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <WorkspaceContainer
-                    moduleId={pinnedTab.module}
-                    label={pinnedTab.label}
-                    split={true}
-                  />
-                </>
-              )}
-            </div>
+          {/* Content area */}
+          <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+            <Outlet />
+            {state.splitView.enabled && pinnedTab && (
+              <>
+                <div
+                  style={{
+                    width: 1,
+                    background: "#e0e0e0",
+                    flexShrink: 0,
+                  }}
+                />
+                <WorkspaceContainer
+                  moduleId={pinnedTab.module}
+                  label={pinnedTab.label}
+                  split={true}
+                />
+              </>
+            )}
           </div>
         </div>
-      </TabProvider>
+      </div>
 
       {/* Status bar with statistics */}
       <StatusBar

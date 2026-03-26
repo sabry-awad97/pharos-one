@@ -3,7 +3,7 @@
  * Container for all workspace tabs
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, SplitSquareHorizontal } from "lucide-react";
 import {
   DndContext,
@@ -20,12 +20,11 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { Tab } from "../types";
-import { TabItem } from "./TabItem";
 import { SortableTabItem } from "./SortableTabItem";
 import { TabContextMenu } from "./TabContextMenu";
 import { TabOverflow } from "./TabOverflow";
 import { NewWorkspaceDialog } from "./NewWorkspaceDialog";
-import { useTabOverflow } from "../hooks/use-tab-overflow";
+import { calculateTabOverflow } from "../stores/tabs-store";
 import type { WorkspaceTemplate } from "../constants";
 
 export interface TabBarProps {
@@ -75,7 +74,10 @@ export function TabBar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Calculate visible vs overflow tabs
-  const { visibleTabs, overflowTabs, hasOverflow } = useTabOverflow(tabs);
+  const { visibleTabs, overflowTabs, hasOverflow } = useMemo(
+    () => calculateTabOverflow(tabs),
+    [tabs],
+  );
 
   // Setup drag-and-drop sensors
   const sensors = useSensors(

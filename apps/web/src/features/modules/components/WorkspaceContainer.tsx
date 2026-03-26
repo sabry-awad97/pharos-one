@@ -4,6 +4,7 @@
  */
 
 import { getModule } from "../registry";
+import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 
 export interface WorkspaceContainerProps {
   /** The module ID to render */
@@ -23,6 +24,9 @@ export function WorkspaceContainer({
   split = false,
   label,
 }: WorkspaceContainerProps) {
+  // Get active tab label from store if not provided
+  const activeTabLabel = useTabsStore((store) => store.activeTabLabel);
+  const effectiveLabel = label ?? activeTabLabel;
   // No module selected
   if (!moduleId) {
     return (
@@ -115,7 +119,10 @@ export function WorkspaceContainer({
       )}
 
       {/* Module workspace - pass split prop and optional label */}
-      <ModuleComponent split={split} {...(label ? { label } : {})} />
+      <ModuleComponent
+        split={split}
+        {...(effectiveLabel ? { label: effectiveLabel } : {})}
+      />
     </div>
   );
 }

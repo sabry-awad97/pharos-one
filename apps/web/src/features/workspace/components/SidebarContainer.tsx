@@ -1,5 +1,8 @@
 import * as React from "react";
-import { useSidebarStateStore } from "../stores/sidebar-state-store";
+import {
+  useSidebarStateStore,
+  DEFAULT_WIDTH as STORE_DEFAULT_WIDTH,
+} from "../stores/sidebar-state-store";
 
 /**
  * SidebarContainer - Reusable sidebar component with resize and collapse functionality
@@ -112,8 +115,15 @@ const SidebarContainer = React.forwardRef<
     ref,
   ) => {
     // Use Zustand store directly for workspace-scoped sidebar state
-    const workspaceState = useSidebarStateStore((state) =>
-      state.getWorkspaceState(workspaceId),
+    // Select specific properties to avoid infinite re-renders
+    const expanded = useSidebarStateStore(
+      (state) => state.getWorkspaceState(workspaceId).expanded,
+    );
+    const storedWidth = useSidebarStateStore(
+      (state) => state.getWorkspaceState(workspaceId).width,
+    );
+    const hasWorkspace = useSidebarStateStore((state) =>
+      state.hasWorkspace(workspaceId),
     );
     const toggle = useSidebarStateStore((state) => state.toggle);
     const setExpanded = useSidebarStateStore((state) => state.setExpanded);
@@ -122,24 +132,32 @@ const SidebarContainer = React.forwardRef<
     );
     const resetWidthStore = useSidebarStateStore((state) => state.resetWidth);
 
-    const expanded = workspaceState.expanded;
-    const sidebarWidth = workspaceState.width;
+    // Determine initial width
+    // If workspace doesn't exist yet OR stored width is the store default and component wants different default
+    // then use component's defaultWidth, otherwise use stored width
+    const initialWidth =
+      !hasWorkspace ||
+      (storedWidth === STORE_DEFAULT_WIDTH &&
+        defaultWidth !== STORE_DEFAULT_WIDTH)
+        ? defaultWidth
+        : storedWidth;
 
-    // Initialize width from store or use default
-    const [width, setWidthState] = React.useState<number>(() => {
-      // If store has a stored width, use it; otherwise use defaultWidth
-      if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
-        return sidebarWidth;
+    const [width, setWidthState] = React.useState<number>(initialWidth);
+
+    // Initialize store with component's defaultWidth on first render if needed
+    React.useEffect(() => {
+      if (!hasWorkspace || storedWidth === STORE_DEFAULT_WIDTH) {
+        setSidebarWidth(workspaceId, defaultWidth);
       }
-      return defaultWidth;
-    });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run once on mount
 
     // Sync width with store when it changes
     React.useEffect(() => {
-      if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
-        setWidthState(sidebarWidth);
+      if (storedWidth >= minWidth && storedWidth <= maxWidth) {
+        setWidthState(storedWidth);
       }
-    }, [sidebarWidth, minWidth, maxWidth]);
+    }, [storedWidth, minWidth, maxWidth]);
 
     // Persist width changes to store
     const setWidth = React.useCallback(

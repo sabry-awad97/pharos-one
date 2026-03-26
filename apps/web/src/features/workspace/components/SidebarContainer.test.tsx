@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import {
   render,
   screen,
@@ -12,14 +12,24 @@ import {
   SidebarFooter,
   type SidebarContainerRef,
 } from "./SidebarContainer";
+import { useSidebarStateStore, MAX_WIDTH } from "../stores/sidebar-state-store";
 import * as React from "react";
 
 describe("SidebarContainer", () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
+    // Reset Zustand store state
+    useSidebarStateStore.setState({ workspaces: {} });
+    // Force rehydration from localStorage (Zustand persist middleware)
+    useSidebarStateStore.persist.rehydrate();
     // Mock console.warn to avoid noise in test output
     vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Clean up mocks
+    vi.restoreAllMocks();
   });
 
   describe("Basic Rendering", () => {
@@ -80,8 +90,24 @@ describe("SidebarContainer", () => {
     });
 
     it("collapses to 48px when not expanded", () => {
-      // Pre-set collapsed state in localStorage using hook's key format
-      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
+      // Pre-set collapsed state in Zustand store format
+      const storeData = {
+        state: {
+          workspaces: {
+            test: {
+              expanded: false,
+              expandedModules: [],
+              pinnedItems: [],
+              hiddenItems: [],
+              width: 200,
+            },
+          },
+        },
+        version: 0,
+      };
+      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      // Force rehydration after setting localStorage
+      useSidebarStateStore.persist.rehydrate();
 
       render(
         <SidebarContainer workspaceId="test">
@@ -101,7 +127,13 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("pharmos-sidebar-test-width")).toBe("220");
+        // Check Zustand store format
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.test.width).toBe(220);
+        }
       });
 
       // Verify it loads from localStorage on remount
@@ -123,9 +155,12 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("pharmos-sidebar-workspace1-width")).toBe(
-          "200",
-        );
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.workspace1.width).toBe(200);
+        }
       });
 
       unmount();
@@ -137,13 +172,13 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("pharmos-sidebar-workspace2-width")).toBe(
-          "250",
-        );
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.workspace2.width).toBe(250);
+        }
       });
-      expect(localStorage.getItem("pharmos-sidebar-workspace1-width")).toBe(
-        "200",
-      );
     });
   });
 
@@ -210,13 +245,30 @@ describe("SidebarContainer", () => {
       fireEvent.mouseMove(window, { clientX: 1000 });
 
       // Width should be clamped to maximum
-      expect(container).toHaveStyle({ width: "400px" });
+      expect(container).toHaveStyle({ width: `${MAX_WIDTH}px` });
 
       fireEvent.mouseUp(window);
     });
 
     it("does not allow resizing when collapsed", () => {
-      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
+      // Pre-set collapsed state in Zustand store format
+      const storeData = {
+        state: {
+          workspaces: {
+            test: {
+              expanded: false,
+              expandedModules: [],
+              pinnedItems: [],
+              hiddenItems: [],
+              width: 200,
+            },
+          },
+        },
+        version: 0,
+      };
+      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      // Force rehydration after setting localStorage
+      useSidebarStateStore.persist.rehydrate();
 
       render(
         <SidebarContainer workspaceId="test" defaultWidth={200}>
@@ -326,18 +378,24 @@ describe("SidebarContainer", () => {
 
       // Initially expanded
       await waitFor(() => {
-        expect(localStorage.getItem("pharmos-sidebar-test-expanded")).toBe(
-          "true",
-        );
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.test.expanded).toBe(true);
+        }
       });
 
       // Toggle to collapsed
       fireEvent.doubleClick(handle);
 
       await waitFor(() => {
-        expect(localStorage.getItem("pharmos-sidebar-test-expanded")).toBe(
-          "false",
-        );
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.test.expanded).toBe(false);
+        }
       });
     });
 
@@ -352,9 +410,12 @@ describe("SidebarContainer", () => {
       fireEvent.doubleClick(handle1);
 
       await waitFor(() => {
-        expect(
-          localStorage.getItem("pharmos-sidebar-workspace1-expanded"),
-        ).toBe("false");
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.workspace1.expanded).toBe(false);
+        }
       });
 
       unmount();
@@ -367,9 +428,12 @@ describe("SidebarContainer", () => {
 
       await waitFor(() => {
         // workspace2 should still be expanded (default)
-        expect(
-          localStorage.getItem("pharmos-sidebar-workspace2-expanded"),
-        ).toBe("true");
+        const stored = localStorage.getItem("pharmos-sidebar-state");
+        expect(stored).toBeTruthy();
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          expect(parsed.state.workspaces.workspace2.expanded).toBe(true);
+        }
       });
     });
   });
@@ -453,12 +517,12 @@ describe("SidebarContainer", () => {
       const container = screen.getByTestId("sidebar-container");
       const handle = screen.getByTestId("sidebar-drag-handle");
 
-      // Resize to different width
+      // Resize to different width (will be clamped to MAX_WIDTH)
       fireEvent.mouseDown(handle, { clientX: 250 });
       fireEvent.mouseMove(window, { clientX: 300 });
       fireEvent.mouseUp(window);
 
-      expect(container).toHaveStyle({ width: "300px" });
+      expect(container).toHaveStyle({ width: `${MAX_WIDTH}px` });
 
       // Reset to default
       await act(async () => {
@@ -496,7 +560,24 @@ describe("SidebarContainer", () => {
     });
 
     it("hides SidebarFooter when collapsed", () => {
-      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
+      // Pre-set collapsed state in Zustand store format
+      const storeData = {
+        state: {
+          workspaces: {
+            test: {
+              expanded: false,
+              expandedModules: [],
+              pinnedItems: [],
+              hiddenItems: [],
+              width: 200,
+            },
+          },
+        },
+        version: 0,
+      };
+      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      // Force rehydration after setting localStorage
+      useSidebarStateStore.persist.rehydrate();
 
       render(
         <SidebarContainer workspaceId="test">

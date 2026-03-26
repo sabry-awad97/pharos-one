@@ -7,9 +7,9 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-const DEFAULT_WIDTH = 180;
-const MIN_WIDTH = 48;
-const MAX_WIDTH = 280;
+export const DEFAULT_WIDTH = 180;
+export const MIN_WIDTH = 48;
+export const MAX_WIDTH = 280;
 
 /**
  * Sidebar state for a single workspace
@@ -40,6 +40,7 @@ interface SidebarStateStore {
 
   // Helpers
   getWorkspaceState: (workspaceId: string) => SidebarState;
+  hasWorkspace: (workspaceId: string) => boolean;
 }
 
 /**
@@ -66,6 +67,11 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
       getWorkspaceState: (workspaceId: string) => {
         const state = get().workspaces[workspaceId];
         return state || getDefaultState();
+      },
+
+      // Helper to check if workspace exists in store
+      hasWorkspace: (workspaceId: string) => {
+        return workspaceId in get().workspaces;
       },
 
       // Actions
