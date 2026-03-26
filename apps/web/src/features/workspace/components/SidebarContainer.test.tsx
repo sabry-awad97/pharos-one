@@ -80,8 +80,8 @@ describe("SidebarContainer", () => {
     });
 
     it("collapses to 48px when not expanded", () => {
-      // Pre-set collapsed state in localStorage
-      localStorage.setItem("sidebar-expanded-test", "false");
+      // Pre-set collapsed state in localStorage using hook's key format
+      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
 
       render(
         <SidebarContainer workspaceId="test">
@@ -101,7 +101,7 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-width-test")).toBe("220");
+        expect(localStorage.getItem("pharmos-sidebar-test-width")).toBe("220");
       });
 
       // Verify it loads from localStorage on remount
@@ -123,7 +123,9 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-width-workspace1")).toBe("200");
+        expect(localStorage.getItem("pharmos-sidebar-workspace1-width")).toBe(
+          "200",
+        );
       });
 
       unmount();
@@ -135,9 +137,13 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-width-workspace2")).toBe("250");
+        expect(localStorage.getItem("pharmos-sidebar-workspace2-width")).toBe(
+          "250",
+        );
       });
-      expect(localStorage.getItem("sidebar-width-workspace1")).toBe("200");
+      expect(localStorage.getItem("pharmos-sidebar-workspace1-width")).toBe(
+        "200",
+      );
     });
   });
 
@@ -210,7 +216,7 @@ describe("SidebarContainer", () => {
     });
 
     it("does not allow resizing when collapsed", () => {
-      localStorage.setItem("sidebar-expanded-test", "false");
+      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
 
       render(
         <SidebarContainer workspaceId="test" defaultWidth={200}>
@@ -320,14 +326,18 @@ describe("SidebarContainer", () => {
 
       // Initially expanded
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-expanded-test")).toBe("true");
+        expect(localStorage.getItem("pharmos-sidebar-test-expanded")).toBe(
+          "true",
+        );
       });
 
       // Toggle to collapsed
       fireEvent.doubleClick(handle);
 
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-expanded-test")).toBe("false");
+        expect(localStorage.getItem("pharmos-sidebar-test-expanded")).toBe(
+          "false",
+        );
       });
     });
 
@@ -342,9 +352,9 @@ describe("SidebarContainer", () => {
       fireEvent.doubleClick(handle1);
 
       await waitFor(() => {
-        expect(localStorage.getItem("sidebar-expanded-workspace1")).toBe(
-          "false",
-        );
+        expect(
+          localStorage.getItem("pharmos-sidebar-workspace1-expanded"),
+        ).toBe("false");
       });
 
       unmount();
@@ -357,9 +367,9 @@ describe("SidebarContainer", () => {
 
       await waitFor(() => {
         // workspace2 should still be expanded (default)
-        expect(localStorage.getItem("sidebar-expanded-workspace2")).toBe(
-          "true",
-        );
+        expect(
+          localStorage.getItem("pharmos-sidebar-workspace2-expanded"),
+        ).toBe("true");
       });
     });
   });
@@ -486,7 +496,7 @@ describe("SidebarContainer", () => {
     });
 
     it("hides SidebarFooter when collapsed", () => {
-      localStorage.setItem("sidebar-expanded-test", "false");
+      localStorage.setItem("pharmos-sidebar-test-expanded", "false");
 
       render(
         <SidebarContainer workspaceId="test">

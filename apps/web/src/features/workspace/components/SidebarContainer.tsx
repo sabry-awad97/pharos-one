@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useSidebarState } from "../hooks/use-sidebar-state";
 
 /**
  * SidebarContainer - Reusable sidebar component with resize and collapse functionality
@@ -8,7 +9,7 @@ import * as React from "react";
  * - Double-click handle to toggle collapse/expand
  * - Width tooltip during resize
  * - Smooth animations using CSS variables
- * - Per-workspace state persistence
+ * - Per-workspace state persistence via useSidebarState hook
  *
  * @example
  * ```tsx
@@ -110,41 +111,41 @@ const SidebarContainer = React.forwardRef<
     },
     ref,
   ) => {
-    // Storage keys scoped to workspace
-    const EXPANDED_KEY = `sidebar-expanded-${workspaceId}`;
-    const WIDTH_KEY = `sidebar-width-${workspaceId}`;
+    // Use workspace-scoped sidebar state hook
+    const {
+      expanded,
+      toggle,
+      setExpanded,
+      sidebarWidth,
+      setSidebarWidth,
+      resetWidth: resetWidthHook,
+    } = useSidebarState(workspaceId);
 
-    // State: expanded/collapsed
-    const [expanded, setExpanded] = React.useState<boolean>(() => {
-      try {
-        const stored = localStorage.getItem(EXPANDED_KEY);
-        return stored !== null ? stored === "true" : true;
-      } catch (error) {
-        console.warn("Failed to read sidebar expanded state:", error);
-        return true;
+    // Initialize width from hook or use default
+    const [width, setWidthState] = React.useState<number>(() => {
+      // If hook has a stored width, use it; otherwise use defaultWidth
+      if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
+        return sidebarWidth;
       }
+      return defaultWidth;
     });
 
-    // State: sidebar width
-    const [width, setWidth] = React.useState<number>(() => {
-      try {
-        const stored = localStorage.getItem(WIDTH_KEY);
-        if (stored !== null) {
-          const parsedWidth = parseInt(stored, 10);
-          if (
-            !isNaN(parsedWidth) &&
-            parsedWidth >= minWidth &&
-            parsedWidth <= maxWidth
-          ) {
-            return parsedWidth;
-          }
-        }
-        return defaultWidth;
-      } catch (error) {
-        console.warn("Failed to read sidebar width:", error);
-        return defaultWidth;
+    // Sync width with hook when it changes
+    React.useEffect(() => {
+      if (sidebarWidth >= minWidth && sidebarWidth <= maxWidth) {
+        setWidthState(sidebarWidth);
       }
-    });
+    }, [sidebarWidth, minWidth, maxWidth]);
+
+    // Persist width changes to hook
+    const setWidth = React.useCallback(
+      (newWidth: number) => {
+        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+        setWidthState(clampedWidth);
+        setSidebarWidth(clampedWidth);
+      },
+      [minWidth, maxWidth, setSidebarWidth],
+    );
 
     // State: resize interaction
     const [hoveredHandle, setHoveredHandle] = React.useState(false);
@@ -153,28 +154,11 @@ const SidebarContainer = React.forwardRef<
       number | null
     >(null);
 
-    // Persist expanded state
-    React.useEffect(() => {
-      try {
-        localStorage.setItem(EXPANDED_KEY, String(expanded));
-      } catch (error) {
-        console.warn("Failed to save sidebar expanded state:", error);
-      }
-    }, [expanded, EXPANDED_KEY]);
-
-    // Persist width
-    React.useEffect(() => {
-      try {
-        localStorage.setItem(WIDTH_KEY, String(width));
-      } catch (error) {
-        console.warn("Failed to save sidebar width:", error);
-      }
-    }, [width, WIDTH_KEY]);
-
-    // Toggle expanded/collapsed
-    const toggle = React.useCallback(() => {
-      setExpanded((current) => !current);
-    }, []);
+    // Reset width to default
+    const resetWidth = React.useCallback(() => {
+      setWidthState(defaultWidth);
+      setSidebarWidth(defaultWidth);
+    }, [defaultWidth, setSidebarWidth]);
 
     // Imperative handle for parent control
     React.useImperativeHandle(
@@ -183,9 +167,9 @@ const SidebarContainer = React.forwardRef<
         toggle,
         setExpanded,
         isExpanded: () => expanded,
-        resetWidth: () => setWidth(defaultWidth),
+        resetWidth,
       }),
-      [toggle, expanded, defaultWidth],
+      [toggle, setExpanded, expanded, resetWidth],
     );
 
     // Drag handle resize logic

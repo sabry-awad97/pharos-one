@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
-import { useSidebarState } from "../hooks/use-sidebar-state";
+import { useSidebarState } from "@/features/workspace/hooks/use-sidebar-state";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarSubItem } from "./SidebarSubItem";
 import { SidebarStats } from "./SidebarStats";
