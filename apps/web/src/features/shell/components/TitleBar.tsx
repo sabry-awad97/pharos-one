@@ -16,6 +16,7 @@ interface TitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
   onMinimize?: () => void;
   onMaximize?: () => void;
   onClose?: () => void;
+  children?: React.ReactNode;
 }
 
 const TitleBar = React.forwardRef<HTMLDivElement, TitleBarProps>(
@@ -27,6 +28,7 @@ const TitleBar = React.forwardRef<HTMLDivElement, TitleBarProps>(
       onMinimize,
       onMaximize,
       onClose,
+      children,
       ...props
     },
     ref,
@@ -92,6 +94,9 @@ const TitleBar = React.forwardRef<HTMLDivElement, TitleBarProps>(
           </div>
           <span style={{ fontSize: 12, color: "#333" }}>{appName}</span>
         </div>
+
+        {/* Optional children (e.g., UserSwitcher) */}
+        {children && <div style={{ marginLeft: 8 }}>{children}</div>}
 
         {/* Quick action buttons */}
         <div

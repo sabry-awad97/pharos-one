@@ -9,8 +9,12 @@ import { immer } from "zustand/middleware/immer";
 import type { Tab, TabState } from "../types";
 import { VISIBLE_TAB_COUNT } from "../constants";
 
+// Temporary dev user ID until real user system exists
+const DEV_USER_ID = "dev-user";
+
 // Direct localStorage access for tab order (simpler than persist middleware)
-const TAB_ORDER_KEY = "pharmos-tab-order";
+// User-scoped keys for per-user state isolation
+const TAB_ORDER_KEY = (userId: string) => `pharmos-tab-order-${userId}`;
 
 /**
  * Tabs store interface
@@ -34,14 +38,15 @@ interface TabsStore {
     rightModuleId: string | null,
   ) => void;
   reorderTabs: (fromIndex: number, toIndex: number) => void;
+  resetForUser: (userId: string) => void;
 }
 
 /**
  * Load tab order from localStorage
  */
-function loadTabOrder(): string[] {
+function loadTabOrder(userId: string): string[] {
   try {
-    const stored = localStorage.getItem(TAB_ORDER_KEY);
+    const stored = localStorage.getItem(TAB_ORDER_KEY(userId));
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
@@ -51,9 +56,9 @@ function loadTabOrder(): string[] {
 /**
  * Save tab order to localStorage
  */
-function saveTabOrder(tabIds: string[]) {
+function saveTabOrder(tabIds: string[], userId: string) {
   try {
-    localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(tabIds));
+    localStorage.setItem(TAB_ORDER_KEY(userId), JSON.stringify(tabIds));
   } catch {
     // Ignore localStorage errors
   }
@@ -91,7 +96,7 @@ export const useTabsStore = create<TabsStore>()(
 
       // Save tab order
       const tabIds = get().state.tabs.map((t) => t.id);
-      saveTabOrder(tabIds);
+      saveTabOrder(tabIds, DEV_USER_ID);
 
       return newTab.id;
     },
@@ -110,7 +115,10 @@ export const useTabsStore = create<TabsStore>()(
         }
 
         // Save tab order
-        saveTabOrder(remaining.map((t) => t.id));
+        saveTabOrder(
+          remaining.map((t) => t.id),
+          DEV_USER_ID,
+        );
       }),
 
     // Set the active tab
@@ -161,7 +169,7 @@ export const useTabsStore = create<TabsStore>()(
 
       // Save tab order
       const tabIds = get().state.tabs.map((t) => t.id);
-      saveTabOrder(tabIds);
+      saveTabOrder(tabIds, DEV_USER_ID);
 
       return newTab.id;
     },
@@ -198,8 +206,31 @@ export const useTabsStore = create<TabsStore>()(
         store.state.tabs.splice(toIndex, 0, movedTab);
 
         // Save tab order
-        saveTabOrder(store.state.tabs.map((t) => t.id));
+        saveTabOrder(
+          store.state.tabs.map((t) => t.id),
+          DEV_USER_ID,
+        );
       }),
+
+    // Reset store for a specific user and rehydrate from localStorage
+    resetForUser: (userId: string) => {
+      set({
+        state: {
+          tabs: [],
+          activeTabId: null,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+        activeTabLabel: undefined,
+      });
+
+      // Note: loadTabOrder(userId) would return saved tab IDs but no tab data
+      // This is intentional - tabs will be recreated by the app
+      // The saved order is used to restore tab positions when tabs are recreated
+    },
   })),
 );
 

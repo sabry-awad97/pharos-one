@@ -23,6 +23,7 @@ import {
   type QuickAction,
   type TabStatistics,
 } from "@/features/shell";
+import { UserSwitcher } from "@/features/auth/components/UserSwitcher";
 import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 import { TabBar } from "@/features/workspace/components/TabBar";
 import { EmptyWorkspaceState } from "@/features/workspace/components/EmptyWorkspaceState";
@@ -143,7 +144,9 @@ function HomeComponent() {
         onMinimize={() => console.log(`Minimize`)}
         onMaximize={() => console.log("Maximize")}
         onClose={() => console.log(`Close`)}
-      />
+      >
+        <UserSwitcher />
+      </TitleBar>
 
       {/* Menu bar with navigation */}
       <MenuBar
