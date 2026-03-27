@@ -3,8 +3,8 @@
  * Container for all workspace tabs
  */
 
-import { useState, useEffect, useMemo } from "react";
-import { Plus, SplitSquareHorizontal } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Plus, SplitSquareHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -25,6 +25,7 @@ import { TabContextMenu } from "./TabContextMenu";
 import { TabOverflow } from "./TabOverflow";
 import { NewWorkspaceDialog } from "./NewWorkspaceDialog";
 import { calculateTabOverflow } from "../stores/tabs-store";
+import type { TabOverflowMode } from "../stores/tabs-store";
 import type { WorkspaceTemplate } from "../constants";
 
 export interface TabBarProps {
@@ -72,12 +73,42 @@ export function TabBar({
     y: number;
   } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Calculate visible vs overflow tabs
-  const { visibleTabs, overflowTabs, hasOverflow } = useMemo(
+  const { visibleTabs, overflowTabs, hasOverflow, mode } = useMemo(
     () => calculateTabOverflow(tabs),
     [tabs],
   );
+
+  // Track scroll position for gradient indicators
+  const updateScrollState = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || mode !== "scrollable") return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState);
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      ro.disconnect();
+    };
+  }, [mode, visibleTabs]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction === "left" ? -120 : 120, behavior: "smooth" });
+  };
 
   // Setup drag-and-drop sensors
   const sensors = useSensors(
@@ -90,6 +121,7 @@ export function TabBar({
   // Keyboard navigation for tab reordering
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Shift+Arrow: reorder tabs
       if (
         e.ctrlKey &&
         e.shiftKey &&
@@ -113,6 +145,36 @@ export function TabBar({
         if (activeTab.pinned !== targetTab.pinned) return;
 
         onTabReorder(activeIndex, newIndex);
+        return;
+      }
+
+      // Ctrl+Tab: cycle forward through all tabs (including overflow)
+      if (e.ctrlKey && !e.shiftKey && e.key === "Tab") {
+        e.preventDefault();
+        if (tabs.length === 0) return;
+        const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
+        const nextIndex = (activeIndex + 1) % tabs.length;
+        onTabClick(tabs[nextIndex].id);
+        return;
+      }
+
+      // Ctrl+Shift+Tab: cycle backward through all tabs
+      if (e.ctrlKey && e.shiftKey && e.key === "Tab") {
+        e.preventDefault();
+        if (tabs.length === 0) return;
+        const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
+        const prevIndex = (activeIndex - 1 + tabs.length) % tabs.length;
+        onTabClick(tabs[prevIndex].id);
+        return;
+      }
+
+      // Ctrl+1-9: jump to specific tab by position
+      if (e.ctrlKey && !e.shiftKey && e.key >= "1" && e.key <= "9") {
+        const index = parseInt(e.key, 10) - 1;
+        if (index < tabs.length) {
+          e.preventDefault();
+          onTabClick(tabs[index].id);
+        }
       }
     };
 
@@ -218,7 +280,7 @@ export function TabBar({
           </SortableContext>
         )}
 
-        {/* Regular tabs */}
+        {/* Regular tabs — scrollable or fixed */}
         <SortableContext
           items={regularTabs.map((t) => t.id)}
           strategy={horizontalListSortingStrategy}
@@ -229,28 +291,133 @@ export function TabBar({
               alignItems: "flex-end",
               height: "100%",
               flex: 1,
+              position: "relative",
               overflow: "hidden",
             }}
           >
-            {regularTabs.map((tab) => (
-              <SortableTabItem
-                key={tab.id}
-                id={tab.id}
-                tab={tab}
-                active={tab.id === activeTabId}
-                onClick={() => onTabClick(tab.id)}
-                onClose={(e) => {
-                  e.stopPropagation();
-                  onTabClose(tab.id);
-                }}
-                onContextMenu={(e) => handleContextMenu(tab.id, e)}
-              />
-            ))}
+            {/* Left scroll button + fade */}
+            {mode === "scrollable" && canScrollLeft && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 32,
+                    background: "linear-gradient(to right, #f0f0f0 60%, transparent)",
+                    zIndex: 2,
+                    pointerEvents: "none",
+                  }}
+                />
+                <button
+                  onClick={() => scrollTabs("left")}
+                  style={{
+                    position: "absolute",
+                    left: 2,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 3,
+                    width: 20,
+                    height: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid #d0d0d0",
+                    borderRadius: 3,
+                    background: "#f8f8f8",
+                    color: "#616161",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                  aria-label="Scroll tabs left"
+                >
+                  <ChevronLeft style={{ width: 12, height: 12 }} />
+                </button>
+              </>
+            )}
+
+            <div
+              ref={scrollRef}
+              onWheel={(e) => {
+                if (mode === "scrollable") {
+                  e.preventDefault();
+                  scrollRef.current?.scrollBy({ left: e.deltaY + e.deltaX, behavior: "auto" });
+                }
+              }}
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                height: "100%",
+                flex: 1,
+                overflowX: mode === "scrollable" ? "auto" : "hidden",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                scrollBehavior: "smooth",
+              }}
+            >
+              {regularTabs.map((tab) => (
+                <SortableTabItem
+                  key={tab.id}
+                  id={tab.id}
+                  tab={tab}
+                  active={tab.id === activeTabId}
+                  onClick={() => onTabClick(tab.id)}
+                  onClose={(e) => {
+                    e.stopPropagation();
+                    onTabClose(tab.id);
+                  }}
+                  onContextMenu={(e) => handleContextMenu(tab.id, e)}
+                />
+              ))}
+            </div>
+
+            {/* Right scroll button + fade */}
+            {mode === "scrollable" && canScrollRight && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 32,
+                    background: "linear-gradient(to left, #f0f0f0 60%, transparent)",
+                    zIndex: 2,
+                    pointerEvents: "none",
+                  }}
+                />
+                <button
+                  onClick={() => scrollTabs("right")}
+                  style={{
+                    position: "absolute",
+                    right: 2,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 3,
+                    width: 20,
+                    height: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid #d0d0d0",
+                    borderRadius: 3,
+                    background: "#f8f8f8",
+                    color: "#616161",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                  aria-label="Scroll tabs right"
+                >
+                  <ChevronRight style={{ width: 12, height: 12 }} />
+                </button>
+              </>
+            )}
           </div>
         </SortableContext>
 
-        {/* Overflow indicator */}
-        {hasOverflow && (
+        {/* Overflow indicator — dropdown mode only */}
+        {mode === "dropdown" && overflowTabs.length > 0 && (
           <TabOverflow
             overflowTabs={overflowTabs}
             onTabClick={onTabClick}

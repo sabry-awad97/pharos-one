@@ -1,9 +1,10 @@
 /**
  * TabOverflow component
- * Dropdown menu showing overflow tabs with count badge
+ * Dropdown menu showing overflow tabs with count badge, tooltip previews,
+ * and smooth fade-in/out transitions.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import type { Tab } from "../types";
 
@@ -18,7 +19,7 @@ export interface TabOverflowProps {
 
 /**
  * Overflow indicator with dropdown menu
- * Shows count badge and displays hidden tabs
+ * Shows count badge and displays hidden tabs with tooltip previews
  */
 export function TabOverflow({
   overflowTabs,
@@ -26,6 +27,18 @@ export function TabOverflow({
   onTabClose,
 }: TabOverflowProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  // Fade-in when opening, fade-out before unmounting
+  useEffect(() => {
+    if (isOpen) {
+      // Next tick so CSS transition fires
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+    }
+  }, [isOpen]);
 
   const handleTabClick = (id: string) => {
     onTabClick(id);
@@ -65,6 +78,7 @@ export function TabOverflow({
           cursor: "pointer",
         }}
         aria-label={`${overflowTabs.length} more tabs`}
+        aria-expanded={isOpen}
       >
         <MoreHorizontal style={{ width: 13, height: 13 }} />
         <span
@@ -77,7 +91,7 @@ export function TabOverflow({
             fontWeight: 600,
           }}
         >
-          {overflowTabs.length}
+          +{overflowTabs.length}
         </span>
       </button>
 
@@ -95,6 +109,9 @@ export function TabOverflow({
             borderRadius: 6,
             padding: "4px 0",
             zIndex: 300,
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(-4px)",
+            transition: "opacity 140ms ease, transform 140ms ease",
           }}
         >
           <div
@@ -118,24 +135,22 @@ export function TabOverflow({
 
           {overflowTabs.map((tab) => {
             const Icon = tab.icon;
+            const isHovered = hoveredId === tab.id;
             return (
               <div
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    "#f0f0f0";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    "transparent";
-                }}
+                onMouseEnter={() => setHoveredId(tab.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                title={tab.label}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
                   padding: "6px 10px",
                   cursor: "pointer",
+                  background: isHovered ? "#f0f0f0" : "transparent",
+                  transition: "background 80ms ease",
                 }}
               >
                 <Icon
@@ -160,6 +175,7 @@ export function TabOverflow({
                 </span>
                 {tab.unsaved && (
                   <span
+                    title="Unsaved changes"
                     style={{
                       width: 6,
                       height: 6,

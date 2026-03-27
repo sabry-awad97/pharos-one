@@ -238,6 +238,8 @@ export const useTabsStore = create<TabsStore>()(
 // Tab Overflow Utilities
 // ============================================================================
 
+export type TabOverflowMode = "none" | "scrollable" | "dropdown";
+
 export interface UseTabOverflowReturn {
   /** Tabs that should be visible in the tab bar */
   visibleTabs: Tab[];
@@ -245,26 +247,43 @@ export interface UseTabOverflowReturn {
   overflowTabs: Tab[];
   /** Whether there are any overflow tabs */
   hasOverflow: boolean;
+  /** Overflow display mode */
+  mode: TabOverflowMode;
 }
 
+/** Threshold: tabs <= this use scrollable mode */
+export const SCROLLABLE_THRESHOLD = 8;
+
 /**
- * Calculate visible vs overflow tabs
- * Used by components to determine which tabs to show
+ * Calculate visible vs overflow tabs with hybrid mode support.
+ * - 1–VISIBLE_TAB_COUNT tabs: no overflow (mode = "none")
+ * - VISIBLE_TAB_COUNT+1–SCROLLABLE_THRESHOLD tabs: scrollable mode
+ * - SCROLLABLE_THRESHOLD+1+ tabs: dropdown mode
  *
  * @param tabs - All tabs
  * @param visibleCount - Maximum number of visible tabs (defaults to VISIBLE_TAB_COUNT)
- * @returns Object with visible tabs, overflow tabs, and hasOverflow flag
+ * @returns Object with visible tabs, overflow tabs, hasOverflow flag, and mode
  */
 export function calculateTabOverflow(
   tabs: Tab[],
   visibleCount: number = VISIBLE_TAB_COUNT,
 ): UseTabOverflowReturn {
-  const visibleTabs = tabs.slice(0, visibleCount);
-  const overflowTabs = tabs.slice(visibleCount);
+  const hasOverflow = tabs.length > visibleCount;
+  const mode: TabOverflowMode = !hasOverflow
+    ? "none"
+    : tabs.length <= SCROLLABLE_THRESHOLD
+      ? "scrollable"
+      : "dropdown";
+
+  // In scrollable mode all tabs are "visible" (scrolled into view);
+  // in dropdown mode only the first `visibleCount` are shown directly.
+  const visibleTabs = mode === "scrollable" ? tabs : tabs.slice(0, visibleCount);
+  const overflowTabs = mode === "dropdown" ? tabs.slice(visibleCount) : [];
 
   return {
     visibleTabs,
     overflowTabs,
-    hasOverflow: overflowTabs.length > 0,
+    hasOverflow,
+    mode,
   };
 }
