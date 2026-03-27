@@ -7,12 +7,7 @@
 
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import {
-  TrendingUp,
-  TrendingDown,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
+import { TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
 
 // ============================================================================
 // SidebarNav
