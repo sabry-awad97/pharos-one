@@ -9,6 +9,9 @@ import {
   SplitSquareHorizontal,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
+  ArrowRight,
+  RotateCw,
 } from "lucide-react";
 import {
   DndContext,
@@ -54,6 +57,19 @@ export interface TabBarProps {
   onSplitViewToggle?: () => void;
   /** Handler for tab reordering */
   onTabReorder?: (fromIndex: number, toIndex: number) => void;
+  /** Navigation handlers (for future TanStack Router integration) */
+  navigation?: {
+    /** Handler for back navigation */
+    onBack?: () => void;
+    /** Handler for forward navigation */
+    onForward?: () => void;
+    /** Handler for refresh */
+    onRefresh?: () => void;
+    /** Whether back navigation is available */
+    canGoBack?: boolean;
+    /** Whether forward navigation is available */
+    canGoForward?: boolean;
+  };
 }
 
 /**
@@ -71,6 +87,7 @@ export function TabBar({
   splitViewEnabled = false,
   onSplitViewToggle,
   onTabReorder,
+  navigation,
 }: TabBarProps) {
   const [contextMenu, setContextMenu] = useState<{
     tabId: string;
@@ -295,6 +312,145 @@ export function TabBar({
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
         }}
       >
+        {/* Navigation buttons - Placeholder for TanStack Router integration */}
+        {/* TODO: Integrate with TanStack Router's useRouter() hook for proper navigation history */}
+        {/* See: https://tanstack.com/router/latest/docs/framework/react/api/router/useRouterHook */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            paddingLeft: 8,
+            paddingRight: 8,
+            height: "100%",
+            borderRight: "1px solid #e0e0e0",
+          }}
+        >
+          <button
+            onClick={() => {
+              if (navigation?.onBack) {
+                navigation.onBack();
+              } else {
+                // Fallback to browser history (placeholder)
+                window.history.back();
+              }
+            }}
+            disabled={navigation?.canGoBack === false}
+            title="Back"
+            style={{
+              width: 28,
+              height: 28,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              borderRadius: 4,
+              background: "transparent",
+              color: navigation?.canGoBack === false ? "#c0c0c0" : "#616161",
+              cursor:
+                navigation?.canGoBack === false ? "not-allowed" : "pointer",
+              transition: "background 0.1s, color 0.1s",
+              opacity: navigation?.canGoBack === false ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (navigation?.canGoBack !== false) {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#e0e0e0";
+                (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (navigation?.canGoBack !== false) {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "transparent";
+                (e.currentTarget as HTMLButtonElement).style.color = "#616161";
+              }
+            }}
+          >
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+          </button>
+
+          <button
+            onClick={() => {
+              if (navigation?.onForward) {
+                navigation.onForward();
+              } else {
+                // Fallback to browser history (placeholder)
+                window.history.forward();
+              }
+            }}
+            disabled={navigation?.canGoForward === false}
+            title="Forward"
+            style={{
+              width: 28,
+              height: 28,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              borderRadius: 4,
+              background: "transparent",
+              color: navigation?.canGoForward === false ? "#c0c0c0" : "#616161",
+              cursor:
+                navigation?.canGoForward === false ? "not-allowed" : "pointer",
+              transition: "background 0.1s, color 0.1s",
+              opacity: navigation?.canGoForward === false ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (navigation?.canGoForward !== false) {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#e0e0e0";
+                (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (navigation?.canGoForward !== false) {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "transparent";
+                (e.currentTarget as HTMLButtonElement).style.color = "#616161";
+              }
+            }}
+          >
+            <ArrowRight style={{ width: 16, height: 16 }} />
+          </button>
+
+          <button
+            onClick={() => {
+              if (navigation?.onRefresh) {
+                navigation.onRefresh();
+              } else {
+                // Fallback to page reload (placeholder)
+                window.location.reload();
+              }
+            }}
+            title="Refresh"
+            style={{
+              width: 28,
+              height: 28,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              borderRadius: 4,
+              background: "transparent",
+              color: "#616161",
+              cursor: "pointer",
+              transition: "background 0.1s, color 0.1s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "#e0e0e0";
+              (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = "#616161";
+            }}
+          >
+            <RotateCw style={{ width: 14, height: 14 }} />
+          </button>
+        </div>
         {/* Pinned tabs group */}
         {pinnedTabs.length > 0 && (
           <SortableContext
