@@ -79,14 +79,14 @@ export function InventorySidebar({
             <SidebarNavItem
               icon={AlertTriangle}
               label="Low Stock"
-              badge={lowStockCount > 0 ? lowStockCount : undefined}
+              badge={lowStockCount}
               active={activeFilter === "low-stock"}
               onClick={() => onFilterChange("low-stock")}
             />
             <SidebarNavItem
               icon={Clock}
               label="Expiring Soon"
-              badge={expiringCount > 0 ? expiringCount : undefined}
+              badge={expiringCount}
               active={activeFilter === "expiring"}
               onClick={() => onFilterChange("expiring")}
             />
