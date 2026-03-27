@@ -189,7 +189,10 @@ export function TabItem({
       {!pinned && (
         <button
           className={styles.closeButton}
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent tab click when closing
+            onClose(e);
+          }}
           style={{
             width: 16,
             height: 16,
