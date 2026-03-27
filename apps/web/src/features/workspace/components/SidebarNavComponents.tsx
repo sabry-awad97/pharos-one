@@ -32,7 +32,7 @@ export function SidebarNav({ children }: SidebarNavProps) {
         flexDirection: "column",
         flex: 1,
         overflowY: "auto",
-        padding: "4px 0",
+        padding: "0 0 4px 0",
       }}
     >
       {children}
