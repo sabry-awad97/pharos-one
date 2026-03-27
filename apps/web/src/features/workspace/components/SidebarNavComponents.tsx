@@ -274,8 +274,20 @@ export function SidebarNavGroup({
             paddingRight: 8,
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
+          {/* Tree border line - positioned to align with parent icon center */}
+          <div
+            style={{
+              position: "absolute",
+              left: 20,
+              top: 0,
+              bottom: 0,
+              width: 2,
+              background: "#e0e0e0",
+            }}
+          />
           {children}
         </div>
       </div>
