@@ -19,7 +19,6 @@ import {
   TitleBar,
   MenuBar,
   StatusBar,
-  Sidebar,
   useMenuState,
   type QuickAction,
   type TabStatistics,
@@ -149,73 +148,6 @@ function HomeComponent() {
     navigate({ to: `/home/${template.id}` });
   };
 
-  // Handler for sidebar module click
-  const handleSidebarModuleClick = (moduleId: string) => {
-    // Check if this is a sub-item (contains hyphen with parent prefix)
-    // e.g., "dashboard-overview" -> parent: "dashboard", route: "/home/dashboard/overview"
-    const isSubItem = moduleId.includes("-");
-    let parentModule = moduleId;
-    let routePath = `/home/${moduleId}`;
-
-    if (isSubItem) {
-      // Parse sub-item ID: "dashboard-overview" -> parent: "dashboard", sub: "overview"
-      const parts = moduleId.split("-");
-      parentModule = parts[0];
-      const subItemPath = parts.slice(1).join("-");
-      routePath = `/home/${parentModule}/${subItemPath}`;
-    }
-
-    // Find first existing tab of this module type
-    const existingTab = state.tabs.find((t) => t.module === moduleId);
-
-    if (existingTab) {
-      // Switch to existing tab
-      setActiveTab(existingTab.id);
-      navigate({ to: routePath });
-    } else {
-      // Create new tab
-      // For sub-items, find the sub-item definition within the parent template
-      let template = WORKSPACE_TEMPLATES.find((t) => t.id === moduleId);
-      let label = moduleId;
-      let icon = undefined;
-
-      if (isSubItem) {
-        // Find parent template and sub-item
-        const parentTemplate = WORKSPACE_TEMPLATES.find(
-          (t) => t.id === parentModule,
-        );
-        if (parentTemplate) {
-          const subItem = parentTemplate.subItems?.find(
-            (s) => s.id === moduleId,
-          );
-          if (subItem) {
-            label = `${parentTemplate.label} - ${subItem.label}`;
-            icon = parentTemplate.icon;
-          }
-        }
-      } else if (template) {
-        label = template.label;
-        icon = template.icon;
-      }
-
-      if (icon) {
-        addTab({
-          label,
-          icon,
-          module: moduleId,
-        });
-        navigate({ to: routePath });
-      }
-    }
-  };
-
-  // Mock stats data
-  const mockStats = [
-    { label: "Sales", value: "₹14,820", trend: "up" as const },
-    { label: "Profit", value: "₹3,940", trend: "up" as const },
-    { label: "Orders", value: "47", trend: "down" as const },
-  ];
-
   // Tab statistics for status bar
   const statistics: TabStatistics = {
     totalTabs: state.tabs.length,
@@ -298,63 +230,50 @@ function HomeComponent() {
         }}
       />
 
-      {/* Main Content Area - Horizontal container with Sidebar and Workspace */}
+      {/* Main Content Area - Workspace area with TabBar and content */}
       <div
-        data-testid="main-horizontal-container"
-        style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}
+        data-testid="workspace-area"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflow: "hidden",
+        }}
       >
-        {/* Sidebar */}
-        <Sidebar
-          activeModule={activeTab?.module ?? null}
-          onModuleClick={handleSidebarModuleClick}
-          stats={mockStats}
+        {/* Tab Bar */}
+        <TabBar
+          tabs={state.tabs}
+          activeTabId={activeTab.id}
+          onTabClick={handleTabClick}
+          onTabClose={closeTab}
+          onTabPin={togglePin}
+          onTabDuplicate={duplicateTab}
+          onAddTab={handleAddTab}
+          splitViewEnabled={state.splitView.enabled}
+          onSplitViewToggle={toggleSplitView}
+          onTabReorder={reorderTabs}
         />
 
-        {/* Workspace area - contains TabBar and content */}
-        <div
-          data-testid="workspace-area"
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            overflow: "hidden",
-          }}
-        >
-          {/* Tab Bar */}
-          <TabBar
-            tabs={state.tabs}
-            activeTabId={activeTab.id}
-            onTabClick={handleTabClick}
-            onTabClose={closeTab}
-            onTabPin={togglePin}
-            onTabDuplicate={duplicateTab}
-            onAddTab={handleAddTab}
-            splitViewEnabled={state.splitView.enabled}
-            onSplitViewToggle={toggleSplitView}
-            onTabReorder={reorderTabs}
-          />
-
-          {/* Content area */}
-          <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-            <Outlet />
-            {state.splitView.enabled && pinnedTab && (
-              <>
-                <div
-                  style={{
-                    width: 1,
-                    background: "#e0e0e0",
-                    flexShrink: 0,
-                  }}
-                />
-                <WorkspaceContainer
-                  moduleId={pinnedTab.module}
-                  label={pinnedTab.label}
-                  split={true}
-                />
-              </>
-            )}
-          </div>
+        {/* Content area - Each workspace renders its own sidebar */}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+          <Outlet />
+          {state.splitView.enabled && pinnedTab && (
+            <>
+              <div
+                style={{
+                  width: 1,
+                  background: "#e0e0e0",
+                  flexShrink: 0,
+                }}
+              />
+              <WorkspaceContainer
+                moduleId={pinnedTab.module}
+                label={pinnedTab.label}
+                split={true}
+              />
+            </>
+          )}
         </div>
       </div>
 

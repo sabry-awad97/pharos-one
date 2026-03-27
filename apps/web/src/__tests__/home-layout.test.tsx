@@ -19,24 +19,23 @@ const { Route } = await import("../routes/_app/home/route");
 const HomeComponent = (Route as any).component as () => JSX.Element;
 
 describe("Home Route Layout", () => {
-  it("should have horizontal container below MenuBar containing sidebar and workspace area", () => {
+  it("should have workspace area as main container with TabBar and content", () => {
     renderWithProviders(<HomeComponent />);
 
-    // Find the main content container (should be horizontal flex with sidebar and workspace)
-    // Look for the container that has both sidebar and workspace area as children
-    const mainContainer = screen.getByTestId("main-horizontal-container");
-    expect(mainContainer).toBeInTheDocument();
-
-    // Verify it contains sidebar
-    const sidebar = within(mainContainer).getByTestId("sidebar");
-    expect(sidebar).toBeInTheDocument();
-
-    // Verify it contains workspace area
-    const workspaceArea = within(mainContainer).getByTestId("workspace-area");
+    // Workspace area should be the main container (no global sidebar)
+    const workspaceArea = screen.getByTestId("workspace-area");
     expect(workspaceArea).toBeInTheDocument();
+
+    // Verify it contains TabBar
+    const tabBar = within(workspaceArea).getByTestId("tab-bar");
+    expect(tabBar).toBeInTheDocument();
+
+    // Verify it contains outlet for workspace content
+    const outlet = within(workspaceArea).getByTestId("outlet");
+    expect(outlet).toBeInTheDocument();
   });
 
-  it("should have TabBar inside workspace area, not as full-width element", () => {
+  it("should have TabBar inside workspace area", () => {
     renderWithProviders(<HomeComponent />);
 
     // TabBar should be inside workspace area
@@ -45,5 +44,13 @@ describe("Home Route Layout", () => {
 
     expect(tabBar).toBeInTheDocument();
     expect(workspaceArea).toContainElement(tabBar);
+  });
+
+  it("should not have global sidebar (workspaces render their own)", () => {
+    renderWithProviders(<HomeComponent />);
+
+    // Global sidebar should not exist
+    const sidebar = screen.queryByTestId("sidebar");
+    expect(sidebar).not.toBeInTheDocument();
   });
 });
