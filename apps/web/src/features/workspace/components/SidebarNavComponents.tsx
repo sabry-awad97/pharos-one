@@ -251,25 +251,17 @@ export function SidebarNavGroup({
         </button>
       </div>
 
-      {/* Sub-items with grid animation like global sidebar */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateRows: expanded ? "1fr" : "0fr",
-          opacity: expanded ? 1 : 0,
-          transition: "all 0.2s ease-in-out",
-          marginTop: expanded ? 4 : 0,
-          marginBottom: expanded ? 4 : 0,
-        }}
-      >
+      {/* Sub-items */}
+      {expanded && (
         <div
           style={{
-            overflow: "hidden",
             paddingLeft: 28,
             paddingRight: 8,
             display: "flex",
             flexDirection: "column",
             position: "relative",
+            marginTop: 4,
+            marginBottom: 4,
           }}
         >
           {/* Tree border line - positioned to align with parent icon center */}
@@ -285,7 +277,7 @@ export function SidebarNavGroup({
           />
           {children}
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 import type { Tab } from "@/features/workspace/types";
 import { LayoutDashboard, Package, ShoppingCart } from "lucide-react";
 
-const TAB_ORDER_KEY = "pharmos-tab-order";
+const TAB_ORDER_KEY = "pharmos-tab-order-dev-user";
 
 describe("Tab Drag-and-Drop Reordering", () => {
   const mockTabs: Tab[] = [

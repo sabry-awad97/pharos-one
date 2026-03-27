@@ -105,7 +105,7 @@ describe("SidebarContainer", () => {
         },
         version: 0,
       };
-      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      localStorage.setItem("pharmos-sidebar-state-dev-user", JSON.stringify(storeData));
       // Force rehydration after setting localStorage
       useSidebarStateStore.persist.rehydrate();
 
@@ -128,7 +128,7 @@ describe("SidebarContainer", () => {
 
       await waitFor(() => {
         // Check Zustand store format
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -155,7 +155,7 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -172,7 +172,7 @@ describe("SidebarContainer", () => {
       );
 
       await waitFor(() => {
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -266,7 +266,7 @@ describe("SidebarContainer", () => {
         },
         version: 0,
       };
-      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      localStorage.setItem("pharmos-sidebar-state-dev-user", JSON.stringify(storeData));
       // Force rehydration after setting localStorage
       useSidebarStateStore.persist.rehydrate();
 
@@ -378,7 +378,7 @@ describe("SidebarContainer", () => {
 
       // Initially expanded
       await waitFor(() => {
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -390,7 +390,7 @@ describe("SidebarContainer", () => {
       fireEvent.doubleClick(handle);
 
       await waitFor(() => {
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -410,7 +410,7 @@ describe("SidebarContainer", () => {
       fireEvent.doubleClick(handle1);
 
       await waitFor(() => {
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -428,7 +428,7 @@ describe("SidebarContainer", () => {
 
       await waitFor(() => {
         // workspace2 should still be expanded (default)
-        const stored = localStorage.getItem("pharmos-sidebar-state");
+        const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
         expect(stored).toBeTruthy();
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -575,7 +575,7 @@ describe("SidebarContainer", () => {
         },
         version: 0,
       };
-      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(storeData));
+      localStorage.setItem("pharmos-sidebar-state-dev-user", JSON.stringify(storeData));
       // Force rehydration after setting localStorage
       useSidebarStateStore.persist.rehydrate();
 
