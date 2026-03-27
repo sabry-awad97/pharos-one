@@ -4,7 +4,13 @@
  * Matches PharmacyTabs.tsx WorkspaceContent component
  */
 
+import { useState } from "react";
 import { ModuleWorkspace } from "../components/ModuleWorkspace";
+import {
+  ReportsSidebar,
+  type ReportType,
+  type DateRange,
+} from "./components/ReportsSidebar";
 
 // Color constants matching old implementation
 const W = {
@@ -22,6 +28,9 @@ export function ReportsWorkspace({
   split?: boolean;
   label?: string;
 }) {
+  const [activeReport, setActiveReport] = useState<ReportType>("all");
+  const [dateRange, setDateRange] = useState<DateRange>("month");
+
   const data = [
     ["Revenue – March", "₹4,48,200", "↑18%"],
     ["Gross Profit", "₹1,12,050", "↑11%"],
@@ -38,13 +47,28 @@ export function ReportsWorkspace({
   };
 
   return (
-    <ModuleWorkspace
-      label={label || "Reports"}
-      color="#c43501"
-      columns={cols}
-      data={data}
-      renderCell={renderCell}
-      split={split}
-    />
+    <div className="flex flex-row flex-1 overflow-hidden font-sans bg-background">
+      {/* Sidebar */}
+      <ReportsSidebar
+        activeReport={activeReport}
+        onReportChange={setActiveReport}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        totalReports={24}
+        generatedReports={18}
+      />
+
+      {/* Main content */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <ModuleWorkspace
+          label={label || "Reports"}
+          color="#c43501"
+          columns={cols}
+          data={data}
+          renderCell={renderCell}
+          split={split}
+        />
+      </div>
+    </div>
   );
 }
