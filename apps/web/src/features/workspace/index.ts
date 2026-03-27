@@ -14,6 +14,8 @@ export {
   SidebarNavGroup,
   SidebarStats,
 } from "./components/SidebarNavComponents";
+export { WorkspaceTemplatePicker } from "./components/WorkspaceTemplatePicker";
+export { WORKSPACE_TEMPLATES } from "./constants/workspace-templates";
 export type { Tab, TabState } from "./types";
 export type { TabBarProps } from "./components/TabBar";
 export type { TabItemProps } from "./components/TabItem";
@@ -32,3 +34,8 @@ export type {
   SidebarStatsProps,
   StatItem,
 } from "./components/SidebarNavComponents";
+export type { WorkspaceTemplatePickerProps } from "./components/WorkspaceTemplatePicker";
+export type {
+  WorkspaceTemplate,
+  TemplateTab,
+} from "./constants/workspace-templates";

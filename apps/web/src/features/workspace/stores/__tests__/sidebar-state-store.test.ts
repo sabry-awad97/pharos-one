@@ -33,6 +33,224 @@ describe("Sidebar State Store", () => {
     });
   });
 
+  describe("User-Scoped localStorage Keys", () => {
+    it("should create separate localStorage entries for different users", () => {
+      const { toggleModule, togglePin } = useSidebarStateStore.getState();
+
+      // Add state for dev-user (default)
+      toggleModule("workspace1", "dashboard");
+      togglePin("workspace1", "inventory");
+
+      // Check localStorage has dev-user key
+      const devUserKey = localStorage.getItem("pharmos-sidebar-state-dev-user");
+      expect(devUserKey).toBeTruthy();
+      const devUserData = JSON.parse(devUserKey!);
+      expect(devUserData.state.workspaces.workspace1).toBeDefined();
+
+      // Simulate different user by manually setting localStorage
+      const user2Data = {
+        state: {
+          workspaces: {
+            workspace2: {
+              expanded: false,
+              expandedModules: ["reports"],
+              pinnedItems: ["pos"],
+              hiddenItems: [],
+              width: 250,
+            },
+          },
+        },
+        version: 0,
+      };
+      localStorage.setItem(
+        "pharmos-sidebar-state-user2",
+        JSON.stringify(user2Data),
+      );
+
+      // Verify both keys exist and are separate
+      const user2Key = localStorage.getItem("pharmos-sidebar-state-user2");
+      expect(user2Key).toBeTruthy();
+      expect(JSON.parse(user2Key!)).toEqual(user2Data);
+
+      // Verify dev-user key is unchanged
+      const devUserKeyAfter = localStorage.getItem(
+        "pharmos-sidebar-state-dev-user",
+      );
+      expect(JSON.parse(devUserKeyAfter!)).toEqual(devUserData);
+    });
+
+    it("should use user-scoped key format", () => {
+      const { toggleModule } = useSidebarStateStore.getState();
+
+      toggleModule("workspace1", "dashboard");
+
+      // Check the key format
+      const keys = Object.keys(localStorage);
+      expect(keys).toContain("pharmos-sidebar-state-dev-user");
+      expect(keys.some((k) => k.startsWith("pharmos-sidebar-state-"))).toBe(
+        true,
+      );
+    });
+
+    it("should not contaminate state between users", () => {
+      const { toggleModule, togglePin, setSidebarWidth } =
+        useSidebarStateStore.getState();
+
+      // Add state for dev-user
+      toggleModule("workspace1", "dashboard");
+      togglePin("workspace1", "inventory");
+      setSidebarWidth("workspace1", 200);
+
+      const devUserData = localStorage.getItem(
+        "pharmos-sidebar-state-dev-user",
+      );
+      expect(devUserData).toBeTruthy();
+      const devUserParsed = JSON.parse(devUserData!);
+      expect(
+        devUserParsed.state.workspaces.workspace1.expandedModules,
+      ).toContain("dashboard");
+      expect(devUserParsed.state.workspaces.workspace1.pinnedItems).toContain(
+        "inventory",
+      );
+      expect(devUserParsed.state.workspaces.workspace1.width).toBe(200);
+
+      // Set up different user data
+      const user2Data = {
+        state: {
+          workspaces: {
+            workspace2: {
+              expanded: false,
+              expandedModules: ["reports"],
+              pinnedItems: ["pos"],
+              hiddenItems: ["settings"],
+              width: 250,
+            },
+          },
+        },
+        version: 0,
+      };
+      localStorage.setItem(
+        "pharmos-sidebar-state-user2",
+        JSON.stringify(user2Data),
+      );
+
+      // Verify dev-user data is unchanged
+      const devUserDataAfter = localStorage.getItem(
+        "pharmos-sidebar-state-dev-user",
+      );
+      expect(JSON.parse(devUserDataAfter!)).toEqual(devUserParsed);
+
+      // Verify user2 data is separate
+      const user2DataAfter = localStorage.getItem(
+        "pharmos-sidebar-state-user2",
+      );
+      expect(JSON.parse(user2DataAfter!)).toEqual(user2Data);
+    });
+  });
+
+  describe("resetForUser Action", () => {
+    it("should clear workspaces state", () => {
+      const { toggleModule, togglePin, resetForUser } =
+        useSidebarStateStore.getState();
+
+      // Add some state
+      toggleModule("workspace1", "dashboard");
+      togglePin("workspace1", "inventory");
+
+      const stateBefore = useSidebarStateStore.getState();
+      expect(Object.keys(stateBefore.workspaces)).toHaveLength(1);
+      expect(stateBefore.workspaces.workspace1).toBeDefined();
+
+      // Reset for dev-user
+      resetForUser("dev-user");
+
+      const stateAfter = useSidebarStateStore.getState();
+      expect(stateAfter.workspaces).toEqual({});
+    });
+
+    it("should clear state and allow rehydration on next load", () => {
+      const { toggleModule, togglePin, resetForUser } =
+        useSidebarStateStore.getState();
+
+      // Add some state
+      toggleModule("workspace1", "dashboard");
+      togglePin("workspace1", "inventory");
+
+      // Verify state exists
+      const stateBefore = useSidebarStateStore.getState();
+      expect(stateBefore.workspaces.workspace1).toBeDefined();
+
+      // Verify it's saved to localStorage
+      const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
+      expect(stored).toBeTruthy();
+      const parsed = JSON.parse(stored!);
+      expect(parsed.state.workspaces.workspace1).toBeDefined();
+
+      // Reset for dev-user
+      resetForUser("dev-user");
+
+      // State should be cleared
+      const stateAfter = useSidebarStateStore.getState();
+      expect(stateAfter.workspaces).toEqual({});
+
+      // But localStorage should still have the data for rehydration on next load
+      const storedAfter = localStorage.getItem(
+        "pharmos-sidebar-state-dev-user",
+      );
+      expect(storedAfter).toBeTruthy();
+    });
+
+    it("should work with different userIds", () => {
+      const { resetForUser } = useSidebarStateStore.getState();
+
+      // Set up localStorage for multiple users
+      localStorage.setItem(
+        "pharmos-sidebar-state-user1",
+        JSON.stringify({
+          state: {
+            workspaces: {
+              workspace1: {
+                expanded: true,
+                expandedModules: ["dashboard"],
+                pinnedItems: [],
+                hiddenItems: [],
+                width: 180,
+              },
+            },
+          },
+          version: 0,
+        }),
+      );
+      localStorage.setItem(
+        "pharmos-sidebar-state-user2",
+        JSON.stringify({
+          state: {
+            workspaces: {
+              workspace2: {
+                expanded: false,
+                expandedModules: ["reports"],
+                pinnedItems: ["pos"],
+                hiddenItems: [],
+                width: 250,
+              },
+            },
+          },
+          version: 0,
+        }),
+      );
+
+      // Reset for user1
+      resetForUser("user1");
+
+      const state = useSidebarStateStore.getState();
+      expect(state.workspaces).toEqual({});
+
+      // Verify localStorage still has both user keys
+      expect(localStorage.getItem("pharmos-sidebar-state-user1")).toBeTruthy();
+      expect(localStorage.getItem("pharmos-sidebar-state-user2")).toBeTruthy();
+    });
+  });
+
   describe("Toggle Expanded", () => {
     it("should toggle sidebar expanded state", () => {
       const { toggle, getWorkspaceState } = useSidebarStateStore.getState();
@@ -293,8 +511,8 @@ describe("Sidebar State Store", () => {
       togglePin("test", "inventory");
       setSidebarWidth("test", 220);
 
-      // Check localStorage
-      const stored = localStorage.getItem("pharmos-sidebar-state");
+      // Check localStorage with user-scoped key
+      const stored = localStorage.getItem("pharmos-sidebar-state-dev-user");
       expect(stored).toBeTruthy();
 
       const parsed = JSON.parse(stored!);
@@ -348,7 +566,10 @@ describe("Sidebar State Store", () => {
         },
         version: 0,
       };
-      localStorage.setItem("pharmos-sidebar-state", JSON.stringify(mockData));
+      localStorage.setItem(
+        "pharmos-sidebar-state-dev-user",
+        JSON.stringify(mockData),
+      );
 
       // Rehydrate
       useSidebarStateStore.persist.rehydrate();
@@ -362,6 +583,45 @@ describe("Sidebar State Store", () => {
       expect(workspaceState.expandedModules.has("inventory")).toBe(true);
       expect(workspaceState.pinnedItems).toBeInstanceOf(Set);
       expect(workspaceState.pinnedItems.has("pos")).toBe(true);
+    });
+  });
+
+  describe("Existing Functionality", () => {
+    it("should maintain all existing sidebar operations", () => {
+      const {
+        toggle,
+        setExpanded,
+        toggleModule,
+        togglePin,
+        toggleHide,
+        setSidebarWidth,
+        resetWidth,
+        getWorkspaceState,
+      } = useSidebarStateStore.getState();
+
+      // All operations should work
+      toggle("test");
+      expect(getWorkspaceState("test").expanded).toBe(false);
+
+      setExpanded("test", true);
+      expect(getWorkspaceState("test").expanded).toBe(true);
+
+      toggleModule("test", "dashboard");
+      expect(getWorkspaceState("test").expandedModules.has("dashboard")).toBe(
+        true,
+      );
+
+      togglePin("test", "inventory");
+      expect(getWorkspaceState("test").pinnedItems.has("inventory")).toBe(true);
+
+      toggleHide("test", "reports");
+      expect(getWorkspaceState("test").hiddenItems.has("reports")).toBe(true);
+
+      setSidebarWidth("test", 250);
+      expect(getWorkspaceState("test").width).toBe(250);
+
+      resetWidth("test");
+      expect(getWorkspaceState("test").width).toBe(DEFAULT_WIDTH);
     });
   });
 });

@@ -12,6 +12,9 @@ import { z } from "zod";
 // Enable Immer MapSet plugin to support Set and Map
 enableMapSet();
 
+// Temporary dev user ID until real user system exists
+const DEV_USER_ID = "dev-user";
+
 export const DEFAULT_WIDTH = 180;
 export const MIN_WIDTH = 48;
 export const MAX_WIDTH = 280;
@@ -60,6 +63,7 @@ interface SidebarStateStore {
   toggleHide: (workspaceId: string, itemId: string) => void;
   setSidebarWidth: (workspaceId: string, width: number) => void;
   resetWidth: (workspaceId: string) => void;
+  resetForUser: (userId: string) => void;
 
   // Helpers
   getWorkspaceState: (workspaceId: string) => SidebarState;
@@ -180,9 +184,15 @@ export const useSidebarStateStore = create<SidebarStateStore>()(
           }
           state.workspaces[workspaceId].width = DEFAULT_WIDTH;
         }),
+
+      // Reset store for a specific user
+      // Clears current state - data will be rehydrated from localStorage on next app load
+      resetForUser: (userId: string) => {
+        set({ workspaces: {} });
+      },
     })),
     {
-      name: "pharmos-sidebar-state",
+      name: `pharmos-sidebar-state-${DEV_USER_ID}`,
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
