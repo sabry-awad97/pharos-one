@@ -1,0 +1,26 @@
+/**
+ * TabItem animations
+ * Implements smooth CSS animations for tab operations
+ */
+
+/* Tab container with hover and transform animations */
+.tabContainer {
+  /* Hover animation - background color transition */
+  transition: background-color var(--duration-instant) var(--ease-standard);
+}
+
+/* Close button animation */
+.closeButton {
+  transition: 
+    opacity var(--duration-instant) var(--ease-standard),
+    background-color var(--duration-instant) var(--ease-standard),
+    color var(--duration-instant) var(--ease-standard);
+}
+
+/* Accessibility: Disable animations when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tabContainer,
+  .closeButton {
+    transition: none;
+  }
+}

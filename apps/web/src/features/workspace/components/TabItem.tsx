@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { X, Pin } from "lucide-react";
 import type { Tab } from "../types";
+import styles from "./TabItem.module.css";
 
 export interface TabItemProps {
   /** Tab data */
@@ -37,6 +38,7 @@ export function TabItem({
 
   return (
     <div
+      className={styles.tabContainer}
       onClick={onClick}
       onContextMenu={onContextMenu}
       onMouseEnter={() => setHov(true)}
@@ -66,7 +68,6 @@ export function TabItem({
         marginBottom: active ? -1 : 0,
         gap: 6,
         overflow: "hidden",
-        transition: "background .1s",
         justifyContent: pinned ? "center" : "flex-start",
       }}
     >
@@ -160,6 +161,7 @@ export function TabItem({
       {/* Close button */}
       {!pinned && (
         <button
+          className={styles.closeButton}
           onClick={onClose}
           style={{
             width: 16,
@@ -175,7 +177,6 @@ export function TabItem({
             flexShrink: 0,
             padding: 0,
             opacity: hov || active ? 1 : 0,
-            transition: "opacity .1s",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background =

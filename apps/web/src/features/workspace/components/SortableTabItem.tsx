@@ -6,6 +6,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TabItem, type TabItemProps } from "./TabItem";
+import styles from "./SortableTabItem.module.css";
 
 export interface SortableTabItemProps extends TabItemProps {
   /** Unique identifier for sortable (tab.id) */
@@ -15,6 +16,7 @@ export interface SortableTabItemProps extends TabItemProps {
 /**
  * Sortable wrapper for TabItem
  * Provides drag-and-drop reordering with smooth animations
+ * Includes enter/exit animations for tab open/close
  */
 export function SortableTabItem({ id, ...tabItemProps }: SortableTabItemProps) {
   const {
@@ -34,7 +36,13 @@ export function SortableTabItem({ id, ...tabItemProps }: SortableTabItemProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      className={styles.sortableWrapper}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
       <TabItem {...tabItemProps} />
     </div>
   );
