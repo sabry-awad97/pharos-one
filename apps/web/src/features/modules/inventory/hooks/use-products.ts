@@ -51,7 +51,7 @@ export function useProducts() {
         reservedQuantity: 0,
         nearestExpiry: null as string | null,
         batchCount: 0,
-        stockStatus: "ok" as const,
+        stockStatus: "ok" as "ok" | "low" | "out" | "expiring",
       })),
   );
 

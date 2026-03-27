@@ -143,7 +143,9 @@ export function InventoryWorkspace() {
 
   // Calculate badge counts for sidebar
   const lowStockCount = useMemo(
-    () => products.filter((p) => p.stockStatus === "low").length,
+    () =>
+      products.filter((p) => p.stockStatus === "low" || p.stockStatus === "out")
+        .length,
     [products],
   );
   const expiringCount = useMemo(
@@ -162,7 +164,9 @@ export function InventoryWorkspace() {
   const filteredProducts = useMemo(() => {
     switch (activeFilter) {
       case "low-stock":
-        return products.filter((p) => p.stockStatus === "low");
+        return products.filter(
+          (p) => p.stockStatus === "low" || p.stockStatus === "out",
+        );
       case "expiring":
         return products.filter((p) => p.stockStatus === "expiring");
       case "prescription":

@@ -25,6 +25,8 @@ export interface TabItemProps {
   totalTabs?: number;
   /** Keyboard navigation handler */
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  /** Drag listeners from dnd-kit (applied to drag indicator only) */
+  dragListeners?: Record<string, Function>;
 }
 
 /**
@@ -40,6 +42,7 @@ export function TabItem({
   index,
   totalTabs,
   onKeyDown,
+  dragListeners,
 }: TabItemProps) {
   const [hov, setHov] = useState(false);
   const Icon = tab.icon;
@@ -101,6 +104,7 @@ export function TabItem({
       {/* Drag indicator */}
       {!pinned && hov && !active && (
         <div
+          {...dragListeners}
           style={{
             position: "absolute",
             left: 3,
@@ -110,6 +114,7 @@ export function TabItem({
             flexDirection: "column",
             gap: 2,
             opacity: 0.3,
+            cursor: "grab",
           }}
         >
           <div

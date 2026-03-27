@@ -33,6 +33,7 @@ export function SortableTabItem({ id, ...tabItemProps }: SortableTabItemProps) {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : 1,
+    pointerEvents: isDragging ? ("none" as const) : ("auto" as const),
   };
 
   return (
@@ -41,9 +42,8 @@ export function SortableTabItem({ id, ...tabItemProps }: SortableTabItemProps) {
       className={styles.sortableWrapper}
       style={style}
       {...attributes}
-      {...listeners}
     >
-      <TabItem {...tabItemProps} />
+      <TabItem {...tabItemProps} dragListeners={listeners} />
     </div>
   );
 }

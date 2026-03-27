@@ -4,10 +4,10 @@
  * keyboard reordering, and state persistence
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useTabs } from "../features/workspace/hooks/use-tabs";
-import type { Tab } from "../features/workspace/types";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { act } from "@testing-library/react";
+import { useTabsStore } from "@/features/workspace/stores/tabs-store";
+import type { Tab } from "@/features/workspace/types";
 import { LayoutDashboard, Package, ShoppingCart } from "lucide-react";
 
 const TAB_ORDER_KEY = "pharmos-tab-order";
@@ -39,6 +39,19 @@ describe("Tab Drag-and-Drop Reordering", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    // Reset store state
+    useTabsStore.setState({
+      state: {
+        tabs: [],
+        activeTabId: null,
+        splitView: {
+          enabled: false,
+          leftModuleId: null,
+          rightModuleId: null,
+        },
+      },
+      activeTabLabel: undefined,
+    });
   });
 
   afterEach(() => {
@@ -46,29 +59,34 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should reorder tabs when reorderTabs is called", () => {
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs, reorderTabs } = useTabsStore.getState();
 
-    // Initial order: Dashboard, Inventory, POS
-    expect(result.current.state.tabs[0].id).toBe("tab-1");
-    expect(result.current.state.tabs[1].id).toBe("tab-2");
-    expect(result.current.state.tabs[2].id).toBe("tab-3");
+    act(() => {
+      initializeTabs(mockTabs);
+    });
+
+    const initialTabs = useTabsStore.getState().state.tabs;
+    expect(initialTabs[0].id).toBe("tab-1");
+    expect(initialTabs[1].id).toBe("tab-2");
+    expect(initialTabs[2].id).toBe("tab-3");
 
     // Move Dashboard (index 0) to position 2
     act(() => {
-      result.current.reorderTabs(0, 2);
+      reorderTabs(0, 2);
     });
 
-    // New order: Inventory, POS, Dashboard
-    expect(result.current.state.tabs[0].id).toBe("tab-2");
-    expect(result.current.state.tabs[1].id).toBe("tab-3");
-    expect(result.current.state.tabs[2].id).toBe("tab-1");
+    const reorderedTabs = useTabsStore.getState().state.tabs;
+    expect(reorderedTabs[0].id).toBe("tab-2");
+    expect(reorderedTabs[1].id).toBe("tab-3");
+    expect(reorderedTabs[2].id).toBe("tab-1");
   });
 
   it("should persist tab order to localStorage", () => {
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs, reorderTabs } = useTabsStore.getState();
 
     act(() => {
-      result.current.reorderTabs(0, 2);
+      initializeTabs(mockTabs);
+      reorderTabs(0, 2);
     });
 
     // Check localStorage
@@ -79,41 +97,47 @@ describe("Tab Drag-and-Drop Reordering", () => {
     expect(orderArray).toEqual(["tab-2", "tab-3", "tab-1"]);
   });
 
-  it("should load tab order from localStorage on mount", () => {
+  it("should load tab order from localStorage on initialization", () => {
     // Pre-populate localStorage with custom order
     const customOrder = ["tab-3", "tab-1", "tab-2"];
     localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(customOrder));
 
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs } = useTabsStore.getState();
 
-    // Wait for useEffect to run
     act(() => {
-      // Trigger re-render
+      initializeTabs(mockTabs);
     });
 
     // Tabs should be reordered based on localStorage
-    expect(result.current.state.tabs[0].id).toBe("tab-3");
-    expect(result.current.state.tabs[1].id).toBe("tab-1");
-    expect(result.current.state.tabs[2].id).toBe("tab-2");
+    const tabs = useTabsStore.getState().state.tabs;
+    expect(tabs[0].id).toBe("tab-3");
+    expect(tabs[1].id).toBe("tab-1");
+    expect(tabs[2].id).toBe("tab-2");
   });
 
   it("should handle invalid localStorage data gracefully", () => {
     // Set invalid JSON in localStorage
     localStorage.setItem(TAB_ORDER_KEY, "invalid-json");
 
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs } = useTabsStore.getState();
+
+    act(() => {
+      initializeTabs(mockTabs);
+    });
 
     // Should use initial tab order
-    expect(result.current.state.tabs[0].id).toBe("tab-1");
-    expect(result.current.state.tabs[1].id).toBe("tab-2");
-    expect(result.current.state.tabs[2].id).toBe("tab-3");
+    const tabs = useTabsStore.getState().state.tabs;
+    expect(tabs[0].id).toBe("tab-1");
+    expect(tabs[1].id).toBe("tab-2");
+    expect(tabs[2].id).toBe("tab-3");
   });
 
   it("should update localStorage when tabs are added", () => {
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs, addTab } = useTabsStore.getState();
 
     act(() => {
-      result.current.addTab({
+      initializeTabs(mockTabs);
+      addTab({
         label: "Reports",
         icon: LayoutDashboard,
         module: "reports",
@@ -129,10 +153,11 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should update localStorage when tabs are closed", () => {
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs, closeTab } = useTabsStore.getState();
 
     act(() => {
-      result.current.closeTab("tab-2");
+      initializeTabs(mockTabs);
+      closeTab("tab-2");
     });
 
     const savedOrder = localStorage.getItem(TAB_ORDER_KEY);
@@ -144,10 +169,15 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should maintain separate sections for pinned and regular tabs", () => {
-    const { result } = renderHook(() => useTabs(mockTabs));
+    const { initializeTabs } = useTabsStore.getState();
 
-    const pinnedTabs = result.current.state.tabs.filter((t) => t.pinned);
-    const regularTabs = result.current.state.tabs.filter((t) => !t.pinned);
+    act(() => {
+      initializeTabs(mockTabs);
+    });
+
+    const tabs = useTabsStore.getState().state.tabs;
+    const pinnedTabs = tabs.filter((t: Tab) => t.pinned);
+    const regularTabs = tabs.filter((t: Tab) => !t.pinned);
 
     expect(pinnedTabs).toHaveLength(1);
     expect(pinnedTabs[0].id).toBe("tab-2");
@@ -182,18 +212,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
       },
     ];
 
-    const { result } = renderHook(() => useTabs(tabsWithMultiplePinned));
+    const { initializeTabs, reorderTabs } = useTabsStore.getState();
 
-    // Reorder pinned tabs (swap Dashboard and Inventory)
     act(() => {
-      result.current.reorderTabs(0, 1);
+      initializeTabs(tabsWithMultiplePinned);
+      // Reorder pinned tabs (swap Dashboard and Inventory)
+      reorderTabs(0, 1);
     });
 
+    const tabs = useTabsStore.getState().state.tabs;
     // Pinned tabs should be reordered
-    expect(result.current.state.tabs[0].id).toBe("tab-2");
-    expect(result.current.state.tabs[1].id).toBe("tab-1");
+    expect(tabs[0].id).toBe("tab-2");
+    expect(tabs[1].id).toBe("tab-1");
     // Regular tab should remain in same position
-    expect(result.current.state.tabs[2].id).toBe("tab-3");
+    expect(tabs[2].id).toBe("tab-3");
   });
 
   it("should reorder within regular section independently", () => {
@@ -221,41 +253,28 @@ describe("Tab Drag-and-Drop Reordering", () => {
       },
     ];
 
-    const { result } = renderHook(() => useTabs(tabsWithMultipleRegular));
+    const { initializeTabs, reorderTabs } = useTabsStore.getState();
 
-    // Reorder regular tabs (swap Inventory and POS)
     act(() => {
-      result.current.reorderTabs(1, 2);
+      initializeTabs(tabsWithMultipleRegular);
+      // Reorder regular tabs (swap Inventory and POS)
+      reorderTabs(1, 2);
     });
 
+    const tabs = useTabsStore.getState().state.tabs;
     // Pinned tab should remain in same position
-    expect(result.current.state.tabs[0].id).toBe("tab-1");
+    expect(tabs[0].id).toBe("tab-1");
     // Regular tabs should be reordered
-    expect(result.current.state.tabs[1].id).toBe("tab-3");
-    expect(result.current.state.tabs[2].id).toBe("tab-2");
+    expect(tabs[1].id).toBe("tab-3");
+    expect(tabs[2].id).toBe("tab-2");
   });
 });
 
 describe("Tab Keyboard Reordering", () => {
   it("should provide reorderTabs method for keyboard navigation", () => {
-    const mockTabs: Tab[] = [
-      {
-        id: "tab-1",
-        label: "Dashboard",
-        icon: LayoutDashboard,
-        module: "dashboard",
-      },
-      {
-        id: "tab-2",
-        label: "Inventory",
-        icon: Package,
-        module: "inventory",
-      },
-    ];
+    const { reorderTabs } = useTabsStore.getState();
 
-    const { result } = renderHook(() => useTabs(mockTabs));
-
-    expect(result.current.reorderTabs).toBeDefined();
-    expect(typeof result.current.reorderTabs).toBe("function");
+    expect(reorderTabs).toBeDefined();
+    expect(typeof reorderTabs).toBe("function");
   });
 });

@@ -1288,7 +1288,7 @@ function AdherenceBar({
             top: "-2px",
             bottom: "-2px",
             width: "1px",
-            background: W.borderStrong || "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.3)",
           }}
         />
         <span
