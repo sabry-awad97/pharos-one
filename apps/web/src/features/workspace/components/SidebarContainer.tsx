@@ -268,15 +268,13 @@ const SidebarContainer = React.forwardRef<
           data-testid="sidebar-container"
           className={className}
           style={{
-            background: "var(--color-background)",
-            borderRight: "1px solid var(--color-border)",
+            background: "#ffffff",
+            borderRight: "1px solid #d1d1d1",
             display: "flex",
             flexDirection: "column",
             flexShrink: 0,
             width: expanded ? width : 48,
-            transition: isResizing
-              ? "none"
-              : "width var(--duration-fast) var(--ease-standard)",
+            transition: isResizing ? "none" : "width 0.15s ease",
             position: "relative",
             zIndex: 5,
           }}
@@ -296,10 +294,10 @@ const SidebarContainer = React.forwardRef<
               right: 0,
               width: 2,
               height: "100%",
-              cursor: expanded ? "ew-resize" : "default",
+              cursor: "ew-resize",
               background:
                 hoveredHandle || isResizing ? "#91c9f7" : "transparent",
-              transition: "background var(--duration-instant)",
+              transition: "background 0.1s",
               zIndex: 15,
             }}
           />
@@ -412,7 +410,7 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, SidebarFooterProps>(
         className={className}
         style={{
           flexShrink: 0,
-          borderTop: "1px solid var(--color-border)",
+          borderTop: "1px solid #e8e8e8",
         }}
       >
         {children}

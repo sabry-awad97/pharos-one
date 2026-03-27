@@ -7,7 +7,12 @@
 
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import { TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 
 // ============================================================================
 // SidebarNav
@@ -173,62 +178,107 @@ export function SidebarNavGroup({
 
   return (
     <div data-testid="sidebar-nav-group">
-      <button
-        type="button"
-        aria-label={label}
-        aria-expanded={expanded}
-        onClick={() => setExpanded((v) => !v)}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          width: "100%",
-          gap: 6,
-          height: 28,
-          padding: "0 12px",
-          border: "none",
-          background: hovered ? "#f5f5f5" : "transparent",
-          cursor: "default",
-          fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-          transition: "background .1s",
-        }}
-      >
-        <ChevronRight
-          aria-hidden
+      <div style={{ position: "relative" }}>
+        <button
+          type="button"
+          aria-label={label}
+          aria-expanded={expanded}
+          onClick={() => setExpanded((v) => !v)}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           style={{
-            width: 12,
-            height: 12,
-            color: "#616161",
-            flexShrink: 0,
-            transform: expanded ? "rotate(90deg)" : "none",
-            transition: "transform 0.2s ease",
-          }}
-        />
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.6px",
-            color: "#888",
-            flex: 1,
-            textAlign: "left",
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            height: 28,
+            padding: "0 12px",
+            border: "none",
+            background: hovered ? "#f5f5f5" : "transparent",
+            cursor: "default",
+            fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+            transition: "background .1s",
           }}
         >
-          {label}
-        </span>
-      </button>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.6px",
+              color: "#888",
+              flex: 1,
+              textAlign: "left",
+            }}
+          >
+            {label}
+          </span>
+        </button>
 
-      {expanded && (
+        {/* Chevron button positioned absolutely on the right */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "transparent";
+          }}
+          style={{
+            position: "absolute",
+            right: 8,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 20,
+            height: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "transparent",
+            border: "none",
+            cursor: "default",
+            color: "#616161",
+            transition: "transform 0.2s ease, background 0.1s ease",
+            borderRadius: "50%",
+          }}
+        >
+          <ChevronDown
+            style={{
+              width: 12,
+              height: 12,
+              transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
+              transition: "transform 0.2s ease",
+            }}
+          />
+        </button>
+      </div>
+
+      {/* Sub-items with grid animation like global sidebar */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: expanded ? "1fr" : "0fr",
+          opacity: expanded ? 1 : 0,
+          transition: "all 0.2s ease-in-out",
+          marginTop: expanded ? 4 : 0,
+          marginBottom: expanded ? 4 : 0,
+        }}
+      >
         <div
           style={{
-            paddingLeft: 8,
+            overflow: "hidden",
+            paddingLeft: 28,
+            paddingRight: 8,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {children}
         </div>
-      )}
+      </div>
     </div>
   );
 }
