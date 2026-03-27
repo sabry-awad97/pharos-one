@@ -4,7 +4,7 @@ import {
   useNavigate,
   useMatches,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Save,
   RotateCcw,
@@ -24,12 +24,14 @@ import {
   type TabStatistics,
 } from "@/features/shell";
 import { UserSwitcher } from "@/features/auth/components/UserSwitcher";
+import { useUserProfileStore } from "@/features/auth/stores/user-profile-store";
 import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 import { TabBar } from "@/features/workspace/components/TabBar";
 import { EmptyWorkspaceState } from "@/features/workspace/components/EmptyWorkspaceState";
+import { WorkspaceTemplatePicker } from "@/features/workspace/components/WorkspaceTemplatePicker";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
-import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
-import type { WorkspaceTemplate } from "@/features/workspace/constants";
+import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants/workspace-templates";
+import type { WorkspaceTemplate } from "@/features/workspace/constants/workspace-templates";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomeComponent,
@@ -49,6 +51,31 @@ function HomeComponent() {
   const addTab = useTabsStore((store) => store.addTab);
   const toggleSplitView = useTabsStore((store) => store.toggleSplitView);
   const reorderTabs = useTabsStore((store) => store.reorderTabs);
+
+  // User profile store
+  const currentUserId = useUserProfileStore((s) => s.currentUserId);
+  const getCurrentUser = useUserProfileStore((s) => s.getCurrentUser);
+  const setShowTemplatePicker = useUserProfileStore(
+    (s) => s.setShowTemplatePicker,
+  );
+
+  // Template picker state
+  const [showPicker, setShowPicker] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  // Derive showTemplatePickerOnStartup from current user preferences
+  const currentUser = getCurrentUser();
+  const showTemplatePickerOnStartup =
+    currentUser?.preferences.showTemplatePickerOnStartup ?? true;
+
+  // Show picker when tabs are empty and preference allows
+  useEffect(() => {
+    if (state.tabs.length === 0 && showTemplatePickerOnStartup) {
+      setShowPicker(true);
+    } else if (state.tabs.length > 0) {
+      setShowPicker(false);
+    }
+  }, [state.tabs.length, showTemplatePickerOnStartup]);
 
   // Use the activeTabId from state, not derived from URL
   // This allows multiple tabs with the same module (e.g., POS Terminal 1 & 2)
@@ -88,6 +115,41 @@ function HomeComponent() {
       module: "dashboard",
     });
     navigate({ to: "/home/dashboard" });
+  };
+
+  // Handler for template selection from picker
+  const handleTemplateSelect = (templateId: string) => {
+    const template = WORKSPACE_TEMPLATES.find((t) => t.id === templateId);
+    if (template) {
+      template.tabs.forEach((tab) => {
+        addTab({
+          label: tab.label,
+          icon: tab.icon,
+          module: tab.module,
+          pinned: tab.pinned,
+        });
+      });
+      if (template.tabs.length > 0) {
+        navigate({ to: `/home/${template.tabs[0].module}` });
+      }
+    }
+    if (dontShowAgain && currentUserId) {
+      setShowTemplatePicker(currentUserId, false);
+    }
+    setShowPicker(false);
+  };
+
+  // Handler for skip button in picker
+  const handlePickerSkip = () => {
+    setShowPicker(false);
+  };
+
+  // Handler for "don't show again" checkbox change
+  const handleDontShowAgainChange = (checked: boolean) => {
+    setDontShowAgain(checked);
+    if (checked && currentUserId) {
+      setShowTemplatePicker(currentUserId, false);
+    }
   };
 
   // Tab statistics for status bar
@@ -188,9 +250,7 @@ function HomeComponent() {
         {state.tabs.length === 0 ? (
           <EmptyWorkspaceState
             onOpenDashboard={handleOpenDashboard}
-            onChooseTemplate={() =>
-              console.log("Template picker coming in Phase 4")
-            }
+            onChooseTemplate={() => setShowPicker(true)}
           />
         ) : (
           <>
@@ -236,6 +296,15 @@ function HomeComponent() {
       <StatusBar
         statistics={statistics}
         keyboardShortcuts="Ctrl+T New · Ctrl+W Close · Ctrl+Tab Switch · Ctrl+\ Split"
+      />
+
+      {/* Workspace template picker */}
+      <WorkspaceTemplatePicker
+        open={showPicker}
+        onSelect={handleTemplateSelect}
+        onSkip={handlePickerSkip}
+        dontShowAgain={dontShowAgain}
+        onDontShowAgainChange={handleDontShowAgainChange}
       />
     </div>
   );

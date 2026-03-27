@@ -14,12 +14,20 @@ import { z } from "zod";
 export type UserRole = "pharmacist" | "cashier" | "manager" | "admin";
 
 /**
+ * User preferences interface
+ */
+export interface UserPreferences {
+  showTemplatePickerOnStartup: boolean;
+}
+
+/**
  * User profile interface
  */
 export interface UserProfile {
   id: string; // UUID
   name: string; // Display name
   role: UserRole;
+  preferences: UserPreferences;
 }
 
 /**
@@ -29,6 +37,11 @@ const UserProfileSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   role: z.enum(["pharmacist", "cashier", "manager", "admin"]),
+  preferences: z
+    .object({
+      showTemplatePickerOnStartup: z.boolean(),
+    })
+    .default({ showTemplatePickerOnStartup: true }),
 });
 
 /**
@@ -58,6 +71,7 @@ interface UserProfileStore {
     userId: string,
     updates: Partial<Omit<UserProfile, "id">>,
   ) => void;
+  setShowTemplatePicker: (userId: string, show: boolean) => void;
 
   // Helpers
   getCurrentUser: () => UserProfile | null;
@@ -80,6 +94,9 @@ export const useUserProfileStore = create<UserProfileStore>()(
           id: crypto.randomUUID(),
           name,
           role,
+          preferences: {
+            showTemplatePickerOnStartup: true,
+          },
         };
 
         set((state) => {
@@ -131,6 +148,18 @@ export const useUserProfileStore = create<UserProfileStore>()(
             if (updates.role !== undefined) {
               user.role = updates.role;
             }
+            if (updates.preferences !== undefined) {
+              user.preferences = { ...user.preferences, ...updates.preferences };
+            }
+          }
+        }),
+
+      // Set showTemplatePickerOnStartup preference for a user
+      setShowTemplatePicker: (userId: string, show: boolean) =>
+        set((state) => {
+          const user = state.users.find((u) => u.id === userId);
+          if (user) {
+            user.preferences.showTemplatePickerOnStartup = show;
           }
         }),
 
