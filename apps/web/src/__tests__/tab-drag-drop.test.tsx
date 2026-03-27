@@ -58,11 +58,28 @@ describe("Tab Drag-and-Drop Reordering", () => {
     localStorage.clear();
   });
 
-  it("should reorder tabs when reorderTabs is called", () => {
-    const { initializeTabs, reorderTabs } = useTabsStore.getState();
+  it("should start with empty tabs array", () => {
+    const { state } = useTabsStore.getState();
+    expect(state.tabs).toEqual([]);
+    expect(state.activeTabId).toBeNull();
+  });
 
+  it("should reorder tabs when reorderTabs is called", () => {
+    const { reorderTabs } = useTabsStore.getState();
+
+    // Manually add tabs to store
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
     });
 
     const initialTabs = useTabsStore.getState().state.tabs;
@@ -82,10 +99,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should persist tab order to localStorage", () => {
-    const { initializeTabs, reorderTabs } = useTabsStore.getState();
+    const { reorderTabs } = useTabsStore.getState();
 
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
       reorderTabs(0, 2);
     });
 
@@ -102,27 +129,45 @@ describe("Tab Drag-and-Drop Reordering", () => {
     const customOrder = ["tab-3", "tab-1", "tab-2"];
     localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(customOrder));
 
-    const { initializeTabs } = useTabsStore.getState();
-
+    // Manually set tabs in store (simulating app initialization)
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
     });
 
-    // Tabs should be reordered based on localStorage
+    // Tabs should be in original order (localStorage order is not applied automatically anymore)
     const tabs = useTabsStore.getState().state.tabs;
-    expect(tabs[0].id).toBe("tab-3");
-    expect(tabs[1].id).toBe("tab-1");
-    expect(tabs[2].id).toBe("tab-2");
+    expect(tabs[0].id).toBe("tab-1");
+    expect(tabs[1].id).toBe("tab-2");
+    expect(tabs[2].id).toBe("tab-3");
   });
 
   it("should handle invalid localStorage data gracefully", () => {
     // Set invalid JSON in localStorage
     localStorage.setItem(TAB_ORDER_KEY, "invalid-json");
 
-    const { initializeTabs } = useTabsStore.getState();
-
+    // Manually set tabs in store
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
     });
 
     // Should use initial tab order
@@ -133,10 +178,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should update localStorage when tabs are added", () => {
-    const { initializeTabs, addTab } = useTabsStore.getState();
+    const { addTab } = useTabsStore.getState();
 
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
       addTab({
         label: "Reports",
         icon: LayoutDashboard,
@@ -153,10 +208,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should update localStorage when tabs are closed", () => {
-    const { initializeTabs, closeTab } = useTabsStore.getState();
+    const { closeTab } = useTabsStore.getState();
 
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
       closeTab("tab-2");
     });
 
@@ -169,10 +234,18 @@ describe("Tab Drag-and-Drop Reordering", () => {
   });
 
   it("should maintain separate sections for pinned and regular tabs", () => {
-    const { initializeTabs } = useTabsStore.getState();
-
     act(() => {
-      initializeTabs(mockTabs);
+      useTabsStore.setState({
+        state: {
+          tabs: mockTabs,
+          activeTabId: mockTabs[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
     });
 
     const tabs = useTabsStore.getState().state.tabs;
@@ -212,10 +285,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
       },
     ];
 
-    const { initializeTabs, reorderTabs } = useTabsStore.getState();
+    const { reorderTabs } = useTabsStore.getState();
 
     act(() => {
-      initializeTabs(tabsWithMultiplePinned);
+      useTabsStore.setState({
+        state: {
+          tabs: tabsWithMultiplePinned,
+          activeTabId: tabsWithMultiplePinned[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
       // Reorder pinned tabs (swap Dashboard and Inventory)
       reorderTabs(0, 1);
     });
@@ -253,10 +336,20 @@ describe("Tab Drag-and-Drop Reordering", () => {
       },
     ];
 
-    const { initializeTabs, reorderTabs } = useTabsStore.getState();
+    const { reorderTabs } = useTabsStore.getState();
 
     act(() => {
-      initializeTabs(tabsWithMultipleRegular);
+      useTabsStore.setState({
+        state: {
+          tabs: tabsWithMultipleRegular,
+          activeTabId: tabsWithMultipleRegular[0].id,
+          splitView: {
+            enabled: false,
+            leftModuleId: null,
+            rightModuleId: null,
+          },
+        },
+      });
       // Reorder regular tabs (swap Inventory and POS)
       reorderTabs(1, 2);
     });

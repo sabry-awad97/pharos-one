@@ -34,9 +34,6 @@ interface TabsStore {
     rightModuleId: string | null,
   ) => void;
   reorderTabs: (fromIndex: number, toIndex: number) => void;
-
-  // Initialization
-  initializeTabs: (initialTabs: Tab[]) => void;
 }
 
 /**
@@ -78,34 +75,6 @@ export const useTabsStore = create<TabsStore>()(
       },
     },
     activeTabLabel: undefined,
-
-    // Initialize tabs (called on mount with initial tabs)
-    initializeTabs: (initialTabs: Tab[]) =>
-      set((store) => {
-        // Only initialize if no tabs exist
-        if (store.state.tabs.length === 0 && initialTabs.length > 0) {
-          // Load saved tab order
-          const savedOrder = loadTabOrder();
-
-          // Reorder initial tabs based on saved order
-          if (savedOrder.length > 0) {
-            const orderedTabs = [...initialTabs].sort((a, b) => {
-              const aIndex = savedOrder.indexOf(a.id);
-              const bIndex = savedOrder.indexOf(b.id);
-              // If tab not in saved order, put it at the end
-              if (aIndex === -1) return 1;
-              if (bIndex === -1) return -1;
-              return aIndex - bIndex;
-            });
-            store.state.tabs = orderedTabs;
-          } else {
-            store.state.tabs = initialTabs;
-          }
-
-          store.state.activeTabId = initialTabs[0]?.id ?? null;
-          store.activeTabLabel = initialTabs[0]?.label;
-        }
-      }),
 
     // Add a new tab
     addTab: (tabData: Omit<Tab, "id">) => {
@@ -277,7 +246,8 @@ export function calculateTabOverflow(
 
   // In scrollable mode all tabs are "visible" (scrolled into view);
   // in dropdown mode only the first `visibleCount` are shown directly.
-  const visibleTabs = mode === "scrollable" ? tabs : tabs.slice(0, visibleCount);
+  const visibleTabs =
+    mode === "scrollable" ? tabs : tabs.slice(0, visibleCount);
   const overflowTabs = mode === "dropdown" ? tabs.slice(visibleCount) : [];
 
   return {

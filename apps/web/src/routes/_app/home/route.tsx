@@ -25,72 +25,14 @@ import {
 } from "@/features/shell";
 import { useTabsStore } from "@/features/workspace/stores/tabs-store";
 import { TabBar } from "@/features/workspace/components/TabBar";
+import { EmptyWorkspaceState } from "@/features/workspace/components/EmptyWorkspaceState";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
 import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
-import type { Tab } from "@/features/workspace/types";
 import type { WorkspaceTemplate } from "@/features/workspace/constants";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomeComponent,
 });
-
-// Initial tabs matching the old mockup exactly
-const INITIAL_TABS: Tab[] = [
-  {
-    id: crypto.randomUUID(),
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    module: "dashboard",
-    unsaved: false,
-    pinned: false,
-    color: "#0078d4",
-  },
-  {
-    id: crypto.randomUUID(),
-    label: "Inventory",
-    icon: Package,
-    module: "inventory",
-    unsaved: false,
-    pinned: true,
-    color: "#107c10",
-  },
-  {
-    id: crypto.randomUUID(),
-    label: "POS – Terminal 1",
-    icon: ShoppingCart,
-    module: "pos",
-    unsaved: false,
-    pinned: false,
-    color: "#6b69d6",
-  },
-  {
-    id: crypto.randomUUID(),
-    label: "POS – Terminal 2",
-    icon: ShoppingCart,
-    module: "pos",
-    unsaved: true,
-    pinned: false,
-    color: "#6b69d6",
-  },
-  {
-    id: crypto.randomUUID(),
-    label: "Reports",
-    icon: BarChart2,
-    module: "reports",
-    unsaved: false,
-    pinned: false,
-    color: "#c43501",
-  },
-  {
-    id: crypto.randomUUID(),
-    label: "Purchase Orders",
-    icon: Truck,
-    module: "purchases",
-    unsaved: false,
-    pinned: false,
-    color: "#b8860b",
-  },
-];
 
 function HomeComponent() {
   const navigate = useNavigate();
@@ -99,7 +41,6 @@ function HomeComponent() {
 
   // Use Zustand store directly
   const state = useTabsStore((store) => store.state);
-  const initializeTabs = useTabsStore((store) => store.initializeTabs);
   const setActiveTab = useTabsStore((store) => store.setActiveTab);
   const closeTab = useTabsStore((store) => store.closeTab);
   const togglePin = useTabsStore((store) => store.togglePin);
@@ -107,11 +48,6 @@ function HomeComponent() {
   const addTab = useTabsStore((store) => store.addTab);
   const toggleSplitView = useTabsStore((store) => store.toggleSplitView);
   const reorderTabs = useTabsStore((store) => store.reorderTabs);
-
-  // Initialize tabs on mount
-  useEffect(() => {
-    initializeTabs(INITIAL_TABS);
-  }, [initializeTabs]);
 
   // Use the activeTabId from state, not derived from URL
   // This allows multiple tabs with the same module (e.g., POS Terminal 1 & 2)
@@ -122,11 +58,6 @@ function HomeComponent() {
   const pinnedTab =
     state.tabs.find((t) => t.pinned) ??
     state.tabs.find((t) => t.module === "inventory");
-
-  // If no tabs yet (initial render before useEffect), show loading or return early
-  if (!activeTab) {
-    return <div>Loading...</div>;
-  }
 
   // Handler for tab click - navigate to module route
   const handleTabClick = (tabId: string) => {
@@ -146,6 +77,16 @@ function HomeComponent() {
     });
     // Navigate to the new tab's module
     navigate({ to: `/home/${template.id}` });
+  };
+
+  // Handler for opening dashboard from empty state
+  const handleOpenDashboard = () => {
+    addTab({
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      module: "dashboard",
+    });
+    navigate({ to: "/home/dashboard" });
   };
 
   // Tab statistics for status bar
@@ -241,40 +182,51 @@ function HomeComponent() {
           overflow: "hidden",
         }}
       >
-        {/* Tab Bar */}
-        <TabBar
-          tabs={state.tabs}
-          activeTabId={activeTab.id}
-          onTabClick={handleTabClick}
-          onTabClose={closeTab}
-          onTabPin={togglePin}
-          onTabDuplicate={duplicateTab}
-          onAddTab={handleAddTab}
-          splitViewEnabled={state.splitView.enabled}
-          onSplitViewToggle={toggleSplitView}
-          onTabReorder={reorderTabs}
-        />
+        {state.tabs.length === 0 ? (
+          <EmptyWorkspaceState
+            onOpenDashboard={handleOpenDashboard}
+            onChooseTemplate={() =>
+              console.log("Template picker coming in Phase 4")
+            }
+          />
+        ) : (
+          <>
+            {/* Tab Bar */}
+            <TabBar
+              tabs={state.tabs}
+              activeTabId={activeTab?.id ?? null}
+              onTabClick={handleTabClick}
+              onTabClose={closeTab}
+              onTabPin={togglePin}
+              onTabDuplicate={duplicateTab}
+              onAddTab={handleAddTab}
+              splitViewEnabled={state.splitView.enabled}
+              onSplitViewToggle={toggleSplitView}
+              onTabReorder={reorderTabs}
+            />
 
-        {/* Content area - Each workspace renders its own sidebar */}
-        <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-          <Outlet />
-          {state.splitView.enabled && pinnedTab && (
-            <>
-              <div
-                style={{
-                  width: 1,
-                  background: "#e0e0e0",
-                  flexShrink: 0,
-                }}
-              />
-              <WorkspaceContainer
-                moduleId={pinnedTab.module}
-                label={pinnedTab.label}
-                split={true}
-              />
-            </>
-          )}
-        </div>
+            {/* Content area - Each workspace renders its own sidebar */}
+            <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+              <Outlet />
+              {state.splitView.enabled && pinnedTab && (
+                <>
+                  <div
+                    style={{
+                      width: 1,
+                      background: "#e0e0e0",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <WorkspaceContainer
+                    moduleId={pinnedTab.module}
+                    label={pinnedTab.label}
+                    split={true}
+                  />
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Status bar with statistics */}
