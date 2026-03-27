@@ -60,6 +60,7 @@ export interface SidebarNavItemProps {
 /**
  * Individual navigation item in the sidebar.
  * Supports icon, badge, active state, and keyboard navigation.
+ * Matches global sidebar styling exactly.
  */
 export function SidebarNavItem({
   icon: Icon,
@@ -84,28 +85,28 @@ export function SidebarNavItem({
         display: "flex",
         alignItems: "center",
         width: "100%",
-        gap: 8,
-        height: 32,
-        padding: "0 12px",
+        gap: 10,
+        height: 36,
+        padding: "6px 12px",
         border: "none",
-        borderLeft: active ? "3px solid var(--sidebar-primary, #0078d4)" : "3px solid transparent",
+        borderLeft: active ? "3px solid #0078d4" : "3px solid transparent",
         background: active
-          ? "var(--sidebar-accent, rgba(0,120,212,0.1))"
+          ? "rgba(0,120,212,0.1)"
           : hovered
-            ? "var(--surface-hover, #f0f0f0)"
+            ? "#f5f5f5"
             : "transparent",
         cursor: "default",
-        fontFamily: "var(--font-sans, 'Segoe UI', system-ui, sans-serif)",
-        transition: "background var(--duration-instant, 100ms)",
+        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+        transition: "background .1s",
       }}
     >
       {Icon && (
         <Icon
           aria-hidden
           style={{
-            width: 14,
-            height: 14,
-            color: active ? "var(--sidebar-primary, #0078d4)" : "var(--sidebar-foreground, #616161)",
+            width: 16,
+            height: 16,
+            color: active ? "#0078d4" : "#616161",
             flexShrink: 0,
           }}
         />
@@ -119,7 +120,7 @@ export function SidebarNavItem({
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
           fontWeight: active ? 600 : 400,
-          color: active ? "var(--sidebar-primary, #0078d4)" : "var(--foreground, #333)",
+          color: active ? "#0078d4" : "#333",
         }}
       >
         {label}
@@ -129,13 +130,11 @@ export function SidebarNavItem({
           style={{
             fontSize: 10,
             fontWeight: 600,
-            color: active ? "var(--sidebar-primary, #0078d4)" : "var(--muted-foreground, #616161)",
-            background: active
-              ? "var(--sidebar-accent, rgba(0,120,212,0.1))"
-              : "var(--muted, #f0f0f0)",
-            padding: "1px 5px",
+            color: active ? "#0078d4" : "#616161",
+            background: active ? "rgba(0,120,212,0.1)" : "#f0f0f0",
+            padding: "2px 6px",
             borderRadius: 10,
-            minWidth: 18,
+            minWidth: 20,
             textAlign: "center",
             flexShrink: 0,
           }}
@@ -189,10 +188,10 @@ export function SidebarNavGroup({
           height: 28,
           padding: "0 12px",
           border: "none",
-          background: hovered ? "var(--surface-hover, #f0f0f0)" : "transparent",
+          background: hovered ? "#f5f5f5" : "transparent",
           cursor: "default",
-          fontFamily: "var(--font-sans, 'Segoe UI', system-ui, sans-serif)",
-          transition: "background var(--duration-instant, 100ms)",
+          fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+          transition: "background .1s",
         }}
       >
         <ChevronRight
@@ -200,10 +199,10 @@ export function SidebarNavGroup({
           style={{
             width: 12,
             height: 12,
-            color: "var(--muted-foreground, #616161)",
+            color: "#616161",
             flexShrink: 0,
             transform: expanded ? "rotate(90deg)" : "none",
-            transition: "transform var(--duration-fast, 150ms) var(--ease-standard, ease)",
+            transition: "transform 0.2s ease",
           }}
         />
         <span
@@ -212,7 +211,7 @@ export function SidebarNavGroup({
             fontWeight: 600,
             textTransform: "uppercase",
             letterSpacing: "0.6px",
-            color: "var(--muted-foreground, #888)",
+            color: "#888",
             flex: 1,
             textAlign: "left",
           }}
@@ -264,7 +263,7 @@ export function SidebarStats({ stats }: SidebarStatsProps) {
         padding: "8px 12px",
         display: "flex",
         flexDirection: "column",
-        gap: 6,
+        gap: 3,
       }}
     >
       {stats.map((stat) => (
@@ -280,18 +279,18 @@ export function SidebarStats({ stats }: SidebarStatsProps) {
           <span
             style={{
               fontSize: 11,
-              color: "var(--muted-foreground, #888)",
+              color: "#616161",
               flex: 1,
             }}
           >
             {stat.label}
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 600,
-                color: "var(--foreground, #1a1a1a)",
+                color: "#1a1a1a",
               }}
             >
               {stat.value}
@@ -299,13 +298,21 @@ export function SidebarStats({ stats }: SidebarStatsProps) {
             {stat.trend === "up" && (
               <TrendingUp
                 aria-label="trending up"
-                style={{ width: 11, height: 11, color: "var(--success, #16a34a)" }}
+                style={{
+                  width: 11,
+                  height: 11,
+                  color: "#107c10",
+                }}
               />
             )}
             {stat.trend === "down" && (
               <TrendingDown
                 aria-label="trending down"
-                style={{ width: 11, height: 11, color: "var(--destructive, #dc2626)" }}
+                style={{
+                  width: 11,
+                  height: 11,
+                  color: "#a4262c",
+                }}
               />
             )}
           </div>
