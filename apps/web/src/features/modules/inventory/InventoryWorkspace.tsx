@@ -37,6 +37,10 @@ import {
 } from "@/components/data-table";
 import type { ProductStockSummary } from "./schema";
 import { useViewState } from "@/features/shell";
+import {
+  InventorySidebar,
+  type InventoryFilter,
+} from "./components/InventorySidebar";
 
 const STORAGE_KEY = "inventory-page-size";
 
@@ -103,6 +107,9 @@ export function InventoryWorkspace() {
   const { data: products = [], isLoading, error } = useProducts();
   const { density } = useViewState();
 
+  // Sidebar filter state
+  const [activeFilter, setActiveFilter] = useState<InventoryFilter>("all");
+
   const [batchDetailsPanelProductId, setBatchDetailsPanelProductId] = useState<
     number | null
   >(null);
@@ -133,6 +140,40 @@ export function InventoryWorkspace() {
       stockMovementsPanelProductId,
     );
   }, [stockMovementsPanelProductId]);
+
+  // Calculate badge counts for sidebar
+  const lowStockCount = useMemo(
+    () => products.filter((p) => p.stockStatus === "low").length,
+    [products],
+  );
+  const expiringCount = useMemo(
+    () => products.filter((p) => p.stockStatus === "expiring").length,
+    [products],
+  );
+  const totalValue = useMemo(
+    () =>
+      formatCurrency(
+        products.reduce((sum, p) => sum + p.basePrice * p.availableQuantity, 0),
+      ),
+    [products],
+  );
+
+  // Filter products based on active filter
+  const filteredProducts = useMemo(() => {
+    switch (activeFilter) {
+      case "low-stock":
+        return products.filter((p) => p.stockStatus === "low");
+      case "expiring":
+        return products.filter((p) => p.stockStatus === "expiring");
+      case "prescription":
+        return products.filter((p) => p.category?.name === "Prescription");
+      case "otc":
+        return products.filter((p) => p.category?.name === "OTC");
+      case "all":
+      default:
+        return products;
+    }
+  }, [products, activeFilter]);
 
   // Define columns
   const columns = useMemo<ColumnDef<ProductStockSummary>[]>(
@@ -313,25 +354,40 @@ export function InventoryWorkspace() {
 
   if (isLoading || error) {
     return (
-      <div className="flex flex-col flex-1 overflow-hidden font-sans bg-background">
-        <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
-          <span className="text-[11px] text-muted-foreground">Pharos One</span>
-          <ChevronRight className="w-3 h-3 text-border" />
-          <span className="text-[11px] text-primary font-semibold">
-            Inventory
-          </span>
-          <span className="w-px h-4 bg-border mx-1" />
-          <span className="text-[11px] text-muted-foreground">
-            {products.length} items
-          </span>
-        </div>
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {error && (
-            <div className="p-4 m-3 rounded-md border border-red-700 bg-red-50 text-red-700">
-              Error loading inventory: {error.message}
-            </div>
-          )}
-          {isLoading && <DataTableLoadingSkeleton columns={columns} />}
+      <div className="flex flex-row flex-1 overflow-hidden font-sans bg-background">
+        {/* Sidebar */}
+        <InventorySidebar
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          lowStockCount={lowStockCount}
+          expiringCount={expiringCount}
+          totalProducts={products.length}
+          totalValue={totalValue}
+        />
+
+        {/* Main content */}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
+            <span className="text-[11px] text-muted-foreground">
+              Pharos One
+            </span>
+            <ChevronRight className="w-3 h-3 text-border" />
+            <span className="text-[11px] text-primary font-semibold">
+              Inventory
+            </span>
+            <span className="w-px h-4 bg-border mx-1" />
+            <span className="text-[11px] text-muted-foreground">
+              {products.length} items
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {error && (
+              <div className="p-4 m-3 rounded-md border border-red-700 bg-red-50 text-red-700">
+                Error loading inventory: {error.message}
+              </div>
+            )}
+            {isLoading && <DataTableLoadingSkeleton columns={columns} />}
+          </div>
         </div>
       </div>
     );
@@ -340,22 +396,35 @@ export function InventoryWorkspace() {
   return (
     <DataTableProvider
       columns={columns}
-      data={products}
+      data={filteredProducts}
       persistenceKey={STORAGE_KEY}
       getRowId={(product) => product.id}
       onRowDoubleClick={handleBatchDetailsOpen}
     >
-      <InventoryWorkspaceContent
-        isPanelOpen={isPanelOpen}
-        batchDetailsPanelProductId={batchDetailsPanelProductId}
-        setBatchDetailsPanelProductId={setBatchDetailsPanelProductId}
-        stockMovementsPanelProductId={stockMovementsPanelProductId}
-        setStockMovementsPanelProductId={setStockMovementsPanelProductId}
-        customActions={customActions}
-        products={products}
-        density={density}
-        isLoading={isLoading}
-      />
+      <div className="flex flex-row flex-1 overflow-hidden font-sans bg-background">
+        {/* Sidebar */}
+        <InventorySidebar
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          lowStockCount={lowStockCount}
+          expiringCount={expiringCount}
+          totalProducts={products.length}
+          totalValue={totalValue}
+        />
+
+        {/* Main content */}
+        <InventoryWorkspaceContent
+          isPanelOpen={isPanelOpen}
+          batchDetailsPanelProductId={batchDetailsPanelProductId}
+          setBatchDetailsPanelProductId={setBatchDetailsPanelProductId}
+          stockMovementsPanelProductId={stockMovementsPanelProductId}
+          setStockMovementsPanelProductId={setStockMovementsPanelProductId}
+          customActions={customActions}
+          products={filteredProducts}
+          density={density}
+          isLoading={isLoading}
+        />
+      </div>
     </DataTableProvider>
   );
 }
