@@ -4,7 +4,12 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Plus, SplitSquareHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  SplitSquareHorizontal,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -107,7 +112,10 @@ export function TabBar({
   const scrollTabs = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: direction === "left" ? -120 : 120, behavior: "smooth" });
+    el.scrollBy({
+      left: direction === "left" ? -120 : 120,
+      behavior: "smooth",
+    });
   };
 
   // Setup drag-and-drop sensors
@@ -121,6 +129,15 @@ export function TabBar({
   // Keyboard navigation for tab reordering
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+W: close active tab
+      if (e.ctrlKey && !e.shiftKey && e.key === "w") {
+        e.preventDefault();
+        if (activeTabId) {
+          onTabClose(activeTabId);
+        }
+        return;
+      }
+
       // Ctrl+Shift+Arrow: reorder tabs
       if (
         e.ctrlKey &&
@@ -180,7 +197,7 @@ export function TabBar({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [tabs, activeTabId, onTabReorder]);
+  }, [tabs, activeTabId, onTabReorder, onTabClose]);
 
   const handleContextMenu = (tabId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -218,6 +235,34 @@ export function TabBar({
     onTabReorder(oldIndex, newIndex);
   };
 
+  // Arrow key navigation within tab list
+  const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let targetIndex = index;
+
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        targetIndex = index > 0 ? index - 1 : tabs.length - 1;
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        targetIndex = index < tabs.length - 1 ? index + 1 : 0;
+        break;
+      case "Home":
+        e.preventDefault();
+        targetIndex = 0;
+        break;
+      case "End":
+        e.preventDefault();
+        targetIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    onTabClick(tabs[targetIndex].id);
+  };
+
   const contextMenuTab = contextMenu
     ? tabs.find((t) => t.id === contextMenu.tabId)
     : null;
@@ -233,6 +278,9 @@ export function TabBar({
       onDragEnd={handleDragEnd}
     >
       <div
+        role="tablist"
+        aria-orientation="horizontal"
+        aria-label="Workspace tabs"
         data-testid="tab-bar"
         style={{
           height: 36,
@@ -262,20 +310,26 @@ export function TabBar({
                 paddingRight: 2,
               }}
             >
-              {pinnedTabs.map((tab) => (
-                <SortableTabItem
-                  key={tab.id}
-                  id={tab.id}
-                  tab={tab}
-                  active={tab.id === activeTabId}
-                  onClick={() => onTabClick(tab.id)}
-                  onClose={(e) => {
-                    e.stopPropagation();
-                    onTabClose(tab.id);
-                  }}
-                  onContextMenu={(e) => handleContextMenu(tab.id, e)}
-                />
-              ))}
+              {pinnedTabs.map((tab, idx) => {
+                const globalIndex = tabs.findIndex((t) => t.id === tab.id);
+                return (
+                  <SortableTabItem
+                    key={tab.id}
+                    id={tab.id}
+                    tab={tab}
+                    active={tab.id === activeTabId}
+                    onClick={() => onTabClick(tab.id)}
+                    onClose={(e) => {
+                      e.stopPropagation();
+                      onTabClose(tab.id);
+                    }}
+                    onContextMenu={(e) => handleContextMenu(tab.id, e)}
+                    index={globalIndex}
+                    totalTabs={tabs.length}
+                    onKeyDown={(e) => handleTabKeyDown(e, globalIndex)}
+                  />
+                );
+              })}
             </div>
           </SortableContext>
         )}
@@ -305,7 +359,8 @@ export function TabBar({
                     top: 0,
                     bottom: 0,
                     width: 32,
-                    background: "linear-gradient(to right, #f0f0f0 60%, transparent)",
+                    background:
+                      "linear-gradient(to right, #f0f0f0 60%, transparent)",
                     zIndex: 2,
                     pointerEvents: "none",
                   }}
@@ -342,7 +397,10 @@ export function TabBar({
               onWheel={(e) => {
                 if (mode === "scrollable") {
                   e.preventDefault();
-                  scrollRef.current?.scrollBy({ left: e.deltaY + e.deltaX, behavior: "auto" });
+                  scrollRef.current?.scrollBy({
+                    left: e.deltaY + e.deltaX,
+                    behavior: "auto",
+                  });
                 }
               }}
               style={{
@@ -356,20 +414,26 @@ export function TabBar({
                 scrollBehavior: "smooth",
               }}
             >
-              {regularTabs.map((tab) => (
-                <SortableTabItem
-                  key={tab.id}
-                  id={tab.id}
-                  tab={tab}
-                  active={tab.id === activeTabId}
-                  onClick={() => onTabClick(tab.id)}
-                  onClose={(e) => {
-                    e.stopPropagation();
-                    onTabClose(tab.id);
-                  }}
-                  onContextMenu={(e) => handleContextMenu(tab.id, e)}
-                />
-              ))}
+              {regularTabs.map((tab) => {
+                const globalIndex = tabs.findIndex((t) => t.id === tab.id);
+                return (
+                  <SortableTabItem
+                    key={tab.id}
+                    id={tab.id}
+                    tab={tab}
+                    active={tab.id === activeTabId}
+                    onClick={() => onTabClick(tab.id)}
+                    onClose={(e) => {
+                      e.stopPropagation();
+                      onTabClose(tab.id);
+                    }}
+                    onContextMenu={(e) => handleContextMenu(tab.id, e)}
+                    index={globalIndex}
+                    totalTabs={tabs.length}
+                    onKeyDown={(e) => handleTabKeyDown(e, globalIndex)}
+                  />
+                );
+              })}
             </div>
 
             {/* Right scroll button + fade */}
@@ -382,7 +446,8 @@ export function TabBar({
                     top: 0,
                     bottom: 0,
                     width: 32,
-                    background: "linear-gradient(to left, #f0f0f0 60%, transparent)",
+                    background:
+                      "linear-gradient(to left, #f0f0f0 60%, transparent)",
                     zIndex: 2,
                     pointerEvents: "none",
                   }}

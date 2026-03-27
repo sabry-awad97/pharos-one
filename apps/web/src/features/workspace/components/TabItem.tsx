@@ -19,6 +19,12 @@ export interface TabItemProps {
   onClose: (e: React.MouseEvent) => void;
   /** Context menu handler */
   onContextMenu?: (e: React.MouseEvent) => void;
+  /** Tab index in the list (for aria-label) */
+  index?: number;
+  /** Total number of tabs (for aria-label) */
+  totalTabs?: number;
+  /** Keyboard navigation handler */
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 }
 
 /**
@@ -31,16 +37,36 @@ export function TabItem({
   onClick,
   onClose,
   onContextMenu,
+  index,
+  totalTabs,
+  onKeyDown,
 }: TabItemProps) {
   const [hov, setHov] = useState(false);
   const Icon = tab.icon;
   const pinned = tab.pinned;
 
+  // Build accessible label
+  const ariaLabel = [
+    tab.label,
+    tab.unsaved ? "unsaved changes" : "",
+    index !== undefined && totalTabs !== undefined
+      ? `tab ${index + 1} of ${totalTabs}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
-    <div
+    <button
+      role="tab"
+      aria-selected={active}
+      aria-controls={`tabpanel-${tab.id}`}
+      aria-label={ariaLabel}
+      tabIndex={active ? 0 : -1}
       className={styles.tabContainer}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      onKeyDown={onKeyDown}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       title={
@@ -65,6 +91,7 @@ export function TabItem({
           : "2px solid transparent",
         borderRight: "1px solid #e0e0e0",
         borderBottom: active ? "1px solid #ffffff" : "1px solid #e0e0e0",
+        borderLeft: "none",
         marginBottom: active ? -1 : 0,
         gap: 6,
         overflow: "hidden",
@@ -192,6 +219,6 @@ export function TabItem({
           <X style={{ width: 10, height: 10 }} />
         </button>
       )}
-    </div>
+    </button>
   );
 }
