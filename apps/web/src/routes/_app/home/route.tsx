@@ -2,7 +2,6 @@ import {
   createFileRoute,
   Outlet,
   useNavigate,
-  useMatches,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -30,7 +29,10 @@ import { TabBar } from "@/features/workspace/components/TabBar";
 import { EmptyWorkspaceState } from "@/features/workspace/components/EmptyWorkspaceState";
 import { WorkspaceTemplatePicker } from "@/features/workspace/components/WorkspaceTemplatePicker";
 import { WorkspaceContainer } from "@/features/modules/components/WorkspaceContainer";
-import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants/workspace-templates";
+import {
+  WORKSPACE_TEMPLATES,
+  getModuleRoute,
+} from "@/features/workspace/constants/workspace-templates";
 import type { WorkspaceTemplate } from "@/features/workspace/constants/workspace-templates";
 
 export const Route = createFileRoute("/_app/home")({
@@ -39,7 +41,6 @@ export const Route = createFileRoute("/_app/home")({
 
 function HomeComponent() {
   const navigate = useNavigate();
-  const matches = useMatches();
   const { activeMenu, toggleMenu, closeMenu } = useMenuState();
 
   // Use Zustand store directly
@@ -87,17 +88,6 @@ function HomeComponent() {
     state.tabs.find((t) => t.pinned) ??
     state.tabs.find((t) => t.module === "inventory");
 
-  // Maps module IDs to their canonical leaf routes, bypassing index redirects.
-  // Modules without an entry navigate to /home/${module} directly.
-  const MODULE_LEAF_ROUTES: Record<string, string> = {
-    inventory: "/home/inventory/all",
-    staff: "/home/staff/overview",
-    dashboard: "/home/dashboard",
-  };
-
-  const getModuleRoute = (module: string): string =>
-    MODULE_LEAF_ROUTES[module] ?? `/home/${module}`;
-
   // Handler for tab click - navigate to module route
   const handleTabClick = (tabId: string) => {
     const tab = state.tabs.find((t) => t.id === tabId);
@@ -124,7 +114,7 @@ function HomeComponent() {
       icon: LayoutDashboard,
       module: "dashboard",
     });
-    navigate({ to: "/home/dashboard" });
+    navigate({ to: getModuleRoute("dashboard") });
   };
 
   // Handler for template selection from picker
@@ -140,7 +130,7 @@ function HomeComponent() {
         });
       });
       if (template.tabs.length > 0) {
-        navigate({ to: `/home/${template.tabs[0].module}` });
+        navigate({ to: getModuleRoute(template.tabs[0].module) });
       }
     }
     if (dontShowAgain && currentUserId) {

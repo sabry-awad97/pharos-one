@@ -13,6 +13,7 @@ import {
   Layers,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ModuleId } from "./module-routes";
 
 /**
  * Tab definition within a template
@@ -22,8 +23,8 @@ export interface TemplateTab {
   label: string;
   /** Icon component from lucide-react */
   icon: LucideIcon;
-  /** Module identifier (e.g., 'dashboard', 'inventory', 'pos') */
-  module: string;
+  /** Module identifier — must be a registered ModuleId */
+  module: ModuleId;
   /** Whether the tab is pinned by default */
   pinned?: boolean;
 }
@@ -47,6 +48,9 @@ export interface WorkspaceTemplate {
 /**
  * Available workspace templates
  */
+export type { ModuleId } from "./module-routes";
+export { MODULE_ROUTES, getModuleRoute } from "./module-routes";
+
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
   {
     id: "pharmacist",
