@@ -12,6 +12,8 @@ import {
   DialogFooter,
 } from "@pharos-one/ui/components/dialog";
 import { Button } from "@pharos-one/ui/components/button";
+import { Checkbox } from "@pharos-one/ui/components/checkbox";
+import { Badge } from "@pharos-one/ui/components/badge";
 import { Layers } from "lucide-react";
 import { WORKSPACE_TEMPLATES } from "../constants/workspace-templates";
 import type { WorkspaceTemplate } from "../constants/workspace-templates";
@@ -70,16 +72,22 @@ export const WorkspaceTemplatePicker = React.forwardRef<
 
         <DialogFooter className="flex items-center justify-between sm:justify-between">
           {/* Don't show again checkbox */}
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="dont-show-again"
               checked={dontShowAgain}
-              onChange={(e) => onDontShowAgainChange(e.target.checked)}
+              onCheckedChange={(checked) =>
+                onDontShowAgainChange(checked === true)
+              }
               data-testid="dont-show-again-checkbox"
-              className="w-4 h-4 cursor-pointer"
             />
-            Don't show this again
-          </label>
+            <label
+              htmlFor="dont-show-again"
+              className="text-xs text-muted-foreground cursor-pointer select-none"
+            >
+              Don't show this again
+            </label>
+          </div>
 
           {/* Action buttons */}
           <Button
@@ -139,12 +147,13 @@ const TemplateCard = React.forwardRef<HTMLButtonElement, TemplateCardProps>(
             </p>
             <div className="flex flex-wrap gap-1">
               {template.tabs.map((tab, index) => (
-                <span
+                <Badge
                   key={index}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-accent/30 rounded text-[10px] text-muted-foreground"
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-5 font-normal"
                 >
                   {tab.label}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
