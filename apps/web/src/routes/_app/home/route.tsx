@@ -87,12 +87,23 @@ function HomeComponent() {
     state.tabs.find((t) => t.pinned) ??
     state.tabs.find((t) => t.module === "inventory");
 
+  // Maps module IDs to their canonical leaf routes, bypassing index redirects.
+  // Modules without an entry navigate to /home/${module} directly.
+  const MODULE_LEAF_ROUTES: Record<string, string> = {
+    inventory: "/home/inventory/all",
+    staff: "/home/staff/overview",
+    dashboard: "/home/dashboard",
+  };
+
+  const getModuleRoute = (module: string): string =>
+    MODULE_LEAF_ROUTES[module] ?? `/home/${module}`;
+
   // Handler for tab click - navigate to module route
   const handleTabClick = (tabId: string) => {
     const tab = state.tabs.find((t) => t.id === tabId);
     if (tab) {
       setActiveTab(tabId);
-      navigate({ to: `/home/${tab.module}` });
+      navigate({ to: getModuleRoute(tab.module) });
     }
   };
 
@@ -103,8 +114,7 @@ function HomeComponent() {
       icon: template.icon,
       module: template.id,
     });
-    // Navigate to the new tab's module
-    navigate({ to: `/home/${template.id}` });
+    navigate({ to: getModuleRoute(template.id) });
   };
 
   // Handler for opening dashboard from empty state
