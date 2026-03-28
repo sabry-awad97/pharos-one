@@ -120,6 +120,7 @@ export function WorkspaceContainer({
 
       {/* Module workspace - pass split prop and optional label */}
       <ModuleComponent
+        key={moduleId}
         split={split}
         {...(effectiveLabel ? { label: effectiveLabel } : {})}
       />
