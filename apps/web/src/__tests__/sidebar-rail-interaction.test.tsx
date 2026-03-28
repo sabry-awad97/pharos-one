@@ -1,6 +1,7 @@
 import { screen, within, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders } from "@/test-utils";
+import { Sidebar } from "@/features/shell/components/Sidebar";
 import { useSidebarStateStore } from "@/features/workspace/stores/sidebar-state-store";
 
 // Mock the router hooks
@@ -15,21 +16,34 @@ vi.mock("@tanstack/react-router", () => ({
   useMatches: () => [],
 }));
 
-// Import after mocking
-const { Route } = await import("../routes/_app/home/route");
-const HomeComponent = (Route as any).component as () => React.JSX.Element;
+const mockOnModuleClick = vi.fn();
 
 describe("Sidebar Rail Interaction", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    // Clear localStorage and reset store
+    mockOnModuleClick.mockClear();
     localStorage.clear();
-    useSidebarStateStore.setState({ workspaces: {} });
-    useSidebarStateStore.persist.rehydrate();
+    // Pre-initialize the 'global' workspace to avoid set() inside selector infinite loop
+    useSidebarStateStore.setState({
+      workspaces: {
+        global: {
+          expanded: true,
+          expandedModules: new Set(),
+          pinnedItems: new Set(),
+          hiddenItems: new Set(),
+          width: 180,
+        },
+      },
+    });
   });
 
+  const renderSidebar = () =>
+    renderWithProviders(
+      <Sidebar activeModule={null} onModuleClick={mockOnModuleClick} />
+    );
+
   it("should show rail when sidebar is collapsed", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -51,7 +65,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should collapse sidebar when double-clicking rail while expanded", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -82,7 +96,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should expand sidebar when double-clicking rail while collapsed", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -113,7 +127,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should resize sidebar when dragging rail while expanded", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -146,7 +160,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should not resize sidebar when dragging rail while collapsed", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 
@@ -179,7 +193,7 @@ describe("Sidebar Rail Interaction", () => {
   });
 
   it("should not render collapse/expand button", () => {
-    renderWithProviders(<HomeComponent />);
+    renderSidebar();
 
     const sidebar = screen.getByTestId("sidebar");
 

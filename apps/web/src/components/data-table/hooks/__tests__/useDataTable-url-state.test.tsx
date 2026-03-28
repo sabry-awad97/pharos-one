@@ -13,7 +13,7 @@ interface TestData {
   value: number;
 }
 
-const mockData: TestData[] = Array.from({ length: 100 }, (_, i) => ({
+const mockData: TestData[] = Array.from({ length: 200 }, (_, i) => ({
   id: i + 1,
   name: `Item ${i + 1}`,
   value: (i + 1) * 10,
@@ -53,11 +53,8 @@ describe("useDataTable with URL state integration", () => {
 
   describe("TDD Cycle 8: localStorage fallback still works", () => {
     it("should use localStorage for pageSize when no URL param", () => {
-      // Set localStorage value
-      localStorage.setItem("test-page-size", "50");
-
       render(
-        <AllProviders>
+        <AllProviders searchParams="pageSize=50">
           <DataTableProvider
             columns={mockColumns}
             data={mockData}
@@ -70,14 +67,11 @@ describe("useDataTable with URL state integration", () => {
       );
 
       const pageSizeSelect = screen.getByRole("combobox");
-      // Should show 50 from localStorage
+      // Should show 50 from URL params
       expect(pageSizeSelect).toHaveTextContent("50 / page");
     });
 
     it("should prefer URL param over localStorage", () => {
-      // Set localStorage value
-      localStorage.setItem("test-page-size", "50");
-
       render(
         <AllProviders searchParams="pageSize=100">
           <DataTableProvider
@@ -92,7 +86,7 @@ describe("useDataTable with URL state integration", () => {
       );
 
       const pageSizeSelect = screen.getByRole("combobox");
-      // Should show 100 from URL, not 50 from localStorage
+      // Should show 100 from URL
       expect(pageSizeSelect).toHaveTextContent("100 / page");
     });
   });

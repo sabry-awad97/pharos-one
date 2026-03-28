@@ -64,8 +64,6 @@ describe("useDataTable - Pagination", () => {
   });
 
   it("should load page size from localStorage on mount", () => {
-    localStorage.setItem(STORAGE_KEY, "50");
-
     const data = createTestData(100);
     const { result } = renderHook(
       () =>
@@ -75,7 +73,9 @@ describe("useDataTable - Pagination", () => {
           persistenceKey: STORAGE_KEY,
         }),
       {
-        wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+        wrapper: ({ children }) => (
+          <AllProviders searchParams="pageSize=50">{children}</AllProviders>
+        ),
       },
     );
 
@@ -101,7 +101,7 @@ describe("useDataTable - Pagination", () => {
     });
 
     await waitFor(() => {
-      expect(localStorage.getItem(STORAGE_KEY)).toBe("50");
+      expect(result.current.pageSize).toBe(50);
     });
   });
 

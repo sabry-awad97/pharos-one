@@ -1,7 +1,9 @@
 import { screen, within } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils";
 import type { JSX } from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { useTabsStore } from "@/features/workspace/stores/tabs-store";
+import { LayoutDashboard } from "lucide-react";
 
 // Mock the router hooks
 vi.mock("@tanstack/react-router", () => ({
@@ -18,7 +20,26 @@ vi.mock("@tanstack/react-router", () => ({
 const { Route } = await import("../routes/_app/home/route");
 const HomeComponent = (Route as any).component as () => JSX.Element;
 
+const seedTab = () =>
+  useTabsStore.setState({
+    state: {
+      tabs: [{ id: "tab-1", label: "Dashboard", icon: LayoutDashboard, module: "dashboard" }],
+      activeTabId: "tab-1",
+      splitView: { enabled: false, leftModuleId: null, rightModuleId: null },
+    },
+    activeTabLabel: "Dashboard",
+  });
+
+const clearTabs = () =>
+  useTabsStore.setState({
+    state: { tabs: [], activeTabId: null, splitView: { enabled: false, leftModuleId: null, rightModuleId: null } },
+    activeTabLabel: undefined,
+  });
+
 describe("Home Route Layout", () => {
+  beforeEach(seedTab);
+  afterEach(clearTabs);
+
   it("should have workspace area as main container with TabBar and content", () => {
     renderWithProviders(<HomeComponent />);
 
