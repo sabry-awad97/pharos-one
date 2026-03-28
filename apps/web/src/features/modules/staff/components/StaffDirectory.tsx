@@ -351,7 +351,10 @@ function StaffDirectoryContent({
       </div>
 
       {/* Table content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div
+        className="flex-1 flex flex-col overflow-hidden"
+        data-density="compact"
+      >
         {/* Scrollable table area */}
         {hasData ? (
           <DataTable<Staff>
