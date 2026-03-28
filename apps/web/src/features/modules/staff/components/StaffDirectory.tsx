@@ -3,8 +3,9 @@
  * Searchable, filterable list of staff members using TanStack Table
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { flexRender, type ColumnDef } from "@tanstack/react-table";
+import { Search, Grid, AlignLeft, Eye, MoreHorizontal } from "lucide-react";
 import { STAFF_DATA } from "../mock-data";
 import type { Staff, StaffRole, DutyStatus } from "../types";
 import {
@@ -14,7 +15,6 @@ import {
   DataTable,
   DataTableColumnHeader,
   DataTableEmptyState,
-  DataTableLoadingSkeleton,
 } from "@/components/data-table";
 import { CopyWrapper } from "@/components/copy-wrapper";
 
@@ -24,16 +24,6 @@ export interface StaffDirectoryProps {
 
 const STORAGE_KEY = "staff-directory-page-size";
 
-// Duty status badge styles
-const dutyStatusStyles: Record<
-  DutyStatus,
-  { bg: string; text: string; dot: string }
-> = {
-  "On Duty": { bg: "#DFF6DD", text: "#0F7B0F", dot: "#0F7B0F" },
-  "On Break": { bg: "#FFF4CE", text: "#835400", dot: "#9D5D00" },
-  "Off Duty": { bg: "#F5F5F5", text: "#616161", dot: "#ABABAB" },
-};
-
 // Status dot color mapping
 const statusDotClass: Record<DutyStatus, string> = {
   "On Duty": "bg-green-700",
@@ -41,90 +31,54 @@ const statusDotClass: Record<DutyStatus, string> = {
   "Off Duty": "bg-gray-400",
 };
 
+// Status badge component matching inventory style
 function StatusBadge({ status }: { status: DutyStatus }) {
-  const s = dutyStatusStyles[status];
+  const config = {
+    "On Duty": {
+      className: "bg-green-50 text-green-700 border-green-200",
+      label: "On Duty",
+    },
+    "On Break": {
+      className: "bg-yellow-50 text-yellow-800 border-yellow-200",
+      label: "On Break",
+    },
+    "Off Duty": {
+      className: "bg-gray-50 text-gray-600 border-gray-200",
+      label: "Off Duty",
+    },
+  };
+
+  const { className, label } = config[status];
+
   return (
     <span
-      style={{
-        background: s.bg,
-        color: s.text,
-        borderRadius: 100,
-        padding: "2px 9px",
-        fontSize: 11,
-        fontWeight: 500,
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 5,
-        whiteSpace: "nowrap",
-      }}
+      className={`text-[10px] px-1.5 py-0.5 rounded-[3px] font-medium border ${className}`}
     >
-      <span
-        style={{
-          position: "relative",
-          width: 6,
-          height: 6,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {status === "On Duty" && (
-          <span
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              background: s.dot,
-              opacity: 0.5,
-            }}
-          />
-        )}
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: s.dot,
-            position: "relative",
-            zIndex: 1,
-          }}
-        />
-      </span>
-      {status}
+      {label}
     </span>
   );
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 90 ? "#0F7B0F" : score >= 70 ? "#9D5D00" : "#C42B1C";
+  const colorClass =
+    score >= 90
+      ? "text-green-700"
+      : score >= 70
+        ? "text-yellow-700"
+        : "text-red-700";
+  const bgClass =
+    score >= 90 ? "bg-green-700" : score >= 70 ? "bg-yellow-600" : "bg-red-700";
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-      <div
-        style={{
-          flex: 1,
-          height: 4,
-          background: "#F5F5F5",
-          borderRadius: 99,
-          overflow: "hidden",
-        }}
-      >
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
         <div
-          style={{
-            width: `${score}%`,
-            height: "100%",
-            background: color,
-            borderRadius: 99,
-          }}
+          className={`h-full ${bgClass} rounded-full`}
+          style={{ width: `${score}%` }}
         />
       </div>
       <span
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color,
-          minWidth: 22,
-          textAlign: "right",
-        }}
+        className={`text-[11px] font-semibold ${colorClass} min-w-[22px] text-right`}
       >
         {score}
       </span>
@@ -136,13 +90,31 @@ function ScoreBar({ score }: { score: number }) {
  * Staff directory with TanStack Table
  */
 export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
-  // Define columns
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<StaffRole | "All">("All");
+  const [statusFilter, setStatusFilter] = useState<DutyStatus | "All">("All");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+
+  // Filter data based on search and filters
+  const filteredData = useMemo(() => {
+    return STAFF_DATA.filter((staff) => {
+      const matchesSearch = staff.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesRole = roleFilter === "All" || staff.role === roleFilter;
+      const matchesStatus =
+        statusFilter === "All" || staff.dutyStatus === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [searchQuery, roleFilter, statusFilter]);
+
+  // Define columns matching inventory style
   const columns = useMemo<ColumnDef<Staff>[]>(
     () => [
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Member" />
+          <DataTableColumnHeader column={column} title="Staff Member" />
         ),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
@@ -151,7 +123,7 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
             />
             <div>
               <CopyWrapper value={row.original.name} size="xs">
-                <span className="text-xs font-semibold text-foreground">
+                <span className="text-xs font-medium text-foreground">
                   {row.original.name}
                 </span>
               </CopyWrapper>
@@ -189,22 +161,19 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
           return value.includes(row.getValue(id));
         },
         enableColumnFilter: true,
-        size: 120,
+        size: 100,
       },
       {
         accessorKey: "hoursThisWeek",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Hrs/Wk" />
+          <DataTableColumnHeader column={column} title="Hours" />
         ),
         cell: ({ getValue }) => (
-          <span className="text-xs font-semibold">
+          <span className="text-xs font-semibold text-foreground">
             {getValue() as number}
-            <span className="text-[10px] font-normal text-muted-foreground">
-              h
-            </span>
           </span>
         ),
-        size: 80,
+        size: 70,
       },
       {
         accessorKey: "complianceScore",
@@ -214,14 +183,42 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
         cell: ({ row }) => <ScoreBar score={row.original.complianceScore} />,
         size: 140,
       },
+      {
+        id: "actions",
+        cell: ({ row }) => (
+          <div className="flex gap-0.5">
+            <button
+              title="View Details"
+              className="w-6 h-6 flex items-center justify-center rounded border border-transparent transition-colors text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("View staff:", row.original.id);
+              }}
+            >
+              <Eye className="w-3 h-3" />
+            </button>
+            <button
+              title="More Options"
+              className="w-6 h-6 flex items-center justify-center rounded border border-transparent transition-colors text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("More options for staff:", row.original.id);
+              }}
+            >
+              <MoreHorizontal className="w-3 h-3" />
+            </button>
+          </div>
+        ),
+        size: 56,
+      },
     ],
     [],
   );
 
   return (
-    <DataTableProvider
+    <DataTableProvider<Staff, string>
       columns={columns}
-      data={STAFF_DATA}
+      data={filteredData}
       persistenceKey={STORAGE_KEY}
       getRowId={(staff) => staff.id}
       onRowDoubleClick={(staffId) => {
@@ -229,7 +226,17 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
         if (staff) onSelectStaff(staff);
       }}
     >
-      <StaffDirectoryContent onSelectStaff={onSelectStaff} />
+      <StaffDirectoryContent
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        filteredCount={filteredData.length}
+      />
     </DataTableProvider>
   );
 }
@@ -238,9 +245,25 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
  * Staff directory content that uses DataTableContext
  */
 function StaffDirectoryContent({
-  onSelectStaff,
+  searchQuery,
+  setSearchQuery,
+  roleFilter,
+  setRoleFilter,
+  statusFilter,
+  setStatusFilter,
+  viewMode,
+  setViewMode,
+  filteredCount,
 }: {
-  onSelectStaff: (staff: Staff) => void;
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+  roleFilter: StaffRole | "All";
+  setRoleFilter: (value: StaffRole | "All") => void;
+  statusFilter: DutyStatus | "All";
+  setStatusFilter: (value: DutyStatus | "All") => void;
+  viewMode: "list" | "grid";
+  setViewMode: (value: "list" | "grid") => void;
+  filteredCount: number;
 }) {
   const {
     selectedRowIds,
@@ -254,6 +277,79 @@ function StaffDirectoryContent({
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Toolbar matching inventory style */}
+      <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
+        {/* Search */}
+        <div className="relative flex items-center">
+          <Search size={13} className="absolute left-2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-[26px] pl-7 pr-2 bg-muted border border-transparent rounded text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-40"
+          />
+        </div>
+
+        {/* Role filter */}
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value as StaffRole | "All")}
+          className="h-[26px] px-2 bg-muted border border-transparent rounded text-[11px] text-foreground cursor-pointer outline-none hover:border-border transition-colors"
+        >
+          <option value="All">All Roles</option>
+          {(["Pharmacist", "Technician", "Manager"] as const).map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as DutyStatus | "All")
+          }
+          className="h-[26px] px-2 bg-muted border border-transparent rounded text-[11px] text-foreground cursor-pointer outline-none hover:border-border transition-colors"
+        >
+          <option value="All">All Statuses</option>
+          {(["On Duty", "On Break", "Off Duty"] as const).map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+
+        {/* Staff count */}
+        <span className="text-[11px] text-muted-foreground">
+          {filteredCount} shown
+        </span>
+
+        <div className="flex-1" />
+
+        {/* View toggle */}
+        <div className="flex bg-muted border border-transparent rounded p-0.5">
+          {(["list", "grid"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setViewMode(v)}
+              className={`p-1 rounded transition-colors ${
+                viewMode === v
+                  ? "bg-card text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {v === "list" ? (
+                <AlignLeft className="w-3.5 h-3.5" />
+              ) : (
+                <Grid className="w-3.5 h-3.5" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Table content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Scrollable table area */}
