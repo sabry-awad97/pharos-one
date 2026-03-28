@@ -87,7 +87,7 @@ export function NewWorkspaceDialog({
                       {template.label}
                     </p>
                     <p className="text-[10px] text-muted-foreground leading-snug">
-                      {template.desc}
+                      {template.description}
                     </p>
                   </button>
                 );
