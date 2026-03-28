@@ -12,8 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTabsRouteImport } from './routes/demo/tabs'
+import { Route as DemoSmsRouteImport } from './routes/demo/sms'
+import { Route as DemoPurchaseRouteImport } from './routes/demo/purchase'
+import { Route as DemoPosRouteImport } from './routes/demo/pos'
 import { Route as DemoInventoryRouteImport } from './routes/demo/inventory'
 import { Route as DemoDashboardRouteImport } from './routes/demo/dashboard'
+import { Route as DemoCmsRouteImport } from './routes/demo/cms'
 import { Route as AppHomeRouteRouteImport } from './routes/_app/home/route'
 import { Route as AppHomeReportsRouteImport } from './routes/_app/home/reports'
 import { Route as AppHomePurchasesRouteImport } from './routes/_app/home/purchases'
@@ -42,6 +46,21 @@ const DemoTabsRoute = DemoTabsRouteImport.update({
   path: '/demo/tabs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoSmsRoute = DemoSmsRouteImport.update({
+  id: '/demo/sms',
+  path: '/demo/sms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoPurchaseRoute = DemoPurchaseRouteImport.update({
+  id: '/demo/purchase',
+  path: '/demo/purchase',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoPosRoute = DemoPosRouteImport.update({
+  id: '/demo/pos',
+  path: '/demo/pos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoInventoryRoute = DemoInventoryRouteImport.update({
   id: '/demo/inventory',
   path: '/demo/inventory',
@@ -50,6 +69,11 @@ const DemoInventoryRoute = DemoInventoryRouteImport.update({
 const DemoDashboardRoute = DemoDashboardRouteImport.update({
   id: '/demo/dashboard',
   path: '/demo/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoCmsRoute = DemoCmsRouteImport.update({
+  id: '/demo/cms',
+  path: '/demo/cms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppHomeRouteRoute = AppHomeRouteRouteImport.update({
@@ -125,8 +149,12 @@ const AppHomeDashboardAlertsRoute = AppHomeDashboardAlertsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof AppHomeRouteRouteWithChildren
+  '/demo/cms': typeof DemoCmsRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/demo/inventory': typeof DemoInventoryRoute
+  '/demo/pos': typeof DemoPosRoute
+  '/demo/purchase': typeof DemoPurchaseRoute
+  '/demo/sms': typeof DemoSmsRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
   '/home/pos': typeof AppHomePosRoute
@@ -144,8 +172,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof AppHomeRouteRouteWithChildren
+  '/demo/cms': typeof DemoCmsRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/demo/inventory': typeof DemoInventoryRoute
+  '/demo/pos': typeof DemoPosRoute
+  '/demo/purchase': typeof DemoPurchaseRoute
+  '/demo/sms': typeof DemoSmsRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/home/customers': typeof AppHomeCustomersRoute
   '/home/pos': typeof AppHomePosRoute
@@ -165,8 +197,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
   '/_app/home': typeof AppHomeRouteRouteWithChildren
+  '/demo/cms': typeof DemoCmsRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/demo/inventory': typeof DemoInventoryRoute
+  '/demo/pos': typeof DemoPosRoute
+  '/demo/purchase': typeof DemoPurchaseRoute
+  '/demo/sms': typeof DemoSmsRoute
   '/demo/tabs': typeof DemoTabsRoute
   '/_app/home/customers': typeof AppHomeCustomersRoute
   '/_app/home/pos': typeof AppHomePosRoute
@@ -186,8 +222,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/home'
+    | '/demo/cms'
     | '/demo/dashboard'
     | '/demo/inventory'
+    | '/demo/pos'
+    | '/demo/purchase'
+    | '/demo/sms'
     | '/demo/tabs'
     | '/home/customers'
     | '/home/pos'
@@ -205,8 +245,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/home'
+    | '/demo/cms'
     | '/demo/dashboard'
     | '/demo/inventory'
+    | '/demo/pos'
+    | '/demo/purchase'
+    | '/demo/sms'
     | '/demo/tabs'
     | '/home/customers'
     | '/home/pos'
@@ -225,8 +269,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/_app/home'
+    | '/demo/cms'
     | '/demo/dashboard'
     | '/demo/inventory'
+    | '/demo/pos'
+    | '/demo/purchase'
+    | '/demo/sms'
     | '/demo/tabs'
     | '/_app/home/customers'
     | '/_app/home/pos'
@@ -245,8 +293,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  DemoCmsRoute: typeof DemoCmsRoute
   DemoDashboardRoute: typeof DemoDashboardRoute
   DemoInventoryRoute: typeof DemoInventoryRoute
+  DemoPosRoute: typeof DemoPosRoute
+  DemoPurchaseRoute: typeof DemoPurchaseRoute
+  DemoSmsRoute: typeof DemoSmsRoute
   DemoTabsRoute: typeof DemoTabsRoute
 }
 
@@ -273,6 +325,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoTabsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/sms': {
+      id: '/demo/sms'
+      path: '/demo/sms'
+      fullPath: '/demo/sms'
+      preLoaderRoute: typeof DemoSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/purchase': {
+      id: '/demo/purchase'
+      path: '/demo/purchase'
+      fullPath: '/demo/purchase'
+      preLoaderRoute: typeof DemoPurchaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/pos': {
+      id: '/demo/pos'
+      path: '/demo/pos'
+      fullPath: '/demo/pos'
+      preLoaderRoute: typeof DemoPosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/inventory': {
       id: '/demo/inventory'
       path: '/demo/inventory'
@@ -285,6 +358,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/dashboard'
       fullPath: '/demo/dashboard'
       preLoaderRoute: typeof DemoDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/cms': {
+      id: '/demo/cms'
+      path: '/demo/cms'
+      fullPath: '/demo/cms'
+      preLoaderRoute: typeof DemoCmsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/home': {
@@ -430,8 +510,12 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
+  DemoCmsRoute: DemoCmsRoute,
   DemoDashboardRoute: DemoDashboardRoute,
   DemoInventoryRoute: DemoInventoryRoute,
+  DemoPosRoute: DemoPosRoute,
+  DemoPurchaseRoute: DemoPurchaseRoute,
+  DemoSmsRoute: DemoSmsRoute,
   DemoTabsRoute: DemoTabsRoute,
 }
 export const routeTree = rootRouteImport
