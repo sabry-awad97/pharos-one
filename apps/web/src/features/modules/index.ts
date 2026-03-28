@@ -24,3 +24,4 @@ import "./pos";
 import "./reports";
 import "./purchases";
 import "./customers";
+import "./staff";

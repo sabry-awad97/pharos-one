@@ -1,53 +1,44 @@
 # Purchase Management Workspace - Completion PRD
 
-⚠️ **Development Document. Source of truth: GitHub issue (to be created)**
+⚠️ **Development Document. Source of truth: GitHub issue #126**
 
 ## Quick Links
 
-- **GitHub Issue**: (pending creation)
+- **GitHub Issue**: #126
 - **Milestone**: v2.0
 - **Module**: `module:purchase`
-- **Labels**: `type:epic`, `priority:high`, `layer:full-stack`
-- **Related**: Purchase Management UI Mockup (apps/web/src/mockups/pharmacy-purchase/PurchaseManagement.tsx)
+- **Labels**: `type:feature`, `priority:high`, `layer:ui`, `layer:service`
+- **Related**: Purchase Management UI Mockup (`apps/web/src/mockups/pharmacy-purchase/PurchaseManagement.tsx`)
 
 ---
 
 ## 🎯 Overview
 
-Complete the Purchase Management Workspace by implementing state management, API integration, and interactive functionality for the existing comprehensive UI (5,338 lines, 95% UI complete).
+Convert the Purchase Management Workspace placeholder into a fully functional module using TanStack DB collections and live queries — the same architecture used by the inventory module.
 
 **Current State**:
 
-- ✅ Complete Windows 11 Fluent Design UI (100%)
-- ✅ All modals, forms, and layouts implemented
-- ✅ Comprehensive mock data and type definitions
+- ✅ Complete Windows 11 Fluent Design UI in mockup (`PurchaseManagement.tsx`, ~5,338 lines)
+- ✅ All modals, forms, layouts, and type definitions in the mockup
 - ✅ Three-panel layout (Supplier Nav | Order List | Detail Panel)
-- ❌ No state management or API integration
-- ❌ No form validation or error handling
-- ❌ No real-time calculations or updates
+- ❌ `PurchasesWorkspace.tsx` is a 3-row hardcoded placeholder
+- ❌ No TanStack DB collections or live query hooks
+- ❌ No real-time calculations or reactive state
 
 **Target State**:
 
-- Fully functional purchase order management system
-- Real-time inventory impact calculations
-- Automated payment tracking and reconciliation
-- Supplier performance analytics
-- Complete CRUD operations with optimistic updates
-
-**Business Value**:
-
-- Streamline purchase order workflow (reduce order creation time by 60%)
-- Improve inventory accuracy through automated receiving
-- Reduce payment errors through structured tracking
-- Enable data-driven supplier negotiations
-- Support regulatory compliance (audit trails, batch tracking)
+- Full purchase order UI extracted from mockup into the module structure
+- TanStack DB collections for purchase orders and suppliers (eager mode — small dataset)
+- Live query hooks (`usePurchaseOrders`, `usePurchaseSuppliers`) matching inventory hook patterns
+- Real-time order totals pre-computed in the collection's fetch function
+- Complete CRUD interactions (create, submit, receive, pay, cancel) using local state until Tauri backend is ready
 
 **Design Philosophy**:
 
-- Maintain existing Windows 11 Fluent Design aesthetics
-- Progressive enhancement (basic functionality first, advanced features later)
-- Optimistic UI updates with rollback on error
-- Mobile-responsive for tablet receiving workflows
+- Match the inventory module folder structure exactly
+- TanStack DB collections replace the API layer — no REST routes needed for Phase 1
+- Tauri `invoke()` calls are the swap-in point (same pattern as `tauri-api/product.api.ts`)
+- Maintain Windows 11 Fluent Design aesthetics from the mockup
 
 ---
 

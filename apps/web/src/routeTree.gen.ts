@@ -23,8 +23,10 @@ import { Route as AppHomeReportsRouteImport } from './routes/_app/home/reports'
 import { Route as AppHomePurchasesRouteImport } from './routes/_app/home/purchases'
 import { Route as AppHomePosRouteImport } from './routes/_app/home/pos'
 import { Route as AppHomeCustomersRouteImport } from './routes/_app/home/customers'
+import { Route as AppHomeStaffIndexRouteImport } from './routes/_app/home/staff/index'
 import { Route as AppHomeInventoryIndexRouteImport } from './routes/_app/home/inventory/index'
 import { Route as AppHomeDashboardIndexRouteImport } from './routes/_app/home/dashboard/index'
+import { Route as AppHomeStaffOverviewRouteImport } from './routes/_app/home/staff/overview'
 import { Route as AppHomeInventoryLowStockRouteImport } from './routes/_app/home/inventory/low-stock'
 import { Route as AppHomeInventoryExpiringRouteImport } from './routes/_app/home/inventory/expiring'
 import { Route as AppHomeInventoryCategoriesRouteImport } from './routes/_app/home/inventory/categories'
@@ -101,6 +103,11 @@ const AppHomeCustomersRoute = AppHomeCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AppHomeRouteRoute,
 } as any)
+const AppHomeStaffIndexRoute = AppHomeStaffIndexRouteImport.update({
+  id: '/staff/',
+  path: '/staff/',
+  getParentRoute: () => AppHomeRouteRoute,
+} as any)
 const AppHomeInventoryIndexRoute = AppHomeInventoryIndexRouteImport.update({
   id: '/inventory/',
   path: '/inventory/',
@@ -109,6 +116,11 @@ const AppHomeInventoryIndexRoute = AppHomeInventoryIndexRouteImport.update({
 const AppHomeDashboardIndexRoute = AppHomeDashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => AppHomeRouteRoute,
+} as any)
+const AppHomeStaffOverviewRoute = AppHomeStaffOverviewRouteImport.update({
+  id: '/staff/overview',
+  path: '/staff/overview',
   getParentRoute: () => AppHomeRouteRoute,
 } as any)
 const AppHomeInventoryLowStockRoute =
@@ -166,8 +178,10 @@ export interface FileRoutesByFullPath {
   '/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
   '/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
   '/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
+  '/home/staff/overview': typeof AppHomeStaffOverviewRoute
   '/home/dashboard/': typeof AppHomeDashboardIndexRoute
   '/home/inventory/': typeof AppHomeInventoryIndexRoute
+  '/home/staff/': typeof AppHomeStaffIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,8 +203,10 @@ export interface FileRoutesByTo {
   '/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
   '/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
   '/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
+  '/home/staff/overview': typeof AppHomeStaffOverviewRoute
   '/home/dashboard': typeof AppHomeDashboardIndexRoute
   '/home/inventory': typeof AppHomeInventoryIndexRoute
+  '/home/staff': typeof AppHomeStaffIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -214,8 +230,10 @@ export interface FileRoutesById {
   '/_app/home/inventory/categories': typeof AppHomeInventoryCategoriesRoute
   '/_app/home/inventory/expiring': typeof AppHomeInventoryExpiringRoute
   '/_app/home/inventory/low-stock': typeof AppHomeInventoryLowStockRoute
+  '/_app/home/staff/overview': typeof AppHomeStaffOverviewRoute
   '/_app/home/dashboard/': typeof AppHomeDashboardIndexRoute
   '/_app/home/inventory/': typeof AppHomeInventoryIndexRoute
+  '/_app/home/staff/': typeof AppHomeStaffIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -239,8 +257,10 @@ export interface FileRouteTypes {
     | '/home/inventory/categories'
     | '/home/inventory/expiring'
     | '/home/inventory/low-stock'
+    | '/home/staff/overview'
     | '/home/dashboard/'
     | '/home/inventory/'
+    | '/home/staff/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,8 +282,10 @@ export interface FileRouteTypes {
     | '/home/inventory/categories'
     | '/home/inventory/expiring'
     | '/home/inventory/low-stock'
+    | '/home/staff/overview'
     | '/home/dashboard'
     | '/home/inventory'
+    | '/home/staff'
   id:
     | '__root__'
     | '/'
@@ -286,8 +308,10 @@ export interface FileRouteTypes {
     | '/_app/home/inventory/categories'
     | '/_app/home/inventory/expiring'
     | '/_app/home/inventory/low-stock'
+    | '/_app/home/staff/overview'
     | '/_app/home/dashboard/'
     | '/_app/home/inventory/'
+    | '/_app/home/staff/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -402,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeCustomersRouteImport
       parentRoute: typeof AppHomeRouteRoute
     }
+    '/_app/home/staff/': {
+      id: '/_app/home/staff/'
+      path: '/staff'
+      fullPath: '/home/staff/'
+      preLoaderRoute: typeof AppHomeStaffIndexRouteImport
+      parentRoute: typeof AppHomeRouteRoute
+    }
     '/_app/home/inventory/': {
       id: '/_app/home/inventory/'
       path: '/inventory'
@@ -414,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/home/dashboard/'
       preLoaderRoute: typeof AppHomeDashboardIndexRouteImport
+      parentRoute: typeof AppHomeRouteRoute
+    }
+    '/_app/home/staff/overview': {
+      id: '/_app/home/staff/overview'
+      path: '/staff/overview'
+      fullPath: '/home/staff/overview'
+      preLoaderRoute: typeof AppHomeStaffOverviewRouteImport
       parentRoute: typeof AppHomeRouteRoute
     }
     '/_app/home/inventory/low-stock': {
@@ -472,8 +510,10 @@ interface AppHomeRouteRouteChildren {
   AppHomeInventoryCategoriesRoute: typeof AppHomeInventoryCategoriesRoute
   AppHomeInventoryExpiringRoute: typeof AppHomeInventoryExpiringRoute
   AppHomeInventoryLowStockRoute: typeof AppHomeInventoryLowStockRoute
+  AppHomeStaffOverviewRoute: typeof AppHomeStaffOverviewRoute
   AppHomeDashboardIndexRoute: typeof AppHomeDashboardIndexRoute
   AppHomeInventoryIndexRoute: typeof AppHomeInventoryIndexRoute
+  AppHomeStaffIndexRoute: typeof AppHomeStaffIndexRoute
 }
 
 const AppHomeRouteRouteChildren: AppHomeRouteRouteChildren = {
@@ -487,8 +527,10 @@ const AppHomeRouteRouteChildren: AppHomeRouteRouteChildren = {
   AppHomeInventoryCategoriesRoute: AppHomeInventoryCategoriesRoute,
   AppHomeInventoryExpiringRoute: AppHomeInventoryExpiringRoute,
   AppHomeInventoryLowStockRoute: AppHomeInventoryLowStockRoute,
+  AppHomeStaffOverviewRoute: AppHomeStaffOverviewRoute,
   AppHomeDashboardIndexRoute: AppHomeDashboardIndexRoute,
   AppHomeInventoryIndexRoute: AppHomeInventoryIndexRoute,
+  AppHomeStaffIndexRoute: AppHomeStaffIndexRoute,
 }
 
 const AppHomeRouteRouteWithChildren = AppHomeRouteRoute._addFileChildren(
