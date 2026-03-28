@@ -49,6 +49,38 @@ const statusDotClass: Record<DutyStatus, string> = {
   "Off Duty": "bg-gray-400",
 };
 
+// Avatar colors for grid view
+const avatarColors = [
+  ["#EFF6FC", "#0078D4"],
+  ["#DFF6DD", "#0F7B0F"],
+  ["#FFF4CE", "#835400"],
+  ["#FFF0EE", "#C42B1C"],
+  ["#F4EBFF", "#7B61FF"],
+];
+
+// Avatar component for grid view
+function Avatar({ staff, size = 36 }: { staff: Staff; size?: number }) {
+  const [bg, fg] = avatarColors[parseInt(staff.id) % avatarColors.length];
+  return (
+    <div
+      className="flex items-center justify-center shrink-0 rounded-full font-bold"
+      style={{
+        width: size,
+        height: size,
+        background: bg,
+        color: fg,
+        fontSize: size * 0.36,
+        letterSpacing: 0.3,
+      }}
+    >
+      {staff.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")}
+    </div>
+  );
+}
+
 // Status badge component matching inventory style
 function StatusBadge({ status }: { status: DutyStatus }) {
   const config = {
@@ -469,88 +501,148 @@ function StaffDirectoryContent({
         </div>
       </div>
 
-      {/* Table content */}
+      {/* Content area - Table or Grid */}
       <div
         className="flex-1 flex flex-col overflow-hidden"
         data-density="compact"
       >
-        {/* Scrollable table area */}
-        {hasData ? (
-          <DataTable<Staff>
-            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
-            className="w-full border-collapse"
-            style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-            }}
-            renderRow={(row, idx) => {
-              const selected = selectedRowIds.has(row.original.id);
-              const focused = focusedRowId === row.original.id;
-              return (
-                <tr
-                  key={row.id}
-                  data-selected={selected ? "true" : undefined}
-                  data-focused={focused ? "true" : undefined}
-                  className="border-b transition-[background]"
-                  style={{
-                    borderBottomColor: focused ? "transparent" : "#ebebeb",
-                    background: focused
-                      ? "oklch(from var(--primary) l c h / 0.07)"
-                      : selected
-                        ? "oklch(from var(--primary) l c h / 0.05)"
-                        : idx % 2 === 1
-                          ? "#f9f9f9"
-                          : "#ffffff",
-                    boxShadow: focused
-                      ? "inset 0 0 0 1.5px var(--primary)"
-                      : "none",
-                  }}
-                  onClick={(e) => handleRowClick(row.original.id, e)}
-                  onDoubleClick={() => handleRowDoubleClick(row.original.id)}
-                  onMouseEnter={(e) => {
-                    if (!focused) {
-                      (
-                        e.currentTarget as HTMLTableRowElement
-                      ).style.background = "#f0f6ff";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.background =
-                      focused
-                        ? "oklch(from var(--primary) l c h / 0.07)"
-                        : selected
-                          ? "oklch(from var(--primary) l c h / 0.05)"
-                          : idx % 2 === 1
-                            ? "#f9f9f9"
-                            : "#ffffff";
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="whitespace-nowrap"
+        {viewMode === "list" ? (
+          <>
+            {/* Scrollable table area */}
+            {hasData ? (
+              <DataTable<Staff>
+                containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
+                className="w-full border-collapse"
+                style={{
+                  boxShadow: "0 1px 3px rgba(0,0,0,.06)",
+                }}
+                renderRow={(row, idx) => {
+                  const selected = selectedRowIds.has(row.original.id);
+                  const focused = focusedRowId === row.original.id;
+                  return (
+                    <tr
+                      key={row.id}
+                      data-selected={selected ? "true" : undefined}
+                      data-focused={focused ? "true" : undefined}
+                      className="border-b transition-[background]"
                       style={{
-                        padding: "var(--density-padding)",
+                        borderBottomColor: focused ? "transparent" : "#ebebeb",
+                        background: focused
+                          ? "oklch(from var(--primary) l c h / 0.07)"
+                          : selected
+                            ? "oklch(from var(--primary) l c h / 0.05)"
+                            : idx % 2 === 1
+                              ? "#f9f9f9"
+                              : "#ffffff",
+                        boxShadow: focused
+                          ? "inset 0 0 0 1.5px var(--primary)"
+                          : "none",
+                      }}
+                      onClick={(e) => handleRowClick(row.original.id, e)}
+                      onDoubleClick={() =>
+                        handleRowDoubleClick(row.original.id)
+                      }
+                      onMouseEnter={(e) => {
+                        if (!focused) {
+                          (
+                            e.currentTarget as HTMLTableRowElement
+                          ).style.background = "#f0f6ff";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        (
+                          e.currentTarget as HTMLTableRowElement
+                        ).style.background = focused
+                          ? "oklch(from var(--primary) l c h / 0.07)"
+                          : selected
+                            ? "oklch(from var(--primary) l c h / 0.05)"
+                            : idx % 2 === 1
+                              ? "#f9f9f9"
+                              : "#ffffff";
                       }}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              );
-            }}
-          />
-        ) : (
-          <DataTableEmptyState
-            hasFilters={table.getState().columnFilters.length > 0}
-            onClearFilters={() => table.resetColumnFilters()}
-          />
-        )}
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="whitespace-nowrap"
+                          style={{
+                            padding: "var(--density-padding)",
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                }}
+              />
+            ) : (
+              <DataTableEmptyState
+                hasFilters={table.getState().columnFilters.length > 0}
+                onClearFilters={() => table.resetColumnFilters()}
+              />
+            )}
 
-        {/* Pagination controls */}
-        <DataTablePagination isLoading={false} />
+            {/* Pagination controls */}
+            <DataTablePagination isLoading={false} />
+          </>
+        ) : (
+          /* Grid view */
+          <div className="flex-1 overflow-auto custom-scrollbar bg-card p-4">
+            {hasData ? (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
+                {table.getRowModel().rows.map((row) => {
+                  const staff = row.original;
+                  const selected = selectedRowIds.has(staff.id);
+                  return (
+                    <div
+                      key={staff.id}
+                      onClick={(e) => handleRowClick(staff.id, e)}
+                      onDoubleClick={() => handleRowDoubleClick(staff.id)}
+                      className={cn(
+                        "bg-card rounded-lg p-3.5 cursor-pointer border-[1.5px] transition-all",
+                        selected
+                          ? "border-primary shadow-lg"
+                          : "border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.06)]",
+                      )}
+                    >
+                      {/* Header: Avatar + Name + Role */}
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <Avatar staff={staff} size={36} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-foreground truncate">
+                            {staff.name}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {staff.role}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="mb-2">
+                        <StatusBadge status={staff.dutyStatus} />
+                      </div>
+
+                      {/* Compliance score */}
+                      <div>
+                        <ScoreBar score={staff.complianceScore} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <DataTableEmptyState
+                hasFilters={table.getState().columnFilters.length > 0}
+                onClearFilters={() => table.resetColumnFilters()}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
