@@ -10,6 +10,7 @@ import {
   BarChart2,
   Truck,
   User,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -113,6 +114,12 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     label: "Customers",
     desc: "Patient profiles and loyalty",
     badge: 142,
+  },
+  {
+    id: "staff",
+    icon: Users,
+    label: "Staff",
+    desc: "Staff management and scheduling",
   },
 ];
 
