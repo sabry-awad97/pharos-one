@@ -18,21 +18,21 @@ import { usePaginationState } from "./usePaginationState";
 
 const DEFAULT_PAGE_SIZE = 25;
 
-interface UseDataTableOptions<TData> {
+interface UseDataTableOptions<TData, TId = number> {
   data: TData[];
   columns: ColumnDef<TData>[];
   persistenceKey?: string;
-  getRowId?: (row: TData) => number;
-  onRowDoubleClick?: (rowId: number) => void;
+  getRowId?: (row: TData) => TId;
+  onRowDoubleClick?: (rowId: TId) => void;
 }
 
-export function useDataTable<TData>({
+export function useDataTable<TData, TId = number>({
   data,
   columns,
   persistenceKey,
-  getRowId = (row: TData) => (row as { id: number }).id,
+  getRowId = (row: TData) => (row as { id: TId }).id,
   onRowDoubleClick,
-}: UseDataTableOptions<TData>) {
+}: UseDataTableOptions<TData, TId>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -62,11 +62,9 @@ export function useDataTable<TData>({
   });
 
   // Row selection state for Windows-style multi-select
-  const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
-  const [lastSelectedRowId, setLastSelectedRowId] = useState<number | null>(
-    null,
-  );
-  const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<TId>>(new Set());
+  const [lastSelectedRowId, setLastSelectedRowId] = useState<TId | null>(null);
+  const [focusedRowId, setFocusedRowId] = useState<TId | null>(null);
   const [goToPageValue, setGoToPageValue] = useState<string>("");
 
   // Sync pageSize changes with pagination state
@@ -122,7 +120,7 @@ export function useDataTable<TData>({
 
   // Handle row click with modifier keys for Windows-style selection
   const handleRowClick = useCallback(
-    (rowId: number, event: React.MouseEvent) => {
+    (rowId: TId, event: React.MouseEvent) => {
       if (event.ctrlKey || event.metaKey) {
         // Ctrl+Click: Toggle selection (don't change focus)
         setSelectedRowIds((prev) => {
@@ -172,7 +170,7 @@ export function useDataTable<TData>({
 
   // Handle row double-click
   const handleRowDoubleClick = useCallback(
-    (rowId: number) => {
+    (rowId: TId) => {
       if (onRowDoubleClick) {
         onRowDoubleClick(rowId);
       }

@@ -14,7 +14,7 @@ describe("StaffDirectory", () => {
   it("should render staff list from mock data", () => {
     renderWithProviders(<StaffDirectory onSelectStaff={mockOnSelectStaff} />);
 
-    // Should show staff members from STAFF_DATA
+    // Should show staff members from STAFF_DATA in table
     expect(screen.getByText("Dr. Sarah Chen")).toBeInTheDocument();
     expect(screen.getByText("Marcus Williams")).toBeInTheDocument();
     expect(screen.getByText("Priya Sharma")).toBeInTheDocument();
@@ -22,40 +22,31 @@ describe("StaffDirectory", () => {
     expect(screen.getByText("Linda Park")).toBeInTheDocument();
   });
 
-  it("should filter staff by search query", async () => {
-    const user = (await import("@testing-library/user-event")).default.setup();
+  it("should display staff roles", () => {
     renderWithProviders(<StaffDirectory onSelectStaff={mockOnSelectStaff} />);
 
-    const searchInput = screen.getByPlaceholderText(/search/i);
-    await user.type(searchInput, "Sarah");
-
-    // Should show only Sarah Chen
-    expect(screen.getByText("Dr. Sarah Chen")).toBeInTheDocument();
-    expect(screen.queryByText("Marcus Williams")).not.toBeInTheDocument();
+    // Should show role badges
+    expect(screen.getAllByText("Pharmacist")).toHaveLength(2); // Sarah and Linda
+    expect(screen.getAllByText("Technician")).toHaveLength(2); // Marcus and James
+    expect(screen.getByText("Manager")).toBeInTheDocument(); // Priya
   });
 
-  it("should filter staff by role", async () => {
-    const user = (await import("@testing-library/user-event")).default.setup();
+  it("should display duty status badges", () => {
     renderWithProviders(<StaffDirectory onSelectStaff={mockOnSelectStaff} />);
 
-    const pharmacistButton = screen.getByRole("button", {
-      name: /pharmacist/i,
-    });
-    await user.click(pharmacistButton);
-
-    // Should show only pharmacists
-    expect(screen.getByText("Dr. Sarah Chen")).toBeInTheDocument();
-    expect(screen.getByText("Linda Park")).toBeInTheDocument();
-    expect(screen.queryByText("Marcus Williams")).not.toBeInTheDocument();
+    // Should show duty status badges
+    expect(screen.getAllByText("On Duty")).toHaveLength(2);
+    expect(screen.getByText("On Break")).toBeInTheDocument();
+    expect(screen.getAllByText("Off Duty")).toHaveLength(2);
   });
 
-  it("should call onSelectStaff when clicking a staff card", async () => {
+  it("should call onSelectStaff when double-clicking a staff row", async () => {
     const user = (await import("@testing-library/user-event")).default.setup();
     renderWithProviders(<StaffDirectory onSelectStaff={mockOnSelectStaff} />);
 
-    const staffCard = screen.getByText("Dr. Sarah Chen").closest("div");
-    if (staffCard) {
-      await user.click(staffCard);
+    const staffRow = screen.getByText("Dr. Sarah Chen").closest("tr");
+    if (staffRow) {
+      await user.dblClick(staffRow);
     }
 
     expect(mockOnSelectStaff).toHaveBeenCalledWith(
@@ -63,10 +54,14 @@ describe("StaffDirectory", () => {
     );
   });
 
-  it("should display staff count", () => {
+  it("should display compliance scores", () => {
     renderWithProviders(<StaffDirectory onSelectStaff={mockOnSelectStaff} />);
 
-    // Should show count of 5 staff members
-    expect(screen.getByText(/5.*staff/i)).toBeInTheDocument();
+    // Should show compliance scores
+    expect(screen.getByText("88")).toBeInTheDocument();
+    expect(screen.getByText("75")).toBeInTheDocument();
+    expect(screen.getByText("95")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+    expect(screen.getByText("82")).toBeInTheDocument();
   });
 });

@@ -25,12 +25,17 @@ import { useDataTable } from "../hooks/useDataTable";
 /**
  * Return type of useDataTable hook
  */
-type UseDataTableReturn<TData> = ReturnType<typeof useDataTable<TData>>;
+type UseDataTableReturn<TData, TId = number> = ReturnType<
+  typeof useDataTable<TData, TId>
+>;
 
 /**
  * Context value containing table instance and all state
  */
-interface DataTableContextValue<TData> extends UseDataTableReturn<TData> {
+interface DataTableContextValue<TData, TId = number> extends UseDataTableReturn<
+  TData,
+  TId
+> {
   /**
    * Original columns definition
    */
@@ -47,13 +52,13 @@ interface DataTableContextValue<TData> extends UseDataTableReturn<TData> {
  * Undefined when outside provider
  */
 const DataTableContext = React.createContext<
-  DataTableContextValue<any> | undefined
+  DataTableContextValue<any, any> | undefined
 >(undefined);
 
 /**
  * Props for DataTableProvider
  */
-export interface DataTableProviderProps<TData> {
+export interface DataTableProviderProps<TData, TId = number> {
   /**
    * Column definitions for the table
    */
@@ -72,12 +77,12 @@ export interface DataTableProviderProps<TData> {
   /**
    * Optional function to get row ID
    */
-  getRowId?: (row: TData) => number;
+  getRowId?: (row: TData) => TId;
 
   /**
    * Optional callback for row double-click
    */
-  onRowDoubleClick?: (rowId: number) => void;
+  onRowDoubleClick?: (rowId: TId) => void;
 
   /**
    * Child components that will consume table context
@@ -103,16 +108,16 @@ export interface DataTableProviderProps<TData> {
  * </DataTableProvider>
  * ```
  */
-export function DataTableProvider<TData>({
+export function DataTableProvider<TData, TId = number>({
   children,
   columns,
   data,
   persistenceKey,
   getRowId,
   onRowDoubleClick,
-}: DataTableProviderProps<TData>) {
+}: DataTableProviderProps<TData, TId>) {
   // Create table instance using existing hook
-  const tableState = useDataTable({
+  const tableState = useDataTable<TData, TId>({
     columns,
     data,
     persistenceKey,
@@ -154,7 +159,8 @@ export function DataTableProvider<TData>({
  */
 export function useDataTableContext<
   TData = unknown,
->(): DataTableContextValue<TData> {
+  TId = number,
+>(): DataTableContextValue<TData, TId> {
   const context = React.useContext(DataTableContext);
 
   if (context === undefined) {
@@ -163,5 +169,5 @@ export function useDataTableContext<
     );
   }
 
-  return context as DataTableContextValue<TData>;
+  return context as DataTableContextValue<TData, TId>;
 }

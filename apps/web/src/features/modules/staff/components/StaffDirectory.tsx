@@ -1,25 +1,28 @@
 /**
  * StaffDirectory component
- * Searchable, filterable list/grid of staff members
+ * Searchable, filterable list of staff members using TanStack Table
  */
 
-import { useState, useMemo } from "react";
-import { Search, Grid, AlignLeft } from "lucide-react";
+import { useMemo } from "react";
+import { flexRender, type ColumnDef } from "@tanstack/react-table";
 import { STAFF_DATA } from "../mock-data";
 import type { Staff, StaffRole, DutyStatus } from "../types";
+import {
+  DataTableProvider,
+  useDataTableContext,
+  DataTablePagination,
+  DataTable,
+  DataTableColumnHeader,
+  DataTableEmptyState,
+  DataTableLoadingSkeleton,
+} from "@/components/data-table";
+import { CopyWrapper } from "@/components/copy-wrapper";
 
 export interface StaffDirectoryProps {
   onSelectStaff: (staff: Staff) => void;
 }
 
-// Avatar colors from mockup
-const avatarColors = [
-  ["#EFF6FC", "#0078D4"],
-  ["#DFF6DD", "#0F7B0F"],
-  ["#FFF4CE", "#835400"],
-  ["#FFF0EE", "#C42B1C"],
-  ["#F4EBFF", "#7B61FF"],
-];
+const STORAGE_KEY = "staff-directory-page-size";
 
 // Duty status badge styles
 const dutyStatusStyles: Record<
@@ -31,29 +34,12 @@ const dutyStatusStyles: Record<
   "Off Duty": { bg: "#F5F5F5", text: "#616161", dot: "#ABABAB" },
 };
 
-function Avatar({ staff, size = 32 }: { staff: Staff; size?: number }) {
-  const [bg, fg] = avatarColors[parseInt(staff.id) % avatarColors.length];
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        background: bg,
-        color: fg,
-        fontSize: size * 0.36,
-        fontWeight: 700,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        letterSpacing: 0.3,
-      }}
-    >
-      {staff.initials}
-    </div>
-  );
-}
+// Status dot color mapping
+const statusDotClass: Record<DutyStatus, string> = {
+  "On Duty": "bg-green-700",
+  "On Break": "bg-yellow-600",
+  "Off Duty": "bg-gray-400",
+};
 
 function StatusBadge({ status }: { status: DutyStatus }) {
   const s = dutyStatusStyles[status];
@@ -147,301 +133,206 @@ function ScoreBar({ score }: { score: number }) {
 }
 
 /**
- * Staff directory with search, filters, and list/grid toggle
+ * Staff directory with TanStack Table
  */
 export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<StaffRole | "All">("All");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-
-  const filteredStaff = useMemo(() => {
-    return STAFF_DATA.filter((staff) => {
-      const matchesSearch = staff.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === "All" || staff.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
-  }, [searchQuery, roleFilter]);
+  // Define columns
+  const columns = useMemo<ColumnDef<Staff>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Member" />
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-[7px] h-[7px] rounded-full shrink-0 ${statusDotClass[row.original.dutyStatus]}`}
+            />
+            <div>
+              <CopyWrapper value={row.original.name} size="xs">
+                <span className="text-xs font-semibold text-foreground">
+                  {row.original.name}
+                </span>
+              </CopyWrapper>
+              <div className="text-[10px] text-muted-foreground">
+                {row.original.email}
+              </div>
+            </div>
+          </div>
+        ),
+        size: undefined, // auto width
+      },
+      {
+        accessorKey: "role",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Role" />
+        ),
+        cell: ({ getValue }) => (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
+            {getValue() as string}
+          </span>
+        ),
+        filterFn: (row, id, value) => {
+          return value.includes(row.getValue(id));
+        },
+        enableColumnFilter: true,
+        size: 110,
+      },
+      {
+        accessorKey: "dutyStatus",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
+        cell: ({ row }) => <StatusBadge status={row.original.dutyStatus} />,
+        filterFn: (row, id, value) => {
+          return value.includes(row.getValue(id));
+        },
+        enableColumnFilter: true,
+        size: 120,
+      },
+      {
+        accessorKey: "hoursThisWeek",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Hrs/Wk" />
+        ),
+        cell: ({ getValue }) => (
+          <span className="text-xs font-semibold">
+            {getValue() as number}
+            <span className="text-[10px] font-normal text-muted-foreground">
+              h
+            </span>
+          </span>
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "complianceScore",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Compliance" />
+        ),
+        cell: ({ row }) => <ScoreBar score={row.original.complianceScore} />,
+        size: 140,
+      },
+    ],
+    [],
+  );
 
   return (
-    <div
-      style={{
-        flex: 1,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
+    <DataTableProvider
+      columns={columns}
+      data={STAFF_DATA}
+      persistenceKey={STORAGE_KEY}
+      getRowId={(staff) => staff.id}
+      onRowDoubleClick={(staffId) => {
+        const staff = STAFF_DATA.find((s) => s.id === staffId);
+        if (staff) onSelectStaff(staff);
       }}
     >
-      {/* Toolbar */}
-      <div
-        style={{
-          padding: "10px 20px",
-          background: "#FFFFFF",
-          borderBottom: "1px solid rgba(0,0,0,0.08)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flexShrink: 0,
-        }}
-      >
-        {/* Search */}
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <Search
-            size={13}
-            color="#616161"
-            style={{ position: "absolute", left: 8 }}
-          />
-          <input
-            type="text"
-            placeholder="Search…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+      <StaffDirectoryContent onSelectStaff={onSelectStaff} />
+    </DataTableProvider>
+  );
+}
+
+/**
+ * Staff directory content that uses DataTableContext
+ */
+function StaffDirectoryContent({
+  onSelectStaff,
+}: {
+  onSelectStaff: (staff: Staff) => void;
+}) {
+  const {
+    selectedRowIds,
+    focusedRowId,
+    handleRowClick,
+    handleRowDoubleClick,
+    table,
+  } = useDataTableContext<Staff, string>();
+
+  const hasData = table.getFilteredRowModel().rows.length > 0;
+
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Table content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Scrollable table area */}
+        {hasData ? (
+          <DataTable<Staff>
+            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
+            className="w-full border-collapse"
             style={{
-              paddingLeft: 28,
-              paddingRight: 10,
-              height: 28,
-              background: "#F5F5F5",
-              border: "1px solid rgba(0,0,0,0.12)",
-              borderRadius: 6,
-              fontSize: 12,
-              color: "#1A1A1A",
-              width: 160,
-              outline: "none",
+              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
             }}
-          />
-        </div>
-
-        {/* Role filter chips */}
-        {(["All", "Pharmacist", "Technician", "Manager"] as const).map(
-          (role) => (
-            <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              style={{
-                padding: "3px 10px",
-                borderRadius: 100,
-                fontSize: 11,
-                fontWeight: roleFilter === role ? 700 : 500,
-                color: roleFilter === role ? "#0078D4" : "#616161",
-                background: roleFilter === role ? "#EFF6FC" : "transparent",
-                border: `1px solid ${roleFilter === role ? "#C7E2F5" : "rgba(0,0,0,0.12)"}`,
-                cursor: "pointer",
-              }}
-            >
-              {role}
-            </button>
-          ),
-        )}
-
-        {/* Staff count */}
-        <span
-          style={{
-            padding: "2px 8px",
-            background: "#F5F5F5",
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 100,
-            fontSize: 11,
-            color: "#616161",
-          }}
-        >
-          {filteredStaff.length} staff members
-        </span>
-
-        {/* View toggle */}
-        <div
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            background: "#F5F5F5",
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 6,
-            padding: 2,
-          }}
-        >
-          {(["list", "grid"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setViewMode(v)}
-              style={{
-                padding: "3px 6px",
-                borderRadius: 4,
-                background: viewMode === v ? "#FFFFFF" : "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: viewMode === v ? "#0078D4" : "#616161",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              {v === "list" ? <AlignLeft size={13} /> : <Grid size={13} />}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div
-        style={{ flex: 1, overflow: "auto", padding: 16 }}
-        className="custom-scrollbar"
-      >
-        {viewMode === "list" ? (
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 8,
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.07)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Header */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2.2fr 1fr 1fr 0.7fr 1.4fr",
-                padding: "7px 14px",
-                background: "#F5F5F5",
-                borderBottom: "1px solid rgba(0,0,0,0.12)",
-                fontSize: 10,
-                fontWeight: 700,
-                color: "#616161",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
-              <span>Member</span>
-              <span>Role</span>
-              <span>Status</span>
-              <span>Hrs/Wk</span>
-              <span>Compliance</span>
-            </div>
-            {/* Rows */}
-            {filteredStaff.map((staff, i) => (
-              <div
-                key={staff.id}
-                onClick={() => onSelectStaff(staff)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2.2fr 1fr 1fr 0.7fr 1.4fr",
-                  padding: "10px 14px",
-                  borderBottom:
-                    i < filteredStaff.length - 1
-                      ? "1px solid rgba(0,0,0,0.08)"
+            renderRow={(row, idx) => {
+              const selected = selectedRowIds.has(row.original.id);
+              const focused = focusedRowId === row.original.id;
+              return (
+                <tr
+                  key={row.id}
+                  data-selected={selected ? "true" : undefined}
+                  data-focused={focused ? "true" : undefined}
+                  className="border-b transition-[background]"
+                  style={{
+                    borderBottomColor: focused ? "transparent" : "#ebebeb",
+                    background: focused
+                      ? "oklch(from var(--primary) l c h / 0.07)"
+                      : selected
+                        ? "oklch(from var(--primary) l c h / 0.05)"
+                        : idx % 2 === 1
+                          ? "#f9f9f9"
+                          : "#ffffff",
+                    boxShadow: focused
+                      ? "inset 0 0 0 1.5px var(--primary)"
                       : "none",
-                  cursor: "pointer",
-                  alignItems: "center",
-                  transition: "background 0.1s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#F0F6FF";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <Avatar staff={staff} size={30} />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 12 }}>
-                      {staff.name}
-                    </div>
-                    <div style={{ fontSize: 10, color: "#616161" }}>
-                      {staff.email}
-                    </div>
-                  </div>
-                </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "#616161",
-                    background: "#F5F5F5",
-                    padding: "2px 7px",
-                    borderRadius: 4,
+                  }}
+                  onClick={(e) => handleRowClick(row.original.id, e)}
+                  onDoubleClick={() => handleRowDoubleClick(row.original.id)}
+                  onMouseEnter={(e) => {
+                    if (!focused) {
+                      (
+                        e.currentTarget as HTMLTableRowElement
+                      ).style.background = "#f0f6ff";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLTableRowElement).style.background =
+                      focused
+                        ? "oklch(from var(--primary) l c h / 0.07)"
+                        : selected
+                          ? "oklch(from var(--primary) l c h / 0.05)"
+                          : idx % 2 === 1
+                            ? "#f9f9f9"
+                            : "#ffffff";
                   }}
                 >
-                  {staff.role}
-                </span>
-                <StatusBadge status={staff.dutyStatus} />
-                <span style={{ fontSize: 12, fontWeight: 700 }}>
-                  {staff.hoursThisWeek}
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 400,
-                      color: "#616161",
-                    }}
-                  >
-                    h
-                  </span>
-                </span>
-                <ScoreBar score={staff.complianceScore} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: 10,
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="whitespace-nowrap"
+                      style={{
+                        padding: "var(--density-padding)",
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              );
             }}
-          >
-            {filteredStaff.map((staff) => (
-              <div
-                key={staff.id}
-                onClick={() => onSelectStaff(staff)}
-                style={{
-                  background: "#FFFFFF",
-                  borderRadius: 8,
-                  boxShadow:
-                    "0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.07)",
-                  padding: 14,
-                  cursor: "pointer",
-                  border: "1.5px solid transparent",
-                  transition: "box-shadow 0.1s, border-color 0.1s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.06)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow =
-                    "0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.07)";
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 10,
-                  }}
-                >
-                  <Avatar staff={staff} size={36} />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 12 }}>
-                      {staff.name}
-                    </div>
-                    <div style={{ fontSize: 10, color: "#616161" }}>
-                      {staff.role}
-                    </div>
-                  </div>
-                </div>
-                <StatusBadge status={staff.dutyStatus} />
-                <div style={{ marginTop: 8 }}>
-                  <ScoreBar score={staff.complianceScore} />
-                </div>
-              </div>
-            ))}
-          </div>
+          />
+        ) : (
+          <DataTableEmptyState
+            hasFilters={table.getState().columnFilters.length > 0}
+            onClearFilters={() => table.resetColumnFilters()}
+          />
         )}
+
+        {/* Pagination controls */}
+        <DataTablePagination isLoading={false} />
       </div>
     </div>
   );
