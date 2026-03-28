@@ -34,7 +34,7 @@ import { TabOverflow } from "./TabOverflow";
 import { NewWorkspaceDialog } from "./NewWorkspaceDialog";
 import { calculateTabOverflow } from "../stores/tabs-store";
 import type { TabOverflowMode } from "../stores/tabs-store";
-import type { WorkspaceTemplate } from "../constants";
+import type { WorkspaceTemplate } from "../constants/workspace-templates";
 
 export interface TabBarProps {
   /** All tabs to display */

@@ -4,13 +4,14 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  calculateTabOverflow,
-  SCROLLABLE_THRESHOLD,
-} from "../tabs-store";
-import { VISIBLE_TAB_COUNT } from "../../constants";
+import { calculateTabOverflow, SCROLLABLE_THRESHOLD } from "../tabs-store";
 import type { Tab } from "../../types";
 import { LayoutDashboard } from "lucide-react";
+
+/**
+ * Maximum number of visible tabs before overflow
+ */
+const VISIBLE_TAB_COUNT = 5;
 
 function makeTabs(count: number): Tab[] {
   return Array.from({ length: count }, (_, i) => ({

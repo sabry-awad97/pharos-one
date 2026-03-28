@@ -15,7 +15,11 @@ export {
   SidebarStats,
 } from "./components/SidebarNavComponents";
 export { WorkspaceTemplatePicker } from "./components/WorkspaceTemplatePicker";
-export { WORKSPACE_TEMPLATES } from "./constants/workspace-templates";
+export {
+  WORKSPACE_TEMPLATES,
+  MODULE_ROUTES,
+  getModuleRoute,
+} from "./constants/workspace-templates";
 export type { Tab, TabState } from "./types";
 export type { TabBarProps } from "./components/TabBar";
 export type { TabItemProps } from "./components/TabItem";
@@ -38,4 +42,5 @@ export type { WorkspaceTemplatePickerProps } from "./components/WorkspaceTemplat
 export type {
   WorkspaceTemplate,
   TemplateTab,
+  ModuleId,
 } from "./constants/workspace-templates";

@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  Outlet,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Save,
@@ -247,48 +243,46 @@ function HomeComponent() {
           overflow: "hidden",
         }}
       >
+        {/* Tab Bar - Always visible */}
+        <TabBar
+          tabs={state.tabs}
+          activeTabId={activeTab?.id ?? null}
+          onTabClick={handleTabClick}
+          onTabClose={closeTab}
+          onTabPin={togglePin}
+          onTabDuplicate={duplicateTab}
+          onAddTab={handleAddTab}
+          splitViewEnabled={state.splitView.enabled}
+          onSplitViewToggle={toggleSplitView}
+          onTabReorder={reorderTabs}
+        />
+
+        {/* Content area */}
         {state.tabs.length === 0 ? (
           <EmptyWorkspaceState
             onOpenDashboard={handleOpenDashboard}
             onChooseTemplate={() => setShowPicker(true)}
           />
         ) : (
-          <>
-            {/* Tab Bar */}
-            <TabBar
-              tabs={state.tabs}
-              activeTabId={activeTab?.id ?? null}
-              onTabClick={handleTabClick}
-              onTabClose={closeTab}
-              onTabPin={togglePin}
-              onTabDuplicate={duplicateTab}
-              onAddTab={handleAddTab}
-              splitViewEnabled={state.splitView.enabled}
-              onSplitViewToggle={toggleSplitView}
-              onTabReorder={reorderTabs}
-            />
-
-            {/* Content area - Each workspace renders its own sidebar */}
-            <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-              <Outlet />
-              {state.splitView.enabled && pinnedTab && (
-                <>
-                  <div
-                    style={{
-                      width: 1,
-                      background: "#e0e0e0",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <WorkspaceContainer
-                    moduleId={pinnedTab.module}
-                    label={pinnedTab.label}
-                    split={true}
-                  />
-                </>
-              )}
-            </div>
-          </>
+          <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+            <Outlet />
+            {state.splitView.enabled && pinnedTab && (
+              <>
+                <div
+                  style={{
+                    width: 1,
+                    background: "#e0e0e0",
+                    flexShrink: 0,
+                  }}
+                />
+                <WorkspaceContainer
+                  moduleId={pinnedTab.module}
+                  label={pinnedTab.label}
+                  split={true}
+                />
+              </>
+            )}
+          </div>
         )}
       </div>
 

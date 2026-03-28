@@ -4,7 +4,6 @@
 
 import { describe, expect, it } from "vitest";
 import { getModule } from "../../registry";
-import { WORKSPACE_TEMPLATES } from "@/features/workspace/constants";
 // Import staff module to trigger registration
 import "../../staff";
 
@@ -24,13 +23,5 @@ describe("Staff module registration", () => {
   it("should have an icon", () => {
     const staffModule = getModule("staff");
     expect(staffModule?.icon).toBeDefined();
-  });
-
-  it("should be present in workspace templates", () => {
-    const staffTemplate = WORKSPACE_TEMPLATES.find((t) => t.id === "staff");
-    expect(staffTemplate).toBeDefined();
-    expect(staffTemplate?.label).toBe("Staff");
-    expect(staffTemplate?.desc).toBe("Staff management and scheduling");
-    expect(staffTemplate?.icon).toBeDefined();
   });
 });

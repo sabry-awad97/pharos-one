@@ -99,7 +99,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
           background: "#f8f8f8",
           borderBottomColor: "#e0e0e0",
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-          zIndex: 10,
+          zIndex: 20,
           gap: 1,
         }}
         {...props}
@@ -148,7 +148,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
               position: "absolute",
               top: "100%",
               left: getMenuOffset("file"),
-              zIndex: 20,
+              zIndex: 30,
             }}
           >
             <FileMenu
@@ -169,7 +169,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
               position: "absolute",
               top: "100%",
               left: getMenuOffset("edit"),
-              zIndex: 20,
+              zIndex: 30,
             }}
           >
             <EditMenu
@@ -192,7 +192,7 @@ const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
               position: "absolute",
               top: "100%",
               left: getMenuOffset("view"),
-              zIndex: 20,
+              zIndex: 30,
             }}
           >
             <ViewMenu

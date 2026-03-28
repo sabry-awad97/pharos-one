@@ -7,7 +7,11 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import type { Tab, TabState } from "../types";
-import { VISIBLE_TAB_COUNT } from "../constants";
+
+/**
+ * Maximum number of visible tabs before overflow
+ */
+const VISIBLE_TAB_COUNT = 5;
 
 // Temporary dev user ID until real user system exists
 const DEV_USER_ID = "dev-user";

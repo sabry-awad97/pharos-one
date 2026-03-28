@@ -14,7 +14,10 @@ import {
 } from "@pharos-one/ui/components/dialog";
 import { Button } from "@pharos-one/ui/components/button";
 import { Input } from "@pharos-one/ui/components/input";
-import { WORKSPACE_TEMPLATES, type WorkspaceTemplate } from "../constants";
+import {
+  WORKSPACE_TEMPLATES,
+  type WorkspaceTemplate,
+} from "../constants/workspace-templates";
 
 export interface NewWorkspaceDialogProps {
   /** Whether the dialog is open */
