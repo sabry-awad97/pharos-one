@@ -308,7 +308,7 @@ export function TabBar({
           flexShrink: 0,
           overflow: "hidden",
           position: "relative",
-          zIndex: 5,
+          zIndex: 10,
           fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
         }}
       >
