@@ -5,7 +5,17 @@
 
 import { useMemo, useState } from "react";
 import { flexRender, type ColumnDef } from "@tanstack/react-table";
-import { Search, Grid, AlignLeft, Eye, MoreHorizontal } from "lucide-react";
+import {
+  Search,
+  Grid,
+  AlignLeft,
+  Eye,
+  MoreHorizontal,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+} from "lucide-react";
+import { cva, type VariantProps } from "class-variance-authority";
 import { STAFF_DATA } from "../mock-data";
 import type { Staff, StaffRole, DutyStatus } from "../types";
 import {
@@ -17,6 +27,14 @@ import {
   DataTableEmptyState,
 } from "@/components/data-table";
 import { CopyWrapper } from "@/components/copy-wrapper";
+import { cn } from "@pharos-one/ui/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@pharos-one/ui/components/select";
 
 export interface StaffDirectoryProps {
   onSelectStaff: (staff: Staff) => void;
@@ -57,6 +75,58 @@ function StatusBadge({ status }: { status: DutyStatus }) {
       {label}
     </span>
   );
+}
+
+// Credential badge variants using cva
+const credBadgeVariants = cva(
+  "text-[10px] px-1.5 py-0.5 rounded-[3px] font-bold border",
+  {
+    variants: {
+      status: {
+        valid: "bg-green-50 text-green-700 border-green-200",
+        expiring: "bg-yellow-50 text-yellow-800 border-yellow-200",
+        critical: "bg-red-50 text-red-700 border-red-200",
+        expired: "bg-gray-50 text-gray-400 border-gray-200",
+      },
+    },
+    defaultVariants: {
+      status: "valid",
+    },
+  },
+);
+
+// Credential badge component
+function CredBadge({
+  status,
+  daysLeft,
+  className,
+  ...props
+}: {
+  status: string;
+  daysLeft: number;
+  className?: string;
+} & React.HTMLAttributes<HTMLSpanElement>) {
+  const label = status === "expired" ? "Expired" : `${daysLeft}d`;
+
+  return (
+    <span
+      className={cn(credBadgeVariants({ status: status as any }), className)}
+      {...props}
+    >
+      {label}
+    </span>
+  );
+}
+
+// Credential icon component
+function CredIcon({ status }: { status: string }) {
+  if (status === "valid")
+    return <CheckCircle className="w-[13px] h-[13px] text-green-700" />;
+  if (status === "expiring")
+    return <AlertTriangle className="w-[13px] h-[13px] text-yellow-800" />;
+  if (status === "critical")
+    return <AlertTriangle className="w-[13px] h-[13px] text-red-700" />;
+  return <XCircle className="w-[13px] h-[13px] text-gray-400" />;
 }
 
 function ScoreBar({ score }: { score: number }) {
@@ -166,14 +236,55 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
       {
         accessorKey: "hoursThisWeek",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Hours" />
+          <DataTableColumnHeader column={column} title="Hrs/Wk" />
         ),
         cell: ({ getValue }) => (
-          <span className="text-xs font-semibold text-foreground">
+          <span className="text-xs font-bold text-foreground">
             {getValue() as number}
+            <span className="text-[10px] font-normal text-muted-foreground">
+              h
+            </span>
           </span>
         ),
         size: 70,
+      },
+      {
+        accessorKey: "credentials",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Credentials" />
+        ),
+        cell: ({ row }) => {
+          const credentials = row.original.credentials || [];
+          if (credentials.length === 0)
+            return <span className="text-[10px] text-muted-foreground">—</span>;
+
+          // Find worst credential status
+          const statusOrder = {
+            expired: 0,
+            critical: 1,
+            expiring: 2,
+            valid: 3,
+          };
+          const worst = credentials.reduce((w, c) => {
+            return (statusOrder[c.status as keyof typeof statusOrder] || 3) <
+              (statusOrder[w.status as keyof typeof statusOrder] || 3)
+              ? c
+              : w;
+          }, credentials[0]);
+
+          return (
+            <div className="flex items-center gap-1">
+              <CredIcon status={worst.status} />
+              <CredBadge status={worst.status} daysLeft={worst.daysLeft} />
+              {credentials.length > 1 && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{credentials.length - 1}
+                </span>
+              )}
+            </div>
+          );
+        },
+        size: 120,
       },
       {
         accessorKey: "complianceScore",
@@ -292,37 +403,45 @@ function StaffDirectoryContent({
         </div>
 
         {/* Role filter */}
-        <select
+        <Select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value as StaffRole | "All")}
-          className="h-[26px] px-2 bg-muted border border-transparent rounded text-[11px] text-foreground cursor-pointer outline-none hover:border-border transition-colors"
+          onValueChange={(value) => setRoleFilter(value as StaffRole | "All")}
         >
-          <option value="All">All Roles</option>
-          {(["Pharmacist", "Technician", "Manager"] as const).map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-[26px] w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent side="bottom" align="start" position="popper">
+            <SelectItem value="All">All Roles</SelectItem>
+            {(["Pharmacist", "Technician", "Manager"] as const).map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {/* Status filter */}
-        <select
+        <Select
           value={statusFilter}
-          onChange={(e) =>
-            setStatusFilter(e.target.value as DutyStatus | "All")
+          onValueChange={(value) =>
+            setStatusFilter(value as DutyStatus | "All")
           }
-          className="h-[26px] px-2 bg-muted border border-transparent rounded text-[11px] text-foreground cursor-pointer outline-none hover:border-border transition-colors"
         >
-          <option value="All">All Statuses</option>
-          {(["On Duty", "On Break", "Off Duty"] as const).map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-[26px] w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent side="bottom" align="start" position="popper">
+            <SelectItem value="All">All Statuses</SelectItem>
+            {(["On Duty", "On Break", "Off Duty"] as const).map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        {/* Staff count */}
-        <span className="text-[11px] text-muted-foreground">
+        {/* Staff count badge */}
+        <span className="px-2 py-0.5 bg-muted border border-border rounded-full text-[11px] text-muted-foreground">
           {filteredCount} shown
         </span>
 
