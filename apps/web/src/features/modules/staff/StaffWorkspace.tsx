@@ -5,14 +5,16 @@
 
 import { useState, useMemo } from "react";
 import { StaffSidebar } from "./components/StaffSidebar";
+import { StaffDirectory } from "./components/StaffDirectory";
 import { STAFF_DATA, LEAVE_REQUESTS } from "./mock-data";
-import type { StaffTabId } from "./types";
+import type { StaffTabId, Staff } from "./types";
 
 /**
  * Staff workspace showing sidebar and active view content
  */
 export function StaffWorkspace() {
   const [activeTab, setActiveTab] = useState<StaffTabId>("overview");
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
   // Calculate badge counts from mock data
   const credentialsAlertCount = useMemo(() => {
@@ -49,18 +51,22 @@ export function StaffWorkspace() {
 
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            fontSize: 14,
-            color: "#616161",
-          }}
-        >
-          Staff {activeTab} view placeholder
-        </div>
+        {activeTab === "staff" ? (
+          <StaffDirectory onSelectStaff={setSelectedStaff} />
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              fontSize: 14,
+              color: "#616161",
+            }}
+          >
+            Staff {activeTab} view placeholder
+          </div>
+        )}
       </div>
     </div>
   );
