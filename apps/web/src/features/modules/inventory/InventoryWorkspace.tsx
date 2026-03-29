@@ -486,93 +486,102 @@ function InventoryWorkspaceContent({
         <InventoryToolbar products={products} />
 
         {/* Table content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Scrollable table area */}
-          {hasData ? (
-            <DataTable<ProductStockSummary>
-              containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
-              className="w-full border-collapse"
-              style={{
-                boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-              }}
-              renderRow={(row, idx) => {
-                const selected = selectedRowIds.has(row.original.id);
-                const focused = focusedRowId === row.original.id;
-                return (
-                  <TableRowContextMenu
-                    key={row.id}
-                    row={row.original}
-                    actions={customActions}
-                    actionGroups={actionGroups}
-                  >
-                    <tr
-                      data-selected={selected ? "true" : undefined}
-                      data-focused={focused ? "true" : undefined}
-                      className="border-b transition-[background]"
-                      style={{
-                        borderBottomColor: focused ? "transparent" : "#ebebeb",
-                        background: focused
-                          ? "oklch(from var(--primary) l c h / 0.07)"
-                          : selected
-                            ? "oklch(from var(--primary) l c h / 0.05)"
-                            : idx % 2 === 1
-                              ? "#f9f9f9"
-                              : "#ffffff",
-                        boxShadow: focused
-                          ? "inset 0 0 0 1.5px var(--primary)"
-                          : "none",
-                      }}
-                      onClick={(e) => handleRowClick(row.original.id, e)}
-                      onDoubleClick={() =>
-                        handleRowDoubleClick(row.original.id)
-                      }
-                      onMouseEnter={(e) => {
-                        if (!focused) {
+        <div className="flex-1 flex flex-col overflow-hidden p-4">
+          <div
+            className="flex-1 flex flex-col overflow-hidden bg-card rounded-lg"
+            style={{
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,0.07)",
+            }}
+          >
+            {/* Scrollable table area */}
+            {hasData ? (
+              <DataTable<ProductStockSummary>
+                containerClassName="flex-1 overflow-auto custom-scrollbar"
+                className="w-full border-collapse"
+                renderRow={(row, idx) => {
+                  const selected = selectedRowIds.has(row.original.id);
+                  const focused = focusedRowId === row.original.id;
+                  return (
+                    <TableRowContextMenu
+                      key={row.id}
+                      row={row.original}
+                      actions={customActions}
+                      actionGroups={actionGroups}
+                    >
+                      <tr
+                        data-selected={selected ? "true" : undefined}
+                        data-focused={focused ? "true" : undefined}
+                        className="border-b transition-[background]"
+                        style={{
+                          borderBottomColor: focused
+                            ? "transparent"
+                            : "#ebebeb",
+                          background: focused
+                            ? "oklch(from var(--primary) l c h / 0.07)"
+                            : selected
+                              ? "oklch(from var(--primary) l c h / 0.05)"
+                              : idx % 2 === 1
+                                ? "#f9f9f9"
+                                : "#ffffff",
+                          boxShadow: focused
+                            ? "inset 0 0 0 1.5px var(--primary)"
+                            : "none",
+                        }}
+                        onClick={(e) => handleRowClick(row.original.id, e)}
+                        onDoubleClick={() =>
+                          handleRowDoubleClick(row.original.id)
+                        }
+                        onMouseEnter={(e) => {
+                          if (!focused) {
+                            (
+                              e.currentTarget as HTMLTableRowElement
+                            ).style.background = "#f0f6ff";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
                           (
                             e.currentTarget as HTMLTableRowElement
-                          ).style.background = "#f0f6ff";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        (
-                          e.currentTarget as HTMLTableRowElement
-                        ).style.background = focused
-                          ? "oklch(from var(--primary) l c h / 0.07)"
-                          : selected
-                            ? "oklch(from var(--primary) l c h / 0.05)"
-                            : idx % 2 === 1
-                              ? "#f9f9f9"
-                              : "#ffffff";
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="whitespace-nowrap"
-                          style={{
-                            padding: "var(--density-padding)",
-                          }}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  </TableRowContextMenu>
-                );
-              }}
-            />
-          ) : (
-            <DataTableEmptyState
-              hasFilters={table.getState().columnFilters.length > 0}
-              onClearFilters={() => table.resetColumnFilters()}
-            />
-          )}
+                          ).style.background = focused
+                            ? "oklch(from var(--primary) l c h / 0.07)"
+                            : selected
+                              ? "oklch(from var(--primary) l c h / 0.05)"
+                              : idx % 2 === 1
+                                ? "#f9f9f9"
+                                : "#ffffff";
+                        }}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className="whitespace-nowrap"
+                            style={{
+                              padding: "var(--density-padding)",
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </TableRowContextMenu>
+                  );
+                }}
+              />
+            ) : (
+              <DataTableEmptyState
+                hasFilters={table.getState().columnFilters.length > 0}
+                onClearFilters={() => table.resetColumnFilters()}
+              />
+            )}
 
-          {/* Pagination controls */}
-          <DataTablePagination isLoading={isLoading} />
+            {/* Pagination controls */}
+            <div className="px-4">
+              <DataTablePagination isLoading={isLoading} />
+            </div>
+          </div>
         </div>
       </div>
 

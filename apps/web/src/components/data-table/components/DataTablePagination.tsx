@@ -188,7 +188,7 @@ export function DataTablePagination({
   }
 
   return (
-    <div className="flex-none flex flex-col sm:flex-row items-center justify-between gap-3 px-3 py-3 border-t border-border bg-card transition-opacity duration-150">
+    <div className="flex-none flex flex-col sm:flex-row items-center justify-between gap-3 py-3 border-t border-border bg-card transition-opacity duration-150">
       {/* Left side: Page size selector and go to page */}
       <div className="flex items-center gap-2 w-full sm:w-auto">
         {showPageSize && (

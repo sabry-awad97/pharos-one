@@ -386,98 +386,100 @@ function CredentialsTrackerContent({
       </div>
 
       {/* Table area */}
-      <div
-        className="flex-1 flex flex-col overflow-hidden"
-        data-density="compact"
-      >
-        {hasData ? (
-          <DataTable<CredentialWithStaff>
-            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
-            className="w-full border-collapse"
-            style={{
-              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-            }}
-            renderRow={(row, idx) => {
-              const selected = selectedRowIds.has(
-                `${row.original.staffId}-${row.original.type}`,
-              );
-              const focused =
-                focusedRowId === `${row.original.staffId}-${row.original.type}`;
-              const isExpired = row.original.status === "expired";
+      <div className="flex-1 flex flex-col overflow-hidden p-4">
+        <div
+          className="flex-1 flex flex-col overflow-hidden bg-card rounded-lg"
+          style={{
+            boxShadow: "0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,0.07)",
+          }}
+        >
+          {hasData ? (
+            <DataTable<CredentialWithStaff>
+              containerClassName="flex-1 overflow-auto custom-scrollbar"
+              className="w-full border-collapse"
+              renderRow={(row, idx) => {
+                const selected = selectedRowIds.has(
+                  `${row.original.staffId}-${row.original.type}`,
+                );
+                const focused =
+                  focusedRowId ===
+                  `${row.original.staffId}-${row.original.type}`;
+                const isExpired = row.original.status === "expired";
 
-              return (
-                <tr
-                  key={row.id}
-                  data-selected={selected ? "true" : undefined}
-                  data-focused={focused ? "true" : undefined}
-                  className="border-b transition-[background] cursor-pointer"
-                  style={{
-                    borderBottomColor:
-                      idx === table.getRowModel().rows.length - 1
-                        ? "transparent"
-                        : focused
+                return (
+                  <tr
+                    key={row.id}
+                    data-selected={selected ? "true" : undefined}
+                    data-focused={focused ? "true" : undefined}
+                    className="border-b transition-[background] cursor-pointer"
+                    style={{
+                      borderBottomColor:
+                        idx === table.getRowModel().rows.length - 1
                           ? "transparent"
-                          : "#ebebeb",
-                    background: focused
-                      ? "oklch(from var(--primary) l c h / 0.07)"
-                      : selected
-                        ? "oklch(from var(--primary) l c h / 0.05)"
-                        : isExpired
+                          : focused
+                            ? "transparent"
+                            : "#ebebeb",
+                      background: focused
+                        ? "oklch(from var(--primary) l c h / 0.07)"
+                        : selected
+                          ? "oklch(from var(--primary) l c h / 0.05)"
+                          : isExpired
+                            ? "#FFFBFB"
+                            : "transparent",
+                      boxShadow: focused
+                        ? "inset 0 0 0 1.5px var(--primary)"
+                        : "none",
+                      borderLeft: selected
+                        ? "2.5px solid var(--primary)"
+                        : "2.5px solid transparent",
+                    }}
+                    onClick={(e) =>
+                      handleRowClick(
+                        `${row.original.staffId}-${row.original.type}`,
+                        e,
+                      )
+                    }
+                    onMouseEnter={(e) => {
+                      if (!focused && !selected) {
+                        (
+                          e.currentTarget as HTMLTableRowElement
+                        ).style.background = "#f0f6ff";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!focused && !selected) {
+                        (
+                          e.currentTarget as HTMLTableRowElement
+                        ).style.background = isExpired
                           ? "#FFFBFB"
-                          : "transparent",
-                    boxShadow: focused
-                      ? "inset 0 0 0 1.5px var(--primary)"
-                      : "none",
-                    borderLeft: selected
-                      ? "2.5px solid var(--primary)"
-                      : "2.5px solid transparent",
-                  }}
-                  onClick={(e) =>
-                    handleRowClick(
-                      `${row.original.staffId}-${row.original.type}`,
-                      e,
-                    )
-                  }
-                  onMouseEnter={(e) => {
-                    if (!focused && !selected) {
-                      (
-                        e.currentTarget as HTMLTableRowElement
-                      ).style.background = "#f0f6ff";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!focused && !selected) {
-                      (
-                        e.currentTarget as HTMLTableRowElement
-                      ).style.background = isExpired
-                        ? "#FFFBFB"
-                        : "transparent";
-                    }
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="whitespace-nowrap"
-                      style={{
-                        padding: "10px 14px",
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              );
-            }}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-            No credentials found
-          </div>
-        )}
+                          : "transparent";
+                      }
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="whitespace-nowrap"
+                        style={{
+                          padding: "10px 14px",
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              }}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+              No credentials found
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

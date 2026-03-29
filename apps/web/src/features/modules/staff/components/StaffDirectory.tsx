@@ -473,17 +473,19 @@ function StaffDirectoryContent({
       </div>
 
       {/* Content area - Table or Grid */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden p-4">
         {viewMode === "list" ? (
-          <>
-            {/* Scrollable table area with card styling */}
+          <div
+            className="flex-1 flex flex-col overflow-hidden bg-card rounded-lg"
+            style={{
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,0.07)",
+            }}
+          >
             {hasData ? (
               <DataTable<Staff>
-                containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
+                containerClassName="flex-1 overflow-auto custom-scrollbar"
                 className="w-full border-collapse"
-                style={{
-                  boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-                }}
                 renderRow={(row, idx) => {
                   const selected = selectedRowIds.has(row.original.id);
                   const focused = focusedRowId === row.original.id;
@@ -555,7 +557,7 @@ function StaffDirectoryContent({
                 onClearFilters={() => table.resetColumnFilters()}
               />
             )}
-          </>
+          </div>
         ) : (
           /* Grid view */
           <div className="flex-1 overflow-auto custom-scrollbar bg-card p-4">
