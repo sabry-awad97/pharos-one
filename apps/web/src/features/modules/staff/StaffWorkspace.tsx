@@ -104,7 +104,7 @@ export function StaffWorkspace() {
             )}
           </>
         ) : activeTab === "metrics" ? (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col">
             <MetricsWorkspace
               allStaff={STAFF_DATA}
               selectedStaff={selectedStaff}
