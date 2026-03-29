@@ -9,7 +9,6 @@ import {
   Shield,
   Clock,
   FileText,
-  TrendingUp,
   BarChart2,
 } from "lucide-react";
 import {

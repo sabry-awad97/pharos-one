@@ -11,6 +11,8 @@ import { CredentialsTracker } from "./components/CredentialsTracker";
 import { OverviewTab } from "./components/OverviewTab";
 import { AttendanceWorkspace } from "./components/AttendanceWorkspace";
 import { AttendanceDetailPanel } from "./components/AttendanceDetailPanel";
+import { MetricsWorkspace } from "./components/MetricsWorkspace";
+import { AuditTrailWorkspace } from "./components/AuditTrailWorkspace";
 import { STAFF_DATA, LEAVE_REQUESTS, ATTENDANCE_RECORDS } from "./mock-data";
 import type { StaffTabId, Staff } from "./types";
 
@@ -101,6 +103,22 @@ export function StaffWorkspace() {
               </aside>
             )}
           </>
+        ) : activeTab === "metrics" ? (
+          <div className="flex-1 overflow-hidden">
+            <MetricsWorkspace
+              allStaff={STAFF_DATA}
+              selectedStaff={selectedStaff}
+              onSelectStaff={setSelectedStaff}
+            />
+          </div>
+        ) : activeTab === "audit_trail" ? (
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <AuditTrailWorkspace
+              allStaff={STAFF_DATA}
+              selectedStaff={selectedStaff}
+              onSelectStaff={setSelectedStaff}
+            />
+          </div>
         ) : (
           <div
             style={{
