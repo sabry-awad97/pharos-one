@@ -73,12 +73,12 @@ describe("MetricsWorkspace", () => {
     );
 
     // Should show hours breakdown table
-    expect(
-      screen.getByText("📊 Hours & Leave Breakdown — This Week"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Staff Member")).toBeInTheDocument();
-    expect(screen.getByText("Hours This Week")).toBeInTheDocument();
-    expect(screen.getByText("OT Hours")).toBeInTheDocument();
-    expect(screen.getByText("Leave Balance")).toBeInTheDocument();
+    expect(screen.getByText("📊 Hours & Leave")).toBeInTheDocument();
+    // "Staff" appears in both leaderboard and hours breakdown, so use getAllByText
+    const staffHeaders = screen.getAllByText("Staff");
+    expect(staffHeaders.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Hours")).toBeInTheDocument();
+    expect(screen.getByText("OT")).toBeInTheDocument();
+    expect(screen.getByText("Leave")).toBeInTheDocument();
   });
 });

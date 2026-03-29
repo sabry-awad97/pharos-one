@@ -209,165 +209,172 @@ export function MetricsWorkspace({
         </div>
       </div>
 
-      {/* Punctuality Leaderboard */}
-      <div
-        className="mb-4 rounded-lg bg-card p-3.5 shadow-sm"
-        style={{ boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}
-      >
-        <div className="mb-3 text-[12px] font-semibold">
-          🎯 Punctuality Leaderboard
-        </div>
+      {/* Punctuality Leaderboard & Hours Breakdown Row */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Punctuality Leaderboard */}
         <div
-          className="mb-2 grid items-center gap-2 border-b border-border pb-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground"
-          style={{ gridTemplateColumns: "40px 1fr 1fr 200px 80px" }}
+          className="rounded-lg bg-card p-3.5 shadow-sm"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}
         >
-          <span>Rank</span>
-          <span>Staff</span>
-          <span>Role</span>
-          <span>Punctuality Score</span>
-          <span className="text-right">Score</span>
-        </div>
-        {[...allStaff]
-          .sort((a, b) => (b.punctualityScore || 0) - (a.punctualityScore || 0))
-          .map((s, i) => {
-            const score = s.punctualityScore || 0;
-            const color =
-              score >= 95
-                ? "text-green-600"
-                : score >= 85
-                  ? "text-yellow-600"
-                  : "text-red-600";
-            const bgColor =
-              score >= 95
-                ? "bg-green-600"
-                : score >= 85
-                  ? "bg-yellow-600"
-                  : "bg-red-600";
-            const isSelected = selectedStaff?.id === s.id;
-            return (
-              <div
-                key={s.id}
-                onClick={() => onSelectStaff(isSelected ? null : s)}
-                className={`grid cursor-pointer items-center gap-2 border-l-[2.5px] py-2 transition-colors hover:bg-muted/50 ${
-                  i < allStaff.length - 1 ? "border-b border-border/50" : ""
-                } ${
-                  isSelected
-                    ? "border-l-primary bg-primary/5"
-                    : "border-l-transparent"
-                }`}
-                style={{ gridTemplateColumns: "40px 1fr 1fr 200px 80px" }}
-              >
-                <div className="flex items-center justify-center">
-                  {i === 0 && <span className="text-[16px]">🏆</span>}
-                  {i === 1 && <span className="text-[16px]">🥈</span>}
-                  {i === 2 && <span className="text-[16px]">🥉</span>}
-                  {i > 2 && (
-                    <span className="text-[11px] font-semibold text-muted-foreground">
-                      #{i + 1}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                    {s.initials}
-                  </div>
-                  <span className="text-[11px] font-semibold">{s.name}</span>
-                </div>
-                <span className="text-[11px] text-muted-foreground">
-                  {s.role}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full transition-all ${bgColor}`}
-                      style={{ width: `${score}%` }}
-                    />
-                  </div>
-                </div>
-                <span className={`text-right text-[14px] font-bold ${color}`}>
-                  {score}%
-                </span>
-              </div>
-            );
-          })}
-      </div>
-      {/* Hours Breakdown Table */}
-      <div
-        className="rounded-lg bg-card shadow-sm"
-        style={{ boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}
-      >
-        <div className="border-b border-border px-4 py-2.5">
-          <div className="text-[12px] font-bold">
-            📊 Hours & Leave Breakdown — This Week
+          <div className="mb-3 text-[12px] font-semibold">
+            🎯 Punctuality Leaderboard
           </div>
-        </div>
-        <div
-          className="grid border-b border-border bg-muted/50 px-4 py-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground"
-          style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
-        >
-          <span>Staff Member</span>
-          <span>Hours This Week</span>
-          <span>OT Hours</span>
-          <span>Leave Balance</span>
-        </div>
-        {[...allStaff]
-          .sort((a, b) => b.hoursThisWeek - a.hoursThisWeek)
-          .map((s, i) => {
-            const isSelected = selectedStaff?.id === s.id;
-            const hasOT = (s.otHours || 0) > 0;
-            return (
-              <div
-                key={s.id}
-                onClick={() => onSelectStaff(isSelected ? null : s)}
-                className={`grid cursor-pointer items-center border-l-[2.5px] px-4 py-2.5 transition-colors hover:bg-muted/50 ${
-                  i < allStaff.length - 1 ? "border-b border-border/50" : ""
-                } ${
-                  isSelected
-                    ? "border-l-primary bg-primary/5"
-                    : "border-l-transparent"
-                }`}
-                style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                    {s.initials}
+          <div
+            className="mb-2 grid items-center gap-2 border-b border-border pb-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground"
+            style={{ gridTemplateColumns: "40px 1fr 120px 60px" }}
+          >
+            <span>Rank</span>
+            <span>Staff</span>
+            <span>Score</span>
+            <span className="text-right">%</span>
+          </div>
+          {[...allStaff]
+            .sort(
+              (a, b) => (b.punctualityScore || 0) - (a.punctualityScore || 0),
+            )
+            .map((s, i) => {
+              const score = s.punctualityScore || 0;
+              const color =
+                score >= 95
+                  ? "text-green-600"
+                  : score >= 85
+                    ? "text-yellow-600"
+                    : "text-red-600";
+              const bgColor =
+                score >= 95
+                  ? "bg-green-600"
+                  : score >= 85
+                    ? "bg-yellow-600"
+                    : "bg-red-600";
+              const isSelected = selectedStaff?.id === s.id;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => onSelectStaff(isSelected ? null : s)}
+                  className={`grid cursor-pointer items-center gap-2 border-l-[2.5px] py-2 transition-colors hover:bg-muted/50 ${
+                    i < allStaff.length - 1 ? "border-b border-border/50" : ""
+                  } ${
+                    isSelected
+                      ? "border-l-primary bg-primary/5"
+                      : "border-l-transparent"
+                  }`}
+                  style={{ gridTemplateColumns: "40px 1fr 120px 60px" }}
+                >
+                  <div className="flex items-center justify-center">
+                    {i === 0 && <span className="text-[16px]">🏆</span>}
+                    {i === 1 && <span className="text-[16px]">🥈</span>}
+                    {i === 2 && <span className="text-[16px]">🥉</span>}
+                    {i > 2 && (
+                      <span className="text-[11px] font-semibold text-muted-foreground">
+                        #{i + 1}
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <div className="text-[11px] font-bold">{s.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {s.role}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary shrink-0">
+                      {s.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-semibold truncate">
+                        {s.name}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">
+                        {s.role}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-bold text-primary">
-                    {s.hoursThisWeek}h
-                  </span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{
-                        width: `${(s.hoursThisWeek / maxHours) * 100}%`,
-                      }}
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={`h-full rounded-full transition-all ${bgColor}`}
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
                   </div>
+                  <span className={`text-right text-[13px] font-bold ${color}`}>
+                    {score}%
+                  </span>
                 </div>
-                <span
-                  className={`text-[13px] font-bold ${
-                    hasOT ? "text-yellow-600" : "text-muted-foreground"
+              );
+            })}
+        </div>
+
+        {/* Hours Breakdown Table */}
+        <div
+          className="rounded-lg bg-card p-3.5 shadow-sm"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}
+        >
+          <div className="mb-3 text-[12px] font-semibold">📊 Hours & Leave</div>
+          <div
+            className="mb-2 grid items-center gap-2 border-b border-border pb-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground"
+            style={{ gridTemplateColumns: "1fr 80px 70px 80px" }}
+          >
+            <span>Staff</span>
+            <span>Hours</span>
+            <span>OT</span>
+            <span>Leave</span>
+          </div>
+          {[...allStaff]
+            .sort((a, b) => b.hoursThisWeek - a.hoursThisWeek)
+            .map((s, i) => {
+              const isSelected = selectedStaff?.id === s.id;
+              const hasOT = (s.otHours || 0) > 0;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => onSelectStaff(isSelected ? null : s)}
+                  className={`grid cursor-pointer items-center gap-2 border-l-[2.5px] py-2 transition-colors hover:bg-muted/50 ${
+                    i < allStaff.length - 1 ? "border-b border-border/50" : ""
+                  } ${
+                    isSelected
+                      ? "border-l-primary bg-primary/5"
+                      : "border-l-transparent"
                   }`}
+                  style={{ gridTemplateColumns: "1fr 80px 70px 80px" }}
                 >
-                  {s.otHours || 0}h
-                  {hasOT && (
-                    <span className="ml-1 text-[9px] font-normal">⚡</span>
-                  )}
-                </span>
-                <span className="text-[13px] font-semibold text-foreground">
-                  {s.leaveBalance || 0} days
-                </span>
-              </div>
-            );
-          })}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary shrink-0">
+                      {s.initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold truncate">
+                        {s.name}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">
+                        {s.role}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[12px] font-bold text-primary">
+                      {s.hoursThisWeek}h
+                    </span>
+                    <div className="h-1.5 w-8 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{
+                          width: `${(s.hoursThisWeek / maxHours) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[12px] font-bold ${
+                      hasOT ? "text-yellow-600" : "text-muted-foreground"
+                    }`}
+                  >
+                    {s.otHours || 0}h
+                    {hasOT && (
+                      <span className="ml-0.5 text-[9px] font-normal">⚡</span>
+                    )}
+                  </span>
+                  <span className="text-[12px] font-semibold text-foreground">
+                    {s.leaveBalance || 0}d
+                  </span>
+                </div>
+              );
+            })}
+        </div>
       </div>
     </div>
   );
