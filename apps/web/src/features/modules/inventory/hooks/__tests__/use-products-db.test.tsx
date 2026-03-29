@@ -143,9 +143,11 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
     const products = result.current.data!;
 
     // Check that not all quantities are zero
-    const nonZeroTotal = products.filter((p) => p.totalQuantity > 0).length;
+    const nonZeroTotal = products.filter(
+      (p) => (p.totalQuantity || 0) > 0,
+    ).length;
     const nonZeroAvailable = products.filter(
-      (p) => p.availableQuantity > 0,
+      (p) => (p.availableQuantity || 0) > 0,
     ).length;
 
     expect(nonZeroTotal).toBeGreaterThan(products.length * 0.5); // At least 50% have stock

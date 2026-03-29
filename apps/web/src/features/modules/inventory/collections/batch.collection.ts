@@ -38,14 +38,23 @@ async function fetchBatches(): Promise<Batch[]> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  // For now, generate a default subset (batches for product 1)
-  const defaultProductId = 1;
-  const batchesPerProduct = 5;
+  // Generate batches for first 50 products (matching product collection)
+  const productCount = 50;
+  const batches: Batch[] = [];
 
-  // Generate raw batches (no relations embedded)
-  return Array.from({ length: batchesPerProduct }, (_, i) =>
-    generateBatch(i + 1, defaultProductId),
-  );
+  for (let productId = 1; productId <= productCount; productId++) {
+    // Deterministic batch count per product: 1-5 batches
+    // ~10% products have 0 batches (out of stock)
+    const isOutOfStock = productId % 10 === 0;
+    const batchCount = isOutOfStock ? 0 : 1 + (productId % 5);
+
+    for (let i = 0; i < batchCount; i++) {
+      const batchId = (productId - 1) * 5 + i + 1;
+      batches.push(generateBatch(batchId, productId));
+    }
+  }
+
+  return batches;
 }
 
 /**
