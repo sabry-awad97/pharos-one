@@ -6,6 +6,7 @@
 import { useState, useMemo } from "react";
 import { StaffSidebar } from "./components/StaffSidebar";
 import { StaffDirectory } from "./components/StaffDirectory";
+import { StaffDetailPanel } from "./components/StaffDetailPanel";
 import { STAFF_DATA, LEAVE_REQUESTS } from "./mock-data";
 import type { StaffTabId, Staff } from "./types";
 
@@ -50,9 +51,21 @@ export function StaffWorkspace() {
       />
 
       {/* Main content area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-row flex-1 overflow-hidden">
         {activeTab === "staff" ? (
-          <StaffDirectory onSelectStaff={setSelectedStaff} />
+          <>
+            <div className="flex-1 overflow-hidden">
+              <StaffDirectory onSelectStaff={setSelectedStaff} />
+            </div>
+            {selectedStaff && (
+              <aside className="w-[380px] shrink-0">
+                <StaffDetailPanel
+                  staff={selectedStaff}
+                  onClose={() => setSelectedStaff(null)}
+                />
+              </aside>
+            )}
+          </>
         ) : (
           <div
             style={{
