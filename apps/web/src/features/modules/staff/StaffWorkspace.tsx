@@ -8,6 +8,7 @@ import { StaffSidebar } from "./components/StaffSidebar";
 import { StaffDirectory } from "./components/StaffDirectory";
 import { StaffDetailPanel } from "./components/StaffDetailPanel";
 import { CredentialsTracker } from "./components/CredentialsTracker";
+import { OverviewTab } from "./components/OverviewTab";
 import { STAFF_DATA, LEAVE_REQUESTS } from "./mock-data";
 import type { StaffTabId, Staff } from "./types";
 
@@ -53,7 +54,12 @@ export function StaffWorkspace() {
 
       {/* Main content area */}
       <div className="flex flex-row flex-1 overflow-hidden">
-        {activeTab === "staff" ? (
+        {activeTab === "overview" ? (
+          <OverviewTab
+            selectedStaff={selectedStaff}
+            onSelectStaff={setSelectedStaff}
+          />
+        ) : activeTab === "staff" ? (
           <>
             <div className="flex-1 overflow-hidden">
               <StaffDirectory onSelectStaff={setSelectedStaff} />
