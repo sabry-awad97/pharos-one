@@ -14,8 +14,8 @@ import {
   DataTable,
   DataTableColumnHeader,
 } from "@/components/data-table";
-import { cva } from "class-variance-authority";
 import { cn } from "@pharos-one/ui/lib/utils";
+import { cva } from "class-variance-authority";
 
 interface CredentialWithStaff {
   staffId: string;
@@ -392,13 +392,10 @@ function CredentialsTrackerContent({
       >
         {hasData ? (
           <DataTable<CredentialWithStaff>
-            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card p-4"
+            containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
             className="w-full border-collapse"
             style={{
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,0.07)",
-              borderRadius: "8px",
-              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,.06)",
             }}
             renderRow={(row, idx) => {
               const selected = selectedRowIds.has(
@@ -413,7 +410,7 @@ function CredentialsTrackerContent({
                   key={row.id}
                   data-selected={selected ? "true" : undefined}
                   data-focused={focused ? "true" : undefined}
-                  className="border-b transition-[background]"
+                  className="border-b transition-[background] cursor-pointer"
                   style={{
                     borderBottomColor:
                       idx === table.getRowModel().rows.length - 1
@@ -427,9 +424,7 @@ function CredentialsTrackerContent({
                         ? "oklch(from var(--primary) l c h / 0.05)"
                         : isExpired
                           ? "#FFFBFB"
-                          : idx % 2 === 1
-                            ? "#f9f9f9"
-                            : "#ffffff",
+                          : "transparent",
                     boxShadow: focused
                       ? "inset 0 0 0 1.5px var(--primary)"
                       : "none",
@@ -444,23 +439,20 @@ function CredentialsTrackerContent({
                     )
                   }
                   onMouseEnter={(e) => {
-                    if (!focused) {
+                    if (!focused && !selected) {
                       (
                         e.currentTarget as HTMLTableRowElement
                       ).style.background = "#f0f6ff";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.background =
-                      focused
-                        ? "oklch(from var(--primary) l c h / 0.07)"
-                        : selected
-                          ? "oklch(from var(--primary) l c h / 0.05)"
-                          : isExpired
-                            ? "#FFFBFB"
-                            : idx % 2 === 1
-                              ? "#f9f9f9"
-                              : "#ffffff";
+                    if (!focused && !selected) {
+                      (
+                        e.currentTarget as HTMLTableRowElement
+                      ).style.background = isExpired
+                        ? "#FFFBFB"
+                        : "transparent";
+                    }
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -468,7 +460,7 @@ function CredentialsTrackerContent({
                       key={cell.id}
                       className="whitespace-nowrap"
                       style={{
-                        padding: "var(--density-padding)",
+                        padding: "10px 14px",
                       }}
                     >
                       {flexRender(

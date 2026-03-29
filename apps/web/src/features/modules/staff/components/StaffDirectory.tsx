@@ -15,13 +15,11 @@ import {
   AlertTriangle,
   XCircle,
 } from "lucide-react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { STAFF_DATA } from "../mock-data";
 import type { Staff, StaffRole, DutyStatus } from "../types";
 import {
   DataTableProvider,
   useDataTableContext,
-  DataTablePagination,
   DataTable,
   DataTableColumnHeader,
   DataTableEmptyState,
@@ -41,13 +39,6 @@ export interface StaffDirectoryProps {
 }
 
 const STORAGE_KEY = "staff-directory-page-size";
-
-// Status dot color mapping
-const statusDotClass: Record<DutyStatus, string> = {
-  "On Duty": "bg-green-700",
-  "On Break": "bg-yellow-600",
-  "Off Duty": "bg-gray-400",
-};
 
 // Avatar colors for grid view
 const avatarColors = [
@@ -109,41 +100,22 @@ function StatusBadge({ status }: { status: DutyStatus }) {
   );
 }
 
-// Credential badge variants using cva
-const credBadgeVariants = cva(
-  "text-[10px] px-1.5 py-0.5 rounded-[3px] font-bold border",
-  {
-    variants: {
-      status: {
-        valid: "bg-green-50 text-green-700 border-green-200",
-        expiring: "bg-yellow-50 text-yellow-800 border-yellow-200",
-        critical: "bg-red-50 text-red-700 border-red-200",
-        expired: "bg-gray-50 text-gray-400 border-gray-200",
-      },
-    },
-    defaultVariants: {
-      status: "valid",
-    },
-  },
-);
-
 // Credential badge component
-function CredBadge({
-  status,
-  daysLeft,
-  className,
-  ...props
-}: {
-  status: string;
-  daysLeft: number;
-  className?: string;
-} & React.HTMLAttributes<HTMLSpanElement>) {
+function CredBadge({ status, daysLeft }: { status: string; daysLeft: number }) {
+  const statusMap = {
+    valid: "bg-green-50 text-green-700 border-green-200",
+    expiring: "bg-yellow-50 text-yellow-800 border-yellow-200",
+    critical: "bg-red-50 text-red-700 border-red-200",
+    expired: "bg-gray-50 text-gray-400 border-gray-200",
+  };
+
   const label = status === "expired" ? "Expired" : `${daysLeft}d`;
+  const className =
+    statusMap[status as keyof typeof statusMap] || statusMap.valid;
 
   return (
     <span
-      className={cn(credBadgeVariants({ status: status as any }), className)}
-      {...props}
+      className={`text-[10px] px-1.5 py-0.5 rounded-[3px] font-bold border ${className}`}
     >
       {label}
     </span>
@@ -216,16 +188,14 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Staff Member" />
+          <DataTableColumnHeader column={column} title="Member" />
         ),
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-[7px] h-[7px] rounded-full shrink-0 ${statusDotClass[row.original.dutyStatus]}`}
-            />
+          <div className="flex items-center gap-2.5">
+            <Avatar staff={row.original} size={30} />
             <div>
               <CopyWrapper value={row.original.name} size="xs">
-                <span className="text-xs font-medium text-foreground">
+                <span className="text-xs font-semibold text-foreground">
                   {row.original.name}
                 </span>
               </CopyWrapper>
@@ -243,7 +213,7 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
           <DataTableColumnHeader column={column} title="Role" />
         ),
         cell: ({ getValue }) => (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
+          <span className="text-[11px] px-1.5 py-0.5 rounded-[3px] bg-muted text-muted-foreground border border-border">
             {getValue() as string}
           </span>
         ),
@@ -328,8 +298,9 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
       },
       {
         id: "actions",
+        header: () => <span />,
         cell: ({ row }) => (
-          <div className="flex gap-0.5">
+          <div className="flex gap-0.5 justify-end">
             <button
               title="View Details"
               className="w-6 h-6 flex items-center justify-center rounded border border-transparent transition-colors text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20"
@@ -352,7 +323,7 @@ export function StaffDirectory({ onSelectStaff }: StaffDirectoryProps) {
             </button>
           </div>
         ),
-        size: 56,
+        size: 52,
       },
     ],
     [],
@@ -420,8 +391,8 @@ function StaffDirectoryContent({
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
-      {/* Toolbar matching inventory style */}
-      <div className="h-9 px-3 flex items-center gap-2 shrink-0 border-b border-border bg-card">
+      {/* Toolbar matching credentials style */}
+      <div className="h-10 px-5 flex items-center gap-2 shrink-0 border-b border-border bg-card">
         {/* Search */}
         <div className="relative flex items-center">
           <Search size={13} className="absolute left-2 text-muted-foreground" />
@@ -430,7 +401,7 @@ function StaffDirectoryContent({
             placeholder="Search…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-[26px] pl-7 pr-2 bg-muted border border-transparent rounded text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-40"
+            className="h-7 pl-7 pr-2.5 bg-muted border border-border rounded text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-40"
           />
         </div>
 
@@ -439,7 +410,7 @@ function StaffDirectoryContent({
           value={roleFilter}
           onValueChange={(value) => setRoleFilter(value as StaffRole | "All")}
         >
-          <SelectTrigger className="h-[26px] w-[130px]">
+          <SelectTrigger className="h-7 w-[130px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent side="bottom" align="start" position="popper">
@@ -459,7 +430,7 @@ function StaffDirectoryContent({
             setStatusFilter(value as DutyStatus | "All")
           }
         >
-          <SelectTrigger className="h-[26px] w-[130px]">
+          <SelectTrigger className="h-7 w-[130px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent side="bottom" align="start" position="popper">
@@ -480,12 +451,12 @@ function StaffDirectoryContent({
         <div className="flex-1" />
 
         {/* View toggle */}
-        <div className="flex bg-muted border border-transparent rounded p-0.5">
+        <div className="flex bg-muted border border-border rounded p-0.5">
           {(["list", "grid"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setViewMode(v)}
-              className={`p-1 rounded transition-colors ${
+              className={`p-0.5 px-1.5 rounded transition-colors ${
                 viewMode === v
                   ? "bg-card text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -502,13 +473,10 @@ function StaffDirectoryContent({
       </div>
 
       {/* Content area - Table or Grid */}
-      <div
-        className="flex-1 flex flex-col overflow-hidden"
-        data-density="compact"
-      >
+      <div className="flex-1 flex flex-col overflow-hidden">
         {viewMode === "list" ? (
           <>
-            {/* Scrollable table area */}
+            {/* Scrollable table area with card styling */}
             {hasData ? (
               <DataTable<Staff>
                 containerClassName="flex-1 overflow-auto custom-scrollbar bg-card"
@@ -524,41 +492,43 @@ function StaffDirectoryContent({
                       key={row.id}
                       data-selected={selected ? "true" : undefined}
                       data-focused={focused ? "true" : undefined}
-                      className="border-b transition-[background]"
+                      className="border-b transition-[background] cursor-pointer"
                       style={{
-                        borderBottomColor: focused ? "transparent" : "#ebebeb",
+                        borderBottomColor:
+                          idx === table.getRowModel().rows.length - 1
+                            ? "transparent"
+                            : focused
+                              ? "transparent"
+                              : "#ebebeb",
                         background: focused
                           ? "oklch(from var(--primary) l c h / 0.07)"
                           : selected
                             ? "oklch(from var(--primary) l c h / 0.05)"
-                            : idx % 2 === 1
-                              ? "#f9f9f9"
-                              : "#ffffff",
+                            : "transparent",
                         boxShadow: focused
                           ? "inset 0 0 0 1.5px var(--primary)"
                           : "none",
+                        borderLeft: selected
+                          ? "2.5px solid var(--primary)"
+                          : "2.5px solid transparent",
                       }}
                       onClick={(e) => handleRowClick(row.original.id, e)}
                       onDoubleClick={() =>
                         handleRowDoubleClick(row.original.id)
                       }
                       onMouseEnter={(e) => {
-                        if (!focused) {
+                        if (!focused && !selected) {
                           (
                             e.currentTarget as HTMLTableRowElement
                           ).style.background = "#f0f6ff";
                         }
                       }}
                       onMouseLeave={(e) => {
-                        (
-                          e.currentTarget as HTMLTableRowElement
-                        ).style.background = focused
-                          ? "oklch(from var(--primary) l c h / 0.07)"
-                          : selected
-                            ? "oklch(from var(--primary) l c h / 0.05)"
-                            : idx % 2 === 1
-                              ? "#f9f9f9"
-                              : "#ffffff";
+                        if (!focused && !selected) {
+                          (
+                            e.currentTarget as HTMLTableRowElement
+                          ).style.background = "transparent";
+                        }
                       }}
                     >
                       {row.getVisibleCells().map((cell) => (
@@ -566,7 +536,7 @@ function StaffDirectoryContent({
                           key={cell.id}
                           className="whitespace-nowrap"
                           style={{
-                            padding: "var(--density-padding)",
+                            padding: "10px 14px",
                           }}
                         >
                           {flexRender(
@@ -585,9 +555,6 @@ function StaffDirectoryContent({
                 onClearFilters={() => table.resetColumnFilters()}
               />
             )}
-
-            {/* Pagination controls */}
-            <DataTablePagination isLoading={false} />
           </>
         ) : (
           /* Grid view */
@@ -605,7 +572,7 @@ function StaffDirectoryContent({
                       className={cn(
                         "bg-card rounded-lg p-3.5 cursor-pointer border-[1.5px] transition-all",
                         selected
-                          ? "border-primary shadow-lg"
+                          ? "border-primary shadow-[0_4px_16px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.06)]"
                           : "border-transparent shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.06)]",
                       )}
                     >

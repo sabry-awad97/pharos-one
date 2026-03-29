@@ -6,6 +6,7 @@
  * - Renders table structure (table, thead, tbody)
  * - Delegates row rendering to parent via renderRow prop
  * - Consumes DataTableContext for table state
+ * - Automatically applies density from useViewState
  *
  * USAGE:
  * ```typescript
@@ -17,6 +18,7 @@
 
 import { flexRender } from "@tanstack/react-table";
 import { useDataTableContext } from "../context/DataTableContext";
+import { useViewState } from "@/features/shell";
 import type { Row } from "@tanstack/react-table";
 
 /**
@@ -68,9 +70,10 @@ export function DataTable<TData>({
   containerClassName,
 }: DataTableProps<TData> = {}) {
   const { table } = useDataTableContext<TData>();
+  const { density } = useViewState();
 
   return (
-    <div className={containerClassName}>
+    <div className={containerClassName} data-density={density}>
       <table className={className} style={style}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (

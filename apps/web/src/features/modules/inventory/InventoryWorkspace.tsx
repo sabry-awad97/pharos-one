@@ -486,10 +486,7 @@ function InventoryWorkspaceContent({
         <InventoryToolbar products={products} />
 
         {/* Table content */}
-        <div
-          className="flex-1 flex flex-col overflow-hidden"
-          data-density={density}
-        >
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Scrollable table area */}
           {hasData ? (
             <DataTable<ProductStockSummary>
