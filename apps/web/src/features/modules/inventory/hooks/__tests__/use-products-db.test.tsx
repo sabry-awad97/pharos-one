@@ -122,4 +122,38 @@ describe("useProducts with TanStack DB (On-Demand Mode)", () => {
     // Verify data is array
     expect(Array.isArray(result.current.data)).toBe(true);
   });
+
+  /**
+   * Test 5: Stock fields are NOT all zeros
+   * Verifies that stock aggregation is working (not hardcoded)
+   */
+  it("useProducts returns products with realistic stock values", async () => {
+    const { result } = renderHook(() => useProducts(), {
+      wrapper: AllProviders,
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toBeDefined();
+        expect(result.current.data!.length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
+
+    const products = result.current.data!;
+
+    // Check that not all quantities are zero
+    const nonZeroTotal = products.filter((p) => p.totalQuantity > 0).length;
+    const nonZeroAvailable = products.filter(
+      (p) => p.availableQuantity > 0,
+    ).length;
+
+    expect(nonZeroTotal).toBeGreaterThan(products.length * 0.5); // At least 50% have stock
+    expect(nonZeroAvailable).toBeGreaterThan(products.length * 0.5);
+
+    // Verify stock statuses are varied (not all "ok")
+    const statuses = products.map((p) => p.stockStatus);
+    const uniqueStatuses = new Set(statuses);
+    expect(uniqueStatuses.size).toBeGreaterThan(1); // At least 2 different statuses
+  });
 });

@@ -41,17 +41,9 @@ export function useProducts() {
         "left", // Left join to include products without supplier
       )
       .select(({ product, category, supplier }) => ({
-        ...product,
+        ...product, // Spread all product fields including stock fields
         category: category ?? null,
         defaultSupplier: supplier ?? null,
-        // Add computed fields for UI compatibility
-        // TODO: Calculate these from batches when batch aggregation is implemented
-        totalQuantity: 0,
-        availableQuantity: 0,
-        reservedQuantity: 0,
-        nearestExpiry: null as string | null,
-        batchCount: 0,
-        stockStatus: "ok" as "ok" | "low" | "out" | "expiring",
       })),
   );
 
@@ -85,17 +77,9 @@ export function useProduct(id: number) {
           "left",
         )
         .select(({ product, category, supplier }) => ({
-          ...product,
+          ...product, // Spread all product fields including stock fields
           category,
           defaultSupplier: supplier,
-          // Add computed fields for UI compatibility
-          // TODO: Calculate these from batches when batch aggregation is implemented
-          totalQuantity: 0,
-          availableQuantity: 0,
-          reservedQuantity: 0,
-          nearestExpiry: null as string | null,
-          batchCount: 0,
-          stockStatus: "ok" as const,
         }))
         .findOne();
     },
