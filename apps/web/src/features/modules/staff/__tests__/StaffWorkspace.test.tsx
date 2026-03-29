@@ -85,4 +85,24 @@ describe("StaffWorkspace", () => {
     const newPanelHeaders = screen.getAllByText("Marcus Williams");
     expect(newPanelHeaders.length).toBeGreaterThan(1); // In table and panel
   });
+
+  it("should show CredentialsTracker when credentials tab is active", async () => {
+    const user = (await import("@testing-library/user-event")).default.setup();
+    renderWithProviders(<StaffWorkspace />);
+
+    // Click Credentials tab in sidebar
+    const credentialsTab = screen.getByRole("button", {
+      name: /credentials/i,
+    });
+    await user.click(credentialsTab);
+
+    // Should show CredentialsTracker with KPI counts
+    expect(screen.getByText("Valid")).toBeInTheDocument();
+    expect(screen.getByText("Expiring")).toBeInTheDocument();
+    expect(screen.getByText("Critical")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+
+    // Should show credential rows
+    expect(screen.getAllByText("Dr. Sarah Chen").length).toBeGreaterThan(0);
+  });
 });

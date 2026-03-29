@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import { StaffSidebar } from "./components/StaffSidebar";
 import { StaffDirectory } from "./components/StaffDirectory";
 import { StaffDetailPanel } from "./components/StaffDetailPanel";
+import { CredentialsTracker } from "./components/CredentialsTracker";
 import { STAFF_DATA, LEAVE_REQUESTS } from "./mock-data";
 import type { StaffTabId, Staff } from "./types";
 
@@ -66,6 +67,10 @@ export function StaffWorkspace() {
               </aside>
             )}
           </>
+        ) : activeTab === "credentials" ? (
+          <div className="flex-1 overflow-hidden">
+            <CredentialsTracker />
+          </div>
         ) : (
           <div
             style={{
