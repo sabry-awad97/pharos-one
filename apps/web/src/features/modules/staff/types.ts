@@ -13,8 +13,8 @@ export type StaffTabId =
   | "staff"
   | "credentials"
   | "attendance"
-  | "leave"
-  | "metrics";
+  | "metrics"
+  | "audit_trail"
 export type AttSubTab = "live" | "schedule" | "leave" | "analytics";
 export type LeaveStatus = "pending" | "approved" | "rejected";
 export type AttStatus =

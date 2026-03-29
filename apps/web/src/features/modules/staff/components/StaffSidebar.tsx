@@ -10,6 +10,7 @@ import {
   Clock,
   FileText,
   TrendingUp,
+  BarChart2,
 } from "lucide-react";
 import {
   SidebarContainer,
@@ -92,17 +93,17 @@ export function StaffSidebar({
             onClick={() => onTabChange("attendance")}
           />
           <SidebarNavItem
-            icon={FileText}
-            label="Leave Requests"
+            icon={BarChart2}
+            label="Metrics"
             badge={pendingLeaveCount}
-            active={activeTab === "leave"}
-            onClick={() => onTabChange("leave")}
-          />
-          <SidebarNavItem
-            icon={TrendingUp}
-            label="Performance"
             active={activeTab === "metrics"}
             onClick={() => onTabChange("metrics")}
+          />
+          <SidebarNavItem
+            icon={FileText}
+            label="Audit Trail"
+            active={activeTab === "audit_trail"}
+            onClick={() => onTabChange("audit_trail")}
           />
         </SidebarNav>
       </SidebarContent>

@@ -9,7 +9,9 @@ import { StaffDirectory } from "./components/StaffDirectory";
 import { StaffDetailPanel } from "./components/StaffDetailPanel";
 import { CredentialsTracker } from "./components/CredentialsTracker";
 import { OverviewTab } from "./components/OverviewTab";
-import { STAFF_DATA, LEAVE_REQUESTS } from "./mock-data";
+import { AttendanceWorkspace } from "./components/AttendanceWorkspace";
+import { AttendanceDetailPanel } from "./components/AttendanceDetailPanel";
+import { STAFF_DATA, LEAVE_REQUESTS, ATTENDANCE_RECORDS } from "./mock-data";
 import type { StaffTabId, Staff } from "./types";
 
 /**
@@ -77,6 +79,28 @@ export function StaffWorkspace() {
           <div className="flex-1 overflow-hidden">
             <CredentialsTracker />
           </div>
+        ) : activeTab === "attendance" ? (
+          <>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <AttendanceWorkspace
+                allStaff={STAFF_DATA}
+                selectedStaff={selectedStaff}
+                onSelectStaff={setSelectedStaff}
+                records={ATTENDANCE_RECORDS}
+                leaves={LEAVE_REQUESTS}
+              />
+            </div>
+            {selectedStaff && (
+              <aside className="w-[380px] shrink-0">
+                <AttendanceDetailPanel
+                  staff={selectedStaff}
+                  records={ATTENDANCE_RECORDS}
+                  leaves={LEAVE_REQUESTS}
+                  onClose={() => setSelectedStaff(null)}
+                />
+              </aside>
+            )}
+          </>
         ) : (
           <div
             style={{
